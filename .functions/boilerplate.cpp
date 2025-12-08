@@ -11,7 +11,7 @@ int main() {
 	
 	do {
 		clearScreen();
-		cout << blue << "hello " << r << flush; wait(2); cout << yellow << "there" << r;
+		cout << i << blue << "hello " << r << flush; wait(2); cout << yellow << "there" << r;
 	} while (cout << b << "\n\n " << u << "➡︎ Go Again?" 
 								<< r << b << " (" << green << "y"<< black 
 								<< b << '/' << red << 'n' << r << "): "
