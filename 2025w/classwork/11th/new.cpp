@@ -11,11 +11,11 @@ int main() {
 	
 	do {
 		clearScreen();
-		cout << blue << "hello " << reset << flush; wait(2); cout << yellow << "there" << reset;
-	} while (cout << bold << "\n\n " << underline << "➡︎ Go Again?" 
-								<< reset << bold << " (" << green << "y"
-							  << black << bold << '/' << red << 'n' << reset 
-								<< "): " && cin >> goAgain && goAgain == 'y');
+		cout << blue << "hello " << r << flush; wait(2); cout << yellow << "there" << r;
+	} while (cout << b << "\n\n " << underline << "➡︎ Go Again?" 
+								<< r << b << " (" << green << "y"<< black 
+								<< b << '/' << red << 'n' << r << "): "
+								 && cin >> goAgain && goAgain == 'y');
 	clearScreen();	
 	return 0;
 }

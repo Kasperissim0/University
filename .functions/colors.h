@@ -129,6 +129,12 @@ static constexpr auto& inverse       = Color::ATTR::INVERSE;
 static constexpr auto& hidden        = Color::ATTR::HIDDEN;
 static constexpr auto& strikethrough = Color::ATTR::STRIKETHROUGH;
 
+// --- Compressed Global Aliases for convenience and efficiency ---
+static constexpr auto& r             = reset;
+static constexpr auto& b             = bold;
+static constexpr auto& i             = italic;
+static constexpr auto& u             = underline;
+
 
 #endif
 
@@ -189,11 +195,12 @@ static constexpr auto& strikethrough = Color::ATTR::STRIKETHROUGH;
  *    The terminal style will remain changed until you explicitly reset it. Always
  *    remember to send the `reset` modifier when you are done.
  *
- *    std::cout << red << "This is red." << reset << " This is back to default." << std::endl;
+ *    std::cout << red << "This is red." << r << " This is back to default." << std::endl;
  *
  *    You can access the reset modifier in any of the three ways:
  *    - Color::Attribute::RESET
  *    - Color::RESET
  *    - reset
+ *    - r
  *
  */
