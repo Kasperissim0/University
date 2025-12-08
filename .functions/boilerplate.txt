@@ -11,7 +11,7 @@ int main() {
 	do {
 		clearScreen();
 		cout << "hello " << flush; wait(2); cout << "there" << endl;
-	} while(cout << "\n\nGo Again? (y/n): " && cin >> goAgain && goAgain == 'y');
+	} while (cout << "\n\nGo Again? (y/n): " && cin >> goAgain && goAgain == 'y');
 	clearScreen();	
 	return 0;
 }
