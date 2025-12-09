@@ -2,27 +2,35 @@
 #include <string>
 #include <stdexcept>
 #include "EAN_code.h"
+#include "item.h"
+// #include "shop.h"
 #include "screen.h" // adds clearScreen()          + <iomanip> and <cstdlib>
 #include "wait.h"   // adds wait(unsigned seconds) + <thread> and <chrono>
-// use "clang++ file.cpp -I../../../.functions-link -o a" for correct preprocessor behaviour
+#include "colors.h" // adds color modifiers Color::FG/BG/ATTR::(Bright::)Modify
+// use "clang++ -std=c++23 x.cpp -I../../../.functions-link -o x" for correct preprocessor behaviour
 
 using namespace std;
 
-int main() {
-	char goAgain; string temp;
+int main (int argn, char** args) { if (argn != 2) return 1;
+	// char goAgain; 
+	string temp = args[1];
 	
-	do {
+	// do {
 		clearScreen();
-		while (cin >> temp && temp != "q") {
+		// while (cin >> temp && temp != "q") {
 			try {
 				EAN_code i = temp;
-				cout << i << endl;
+				Item test({i, "Cookie", "The Tastiest Cookier Ever", "321232131231,22335"});
+				cout << test << endl << endl;
 			}
 			catch (const runtime_error& e) {
-				cerr << "❌ ERROR: " << e.what() << endl;
+				cerr << endl << r << red << "❌ ERROR: " << r << b << e.what() << endl << r;
 			}
-		}
-	} while(cout << "\n\nGo Again? (y/n): " && cin >> goAgain && goAgain == 'y');
+		// }
+	// } while (cout << r << b << "\n\n  " << u << "➡︎ Go Again?" 
+	//				  << r << b << " (" << green << "y"<< black 
+	//				  << b << '/' << red << 'n' << r << "): "
+	//				  && cin >> goAgain && goAgain == 'y');
 	// clearScreen();	
 	return 0;
 }

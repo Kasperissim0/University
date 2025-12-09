@@ -24,7 +24,10 @@ class EAN_code {
 		ostream& print(ostream& o) const {
 			return (o << "Contents Of Object: " << endl
 						<< "- Code: " << this->code << endl 
-						<< "- Valid: " << (valid ? "✔️" : "❌"));
+						<< "- Valid: " << (valid ? "✔️" : "❌")) << endl;
+		}
+		string getCode() const {
+			return this->code;
 		}
 		friend bool operator==(const EAN_code& a, const EAN_code& b);
 		friend bool operator!=(const EAN_code& a, const EAN_code& b);
@@ -36,17 +39,17 @@ class EAN_code {
 
 ostream& operator<<(ostream& o, const EAN_code& a) { return (a.print(o)); }
 bool operator==(const EAN_code& a, const EAN_code& b) { return (a.code == b.code); }
-bool operator!=(const EAN_code& a, const EAN_code& b); { return (a.code != b.code); }
-bool operator<(const EAN_code& a, const EAN_code& b); {
+bool operator!=(const EAN_code& a, const EAN_code& b) { return (a.code != b.code); }
+bool operator<(const EAN_code& a, const EAN_code& b) {
 	return (stoi(a.code) < stoi(b.code));
 }
-bool operator<=(const EAN_code& a, const EAN_code& b); {
+bool operator<=(const EAN_code& a, const EAN_code& b) {
 	return (stoi(a.code) <= stoi(b.code));
 }
-bool operator>(const EAN_code& a, const EAN_code& b); {
+bool operator>(const EAN_code& a, const EAN_code& b) {
 	return (stoi(a.code) > stoi(b.code));
 }
-bool operator>=(const EAN_code& a, const EAN_code& b); {
+bool operator>=(const EAN_code& a, const EAN_code& b) {
 	return (stoi(a.code) >= stoi(b.code));
 	}
 
