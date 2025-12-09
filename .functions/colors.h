@@ -134,7 +134,7 @@ static constexpr auto& r             = reset;
 static constexpr auto& b             = bold;
 static constexpr auto& i             = italic;
 static constexpr auto& u             = underline;
-static constexpr auto& s             = strikethrough
+static constexpr auto& s             = strikethrough;
 
 
 #endif
