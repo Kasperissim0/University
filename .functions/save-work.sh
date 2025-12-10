@@ -7,7 +7,7 @@ set -ue
 
 # Require exactly one argument (the commit message)
 if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 \"commit message\"" >&2
+  echo "Envocation Must Include Commit Message" >&2
   exit 1
 fi
 msg="$1"
