@@ -1,5 +1,5 @@
-#ifndef COLORS_H
-#define COLORS_H
+#ifndef COLORS
+#define COLORS
 
 #include <iostream>
 

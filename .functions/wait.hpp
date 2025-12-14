@@ -1,5 +1,5 @@
-#ifndef WAIT_H
-#define WAIT_H
+#ifndef WAIT
+#define WAIT
 
 #include <thread>
 #include <chrono>

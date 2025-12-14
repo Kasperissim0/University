@@ -1,5 +1,5 @@
-#ifndef SCREEN_H
-#define SCREEN_H
+#ifndef SCREEN
+#define SCREEN
 
 #include <iomanip>
 #include <cstdlib>
