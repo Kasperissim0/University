@@ -67,9 +67,7 @@ std::ostream& operator<<(std::ostream& o, const std::vector<std::any>& v) {
       std::stringstream ss; ss << std::any_cast<long double>(item);
       o << ss.str() << "L";
     }
-    else                                                     {
-      o << "[unknown type]";
-    }
+    else throw std::runtime_error("Unknown Type Encountered - " + std::string(item.type().name()));
 
     o << r << ((i == v.size() - 1) ? "" : "\n");
   }
