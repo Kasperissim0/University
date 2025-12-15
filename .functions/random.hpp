@@ -49,10 +49,11 @@ class Generator {
       }
       else throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
     }
-    std::string generateString(const size_t& lengthToGenerate) {
+    std::string generateString(const size_t& lengthToGenerate, 
+                               const char& startingValue = ' ', const char& endingValue = '~') {
       std::string construct(lengthToGenerate, '\0');
       for (size_t i = 0; i < lengthToGenerate; ++i)
-        construct.at(i) = generateNumericType<char>(' ', '~'); // All Values Except \special
+        construct.at(i) = generateNumericType<char>(startingValue, endingValue); // All Values Except \special
       return construct;
     }
   public:
@@ -89,13 +90,22 @@ class Generator {
     }
     // Generate/Delete Value(s)
     template<typename T, typename ARG = T>
-    T generate(ARG minValue = std::numeric_limits<ARG>::min(), ARG maxValue = std::numeric_limits<ARG>::max()) {
+    T generate(ARG minValue = std::numeric_limits<ARG>::min(), 
+               ARG maxValue = std::numeric_limits<ARG>::max(),
+               std::optional<const char> startingValue = std::nullopt,
+               std::optional<const char> endingValue = std::nullopt)    {
       if (minValue > maxValue)          std::swap(minValue, maxValue);
       if constexpr (std::is_arithmetic_v<T>)      return generateNumericType<T>(minValue, maxValue);
       else if constexpr (std::is_same_v<T, std::string>) {
         if (minValue < 0 || maxValue < 0)    throw std::runtime_error("String Length Cannot Be Negative Or 0");
         if (maxValue == std::numeric_limits<ARG>::max()) maxValue = minValue;
-        return generateString(generateNumericType<size_t>(minValue, maxValue));
+        std::string construct = ""; const size_t length = generateNumericType(minValue, maxValue);
+        if (startingValue && endingValue)        construct = generateString(length, *startingValue, *endingValue);
+        else if (startingValue && !endingValue)  construct = generateString(length, *startingValue);
+        else                                     construct = generateString(length);
+
+        if (!construct.empty()) return construct;
+        else throw std::runtime_error("String Somehow Empty After Generation");
       }
       else throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
     }
@@ -113,7 +123,10 @@ class Generator {
     }
     // Input/Output
     template<typename T, typename ARG = T> 
-    Generator& writeValues(ARG minValue = std::numeric_limits<ARG>::min(), ARG maxValue = std::numeric_limits<ARG>::max()) {
+    Generator& writeValues(ARG minValue = std::numeric_limits<ARG>::min(), 
+                           ARG maxValue = std::numeric_limits<ARG>::max(),
+                           std::optional<const char> startingValue = std::nullopt,
+                           std::optional<const char> endingValue = std::nullopt)   {
       std::ofstream fileContent(FILE); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Write To");
       if (minValue > maxValue) std::swap(minValue, maxValue);
       if constexpr (std::is_arithmetic_v<T>) {
@@ -122,9 +135,13 @@ class Generator {
       }
       else if constexpr (std::is_same_v<T, std::string>) {
         if (maxValue == std::numeric_limits<ARG>::max()) maxValue = minValue;
-        for (size_t i = 0; i < AMOUNT; ++i) 
-          fileContent << generateString(generateNumericType<size_t>(minValue, maxValue)) 
-                      << ((i == AMOUNT - 1) ? "" : "\n");
+        for (size_t i = 0; i < AMOUNT; ++i) {
+          const size_t length = generateNumericType<size_t>(minValue, maxValue);
+          if (startingValue && endingValue)       fileContent << generateString(length, *startingValue, *endingValue);
+          else if (startingValue && !endingValue) fileContent << generateString(length, *startingValue);
+          else                                    fileContent << generateString(length);
+                                                  fileContent << ((i == AMOUNT - 1) ? "" : "\n");
+        }
       }
       else { 
         fileContent.close(); 
@@ -261,7 +278,7 @@ int main() {
     ? so you can still use `std::cout << gen.readValues()` directly and it will work.
     
    ! std::cout << "--- Implicit Reading (Strings) ---" << std::endl;
-              << gen.setFile("strings").setAmount(5).writeValues<std::string>(10).readValues() << std::endl;
+              << gen.setFile("strings").setAmount(5).writeValues<std::string>(10, 10, ' ', 'z').readValues() << std::endl;
    !          << "--- Implicit Reading (Doubles) ---" << std::endl;
               << gen.setFile("reals").setAmount(10).writeValues<double>(-100.0, 100.0).readValues() << std::endl;
    !          << "--- Implicit Reading (Bools) ---" << std::endl;
