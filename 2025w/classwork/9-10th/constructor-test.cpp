@@ -4,9 +4,9 @@
 #include "EAN_code.h"
 #include "item.h"
 // #include "shop.h"
-#include "screen.h" // adds clearScreen()          + <iomanip> and <cstdlib>
-#include "wait.h"   // adds wait(unsigned seconds) + <thread> and <chrono>
-#include "colors.h" // adds color modifiers Color::FG/BG/ATTR::(Bright::)Modify
+#include "screen.hpp" // adds clearScreen()          + <iomanip> and <cstdlib>
+#include "wait.hpp"   // adds wait(unsigned seconds) + <thread> and <chrono>
+#include "colors.hpp" // adds color modifiers Color::FG/BG/ATTR::(Bright::)Modify
 // use "clang++ -std=c++23 x.cpp -I../../../.functions-link -o x" for correct preprocessor behaviour
 
 using namespace std;

@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "functions/screen.h" // adds clearScreen()          + <iomanip> and <cstdlib>
-#include "functions/wait.h"   // adds wait(unsigned seconds) + <thread> and <chrono>
+#include "functions/screen.hpp" // adds clearScreen()          + <iomanip> and <cstdlib>
+#include "functions/wait.hpp"   // adds wait(unsigned seconds) + <thread> and <chrono>
 #include "city.h"
 #include "zip.h"
 #include "address.h"

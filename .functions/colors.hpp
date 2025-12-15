@@ -148,7 +148,7 @@ static constexpr auto& s             = strikethrough;
  *
  * 1. INCLUDE THE HEADER
  *    Simply include this file in your C++ source:
- *    #include "colors.h"
+ *    #include "colors.hpp"
  *
  * 2. USE MODIFIERS WITH std::cout
  *    You can stream the color/style modifiers directly to std::cout to change the
