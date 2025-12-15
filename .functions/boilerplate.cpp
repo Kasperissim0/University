@@ -20,10 +20,7 @@ int main (int argc, char** args) { // if (argc != ) return 1;
       // cout << "✅ Succesfully Deleted " << gen.getFile() << endl;
     } catch (const runtime_error& e) { cerr << "❌ ERROR: " << e.what() << endl; }
 		cout << Color::FG::Bright::YELLOW << "List Of Random Chars: " << r << endl; wait(1);
-    cout << gen.setFile("test").setAmount(5)
-                               .writeValues<char>(' ', '~')
-                               .readValues<string>()
-         << endl;
+    cout << gen.setAmount(9).writeValues<char>(' ', '~').readValues();
     try {
       // cout << "🚧 Attempting To Delete " << gen.getFile() << endl; 
       gen.deleteFile();

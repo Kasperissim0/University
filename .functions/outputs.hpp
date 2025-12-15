@@ -57,7 +57,7 @@ std::ostream& operator<<(std::ostream& o, const std::vector<std::any>& v) {
     }
     else if (item.type() == typeid(float))                   {
       std::stringstream ss; ss << std::any_cast<float>(item);
-      o << ss.str() << "f";
+      o << ss.str(); // << "f";
     }
     else if (item.type() == typeid(double))                  {
       std::stringstream ss; ss << std::any_cast<double>(item);
@@ -65,7 +65,7 @@ std::ostream& operator<<(std::ostream& o, const std::vector<std::any>& v) {
     }
     else if (item.type() == typeid(long double))             {
       std::stringstream ss; ss << std::any_cast<long double>(item);
-      o << ss.str() << "L";
+      o << ss.str(); // << "L";
     }
     else throw std::runtime_error("Unknown Type Encountered - " + std::string(item.type().name()));
 
@@ -74,9 +74,12 @@ std::ostream& operator<<(std::ostream& o, const std::vector<std::any>& v) {
   return o;
 }
 template<typename T> std::ostream& operator<<(std::ostream& o, const std::vector<T> v) {
+  bool isAChar = false;
+  if (std::is_same_v<T, char> || std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char>) isAChar = true;
   for (size_t i = 0; i < v.size(); ++i)
     o << Color::FG::Bright::GREEN << "# " << Color::FG::Bright::RED 
-      << (i + 1) << r << ": " << Color::FG::Bright::BLUE << v.at(i) << r << ((i == v.size() - 1) ? "" : "\n");
+      << (i + 1) << r << ": " << Color::FG::Bright::BLUE << (isAChar ? "'" : "") << v.at(i)<< (isAChar ? "'" : "")
+      << r << ((i == v.size() - 1) ? "" : "\n");
   return o;
 }
 

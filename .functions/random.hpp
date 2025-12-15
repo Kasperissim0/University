@@ -14,7 +14,7 @@
 #include <any>
 #include <iomanip>
 
-namespace fs = std::__fs::filesystem;
+namespace fs = std::filesystem;
 
 class Generator {
   private:
@@ -73,7 +73,7 @@ class Generator {
     fs::path getFile() const {
       return FILE;
     }
-    // Set Variables
+    // Edit Configuration(s)
     Generator& setAmount(const size_t& newValue) {
       if (newValue == 0) std::cerr << "❌ Cannot Set Amount Of Generated Numbers To 0, Old Value " 
                                    << AMOUNT << " Retained" << std::endl;
@@ -88,14 +88,33 @@ class Generator {
       else FILE = fileTitle + ".txt";
       return *this;
     }
-    // Generate/Delete Value(s)
+    Generator& deleteFile() {
+      // if (!fs::exists(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
+      // else {
+        try {
+          // if (!fs::remove(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
+          fs::remove(FILE);
+        }
+        catch (const std::bad_alloc& e)       { throw std::runtime_error(e.what()); }
+        catch (const fs::filesystem_error& e) { throw std::runtime_error(e.what()); }
+        catch (const std::error_code& e)      { throw std::runtime_error(e.message()); }
+      // }
+      return *this;
+    }
+    // Generate Value(s)
+    template<typename T>
+    T generate(size_t minValue, std::optional<const char> startingValue = std::nullopt,
+                                std::optional<const char> endingValue = std::nullopt)  {
+     static_assert(std::is_same_v<T, std::string>, "❌ ERROR: This Overload Is For Strings (std::string) Only");
+     return generate<T, size_t>(minValue, minValue, startingValue, endingValue);
+    }
     template<typename T, typename ARG = T>
     T generate(ARG minValue = std::numeric_limits<ARG>::min(), 
                ARG maxValue = std::numeric_limits<ARG>::max(),
                std::optional<const char> startingValue = std::nullopt,
-               std::optional<const char> endingValue = std::nullopt)    {
-      if (minValue > maxValue)          std::swap(minValue, maxValue);
-      if constexpr (std::is_arithmetic_v<T>)      return generateNumericType<T>(minValue, maxValue);
+               std::optional<const char> endingValue = std::nullopt)  {
+      if (minValue > maxValue) std::swap(minValue, maxValue);
+      if      constexpr (std::is_arithmetic_v<T>) return generateNumericType<T>(minValue, maxValue);
       else if constexpr (std::is_same_v<T, std::string>) {
         if (minValue < 0 || maxValue < 0)    throw std::runtime_error("String Length Cannot Be Negative Or 0");
         if (maxValue == std::numeric_limits<ARG>::max()) maxValue = minValue;
@@ -109,29 +128,29 @@ class Generator {
       }
       else throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
     }
-    Generator& deleteFile() {
-      if (!fs::exists(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
-      else {
-        try {
-          if (!fs::remove(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
-        }
-        catch (const std::bad_alloc& e)       { throw std::runtime_error(e.what()); }
-        catch (const fs::filesystem_error& e) { throw std::runtime_error(e.what()); }
-        catch (const std::error_code& e)      { throw std::runtime_error(e.message()); }
-      }
-      return *this;
-    }
     // Input/Output
-    template<typename T, typename ARG = T> 
+    template<typename T>
+    Generator& writeValues(size_t minValue, std::optional<const char> startingValue = std::nullopt,
+                                            std::optional<const char> endingValue = std::nullopt)  {
+     static_assert(std::is_same_v<T, std::string>, "❌ ERROR: This Overload Is For Strings (std::string) Only");
+     return writeValues<T, size_t>(minValue, minValue, startingValue, endingValue);
+    }
+    template<typename T, typename ARG = T>
     Generator& writeValues(ARG minValue = std::numeric_limits<ARG>::min(), 
                            ARG maxValue = std::numeric_limits<ARG>::max(),
                            std::optional<const char> startingValue = std::nullopt,
-                           std::optional<const char> endingValue = std::nullopt)   {
-      std::ofstream fileContent(FILE); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Write To");
+                           std::optional<const char> endingValue = std::nullopt) {
+      std::ofstream fileContent(FILE); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Write In");
+      try {
+        for (size_t i = 0; i < AMOUNT; ++i)
+          fileContent << generate<T, ARG>(minValue, maxValue, startingValue, endingValue) 
+                      << ((i == AMOUNT - 1) ? "" : "\n");
+      } catch (const std::runtime_error& e) { fileContent.close(); throw e; }
+      /*
       if (minValue > maxValue) std::swap(minValue, maxValue);
       if constexpr (std::is_arithmetic_v<T>) {
         for (size_t i = 0; i < AMOUNT; ++i) 
-          fileContent << +generateNumericType<T>(minValue, maxValue) << ((i == AMOUNT - 1) ? "" : "\n");
+          fileContent << generateNumericType<T>(minValue, maxValue) << ((i == AMOUNT - 1) ? "" : "\n");
       }
       else if constexpr (std::is_same_v<T, std::string>) {
         if (maxValue == std::numeric_limits<ARG>::max()) maxValue = minValue;
@@ -147,7 +166,7 @@ class Generator {
         fileContent.close(); 
         throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
       }
-
+      */
       fileContent.close();
       LAST_WRITTEN = typeid(T);
       return *this;
@@ -167,15 +186,18 @@ class Generator {
         while (fileContent >> temp) collected.push_back(temp);
       }
       else if (LAST_WRITTEN == typeid(char))                       {
-        int temp; 
+        // int temp;
+        char temp; 
         while (fileContent >> temp) collected.push_back(static_cast<char>(temp));
       }
       else if (LAST_WRITTEN == typeid(signed char))                {
-        int temp; 
+        // int temp;
+        signed char temp; 
         while (fileContent >> temp) collected.push_back(static_cast<signed char>(temp));
       }
       else if (LAST_WRITTEN == typeid(unsigned char))              {
-        int temp; 
+        // int temp;
+        unsigned char temp; 
         while (fileContent >> temp) collected.push_back(static_cast<unsigned char>(temp));
       }
       else if (LAST_WRITTEN == typeid(short))                      {
@@ -236,10 +258,7 @@ class Generator {
       std::vector<T> collected = {};
 
       if constexpr (std::is_same_v<T, char> || std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char>) {
-        int temp; 
-        while (fileContent >> temp) {
-          collected.push_back(static_cast<T>(temp));
-        }
+        int temp; while (fileContent >> temp) collected.push_back(static_cast<T>(temp));
       }
       else if constexpr (std::is_same_v<T, std::string>) {
         std::string temp; while (getline(fileContent, temp)) collected.push_back(temp);
