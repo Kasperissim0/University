@@ -22,7 +22,7 @@ class Generator {
     fs::path FILE = "input.txt";
     size_t AMOUNT = 50;
     std::mt19937 ENGINE;
-    std::type_index LAST_WRITTEN = typeid(nullptr_t);
+    std::type_index LAST_WRITTEN = typeid(std::nullptr_t);
 
     // Seed Engine In Constructor
     Generator() {
@@ -172,7 +172,7 @@ class Generator {
       return *this;
     }
     std::vector<std::any> readValues() {
-      if (LAST_WRITTEN == typeid(nullptr_t)) throw std::runtime_error("Unable To Infer Type");
+      if (LAST_WRITTEN == typeid(std::nullptr_t)) throw std::runtime_error("Unable To Infer Type");
       if (!fs::exists(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
       std::ifstream fileContent(FILE); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Read From");
       std::vector<std::any> collected = {};

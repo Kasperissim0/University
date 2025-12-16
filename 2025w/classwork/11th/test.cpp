@@ -10,8 +10,13 @@
 
 using namespace std;
 
-int main (int argc, char** args) { // if (argc != ) return 1;
-	char goAgain;
+int main (int argc, char** args) { if (argc > 2) return 1;
+	char goAgain; size_t genAmount = 9;
+	try {
+		genAmount = stoi(string(args[1]));
+	} catch (...) {
+		cerr << "❌ ERROR: Invalid Argument Passed, Using Default - " + to_string(genAmount);
+	 }
   
 	do { clearScreen();
   	try {
@@ -20,7 +25,7 @@ int main (int argc, char** args) { // if (argc != ) return 1;
       // cout << "✅ Succesfully Deleted " << gen.getFile() << endl;
     } catch (const runtime_error& e) { cerr << "❌ ERROR: " << e.what() << endl; }
 		cout << Color::FG::Bright::YELLOW << "List Of Random Chars: " << r << endl; wait(1);
-    cout << gen.setAmount(9).writeValues<char>(' ', '~').readValues();
+      cout << gen.setAmount(genAmount).writeValues<char>(' ', '~').readValues();
     try {
       // cout << "🚧 Attempting To Delete " << gen.getFile() << endl; 
       gen.deleteFile();
