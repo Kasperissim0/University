@@ -17,47 +17,47 @@
 namespace fs = std::filesystem;
 
 class Generator {
-  private:
-    // Variables
-    fs::path FILE = "input.txt";
-    size_t AMOUNT = 50;
-    std::mt19937 ENGINE;
-    std::type_index LAST_WRITTEN = typeid(std::nullptr_t);
+    //!  Variables
+    fs::path currentFile = "input.txt";
+    size_t generatedAmount = 50;
+    std::mt19937 generationEngine;
+    std::type_index lastTypeWritten = typeid(std::nullptr_t);
+    std::vector<fs::path> createdFiles = {};
 
-    // Seed Engine In Constructor
+    //!  Seed Engine In Constructor
     Generator() {
       std::random_device randomSeed;
-      ENGINE.seed(randomSeed());
+      generationEngine.seed(randomSeed());
     }
-    // Private Value Generators
+    //!  Private Value Generators
     template <typename T> T generateNumericType(const T& minValue, const T& maxValue) {
       if      constexpr (std::is_same_v<T, bool>) {
         std::uniform_int_distribution<short> distributionRange(0, 1);
-        return static_cast<T>(distributionRange(ENGINE));
+        return static_cast<T>(distributionRange(generationEngine));
       }
       else if constexpr (std::is_same<T, char>() || std::is_same<T, signed char>() || std::is_same<T, unsigned char>::value) {
         std::uniform_int_distribution<short> distributionRange(minValue, maxValue);
-        return static_cast<T>(distributionRange(ENGINE));
+        return static_cast<T>(distributionRange(generationEngine));
       }
       else if constexpr (std::is_integral<T>()) {
         std::uniform_int_distribution distributionRange(minValue, maxValue);
-        return distributionRange(ENGINE);
+        return distributionRange(generationEngine);
       }
       else if constexpr (std::is_floating_point<T>()) {
         std::uniform_real_distribution distributionRange(minValue, maxValue);
-        return distributionRange(ENGINE);
+        return distributionRange(generationEngine);
       }
       else throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
     }
-    std::string generateString(const size_t& lengthToGenerate, 
-                               const char& startingValue = ' ', const char& endingValue = '~') {
+    std::string generateString(const size_t& lengthToGenerate, const char& startingValue = ' ', 
+                                                               const char& endingValue = '~') {
       std::string construct(lengthToGenerate, '\0');
       for (size_t i = 0; i < lengthToGenerate; ++i)
         construct.at(i) = generateNumericType<char>(startingValue, endingValue); // All Values Except \special
       return construct;
     }
   public:
-    // Singleton Type Modifications
+    //!  Singleton Type Modifications
     Generator(const Generator&) = delete;
     Generator& operator=(const Generator&) = delete;
     Generator(Generator&&) = delete;
@@ -66,42 +66,47 @@ class Generator {
       static Generator instance;
       return instance;
     }
-    // Get Variables
+    //!  Get Variables
     size_t getAmount() const {
-      return AMOUNT;
+      return generatedAmount;
     }
     fs::path getFile() const {
-      return FILE;
+      return currentFile;
     }
-    // Edit Configuration(s)
+    //!  Edit Configuration(s)
     Generator& setAmount(const size_t& newValue) {
       if (newValue == 0) std::cerr << "❌ Cannot Set Amount Of Generated Numbers To 0, Old Value " 
-                                   << AMOUNT << " Retained" << std::endl;
-      else AMOUNT = newValue;
+                                   << generatedAmount << " Retained" << std::endl;
+      else generatedAmount = newValue;
       return *this;
     }
     Generator& setFile(const std::string& fileTitle) {
       if (fileTitle.empty()) std::cerr << "❌ Cannot Set File Title To Empty, Old Value " 
-                                       << FILE << " Retained" << std::endl;
+                                       << currentFile << " Retained" << std::endl;
       
-      else if (fileTitle.find(".txt") != std::string::npos) FILE = fileTitle;
-      else FILE = fileTitle + ".txt";
+      else if (fileTitle.find(".txt") != std::string::npos) currentFile = fileTitle;
+      else currentFile = fileTitle + ".txt";
       return *this;
     }
-    Generator& deleteFile() {
-      // if (!fs::exists(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
+    Generator& deleteFile(std::optional<fs::path> fileToDelete = std::nullopt) {
+      const auto& chosenFile = (fileToDelete ? *fileToDelete : currentFile);
+      // if (!fs::exists(chosenFile))                               throw std::runtime_error("File: " + chosenFile.string() + " Does Not Exist");
       // else {
         try {
-          // if (!fs::remove(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
-          fs::remove(FILE);
+          fs::remove(chosenFile); // if (!fs::remove(chosenFile))   throw std::runtime_error("File: " + chosenFile.string() + " Does Not Exist");
         }
-        catch (const std::bad_alloc& e)       { throw std::runtime_error(e.what()); }
-        catch (const fs::filesystem_error& e) { throw std::runtime_error(e.what()); }
-        catch (const std::error_code& e)      { throw std::runtime_error(e.message()); }
+        catch (const std::bad_alloc& e)       {                     throw std::runtime_error(e.what()); }
+        catch (const fs::filesystem_error& e) {                     throw std::runtime_error(e.what()); }
+        catch (const std::error_code& e)      {                     throw std::runtime_error(e.message()); }
       // }
       return *this;
     }
-    // Generate Value(s)
+    Generator& deleteFiles(std::optional<std::vector<fs::path>> filesToDelete = std::nullopt) {
+      const auto& chosenFiles = (filesToDelete ? *filesToDelete : createdFiles);
+      for (const auto& f : chosenFiles) deleteFile(f); // if (!fs::remove(f)) throw std::runtime_error("File: " + f.string() + " Does Not Exist");
+      return *this;
+    }
+    //!  Generate Value(s)
     template<typename T>
     T generate(size_t minValue, std::optional<const char> startingValue = std::nullopt,
                                 std::optional<const char> endingValue = std::nullopt)  {
@@ -128,136 +133,124 @@ class Generator {
       }
       else throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
     }
-    // Input/Output
+    //! Input/Output
     template<typename T>
     Generator& writeValues(size_t minValue, std::optional<const char> startingValue = std::nullopt,
-                                            std::optional<const char> endingValue = std::nullopt)  {
+                                            std::optional<const char> endingValue = std::nullopt,
+                                            std::optional<fs::path> fileToWriteTo = std::nullopt)  {
      static_assert(std::is_same_v<T, std::string>, "❌ ERROR: This Overload Is For Strings (std::string) Only");
-     return writeValues<T, size_t>(minValue, minValue, startingValue, endingValue);
+     return writeValues<T, size_t>(minValue, minValue, startingValue, endingValue, fileToWriteTo);
     }
     template<typename T, typename ARG = T>
     Generator& writeValues(ARG minValue = std::numeric_limits<ARG>::min(), 
                            ARG maxValue = std::numeric_limits<ARG>::max(),
                            std::optional<const char> startingValue = std::nullopt,
-                           std::optional<const char> endingValue = std::nullopt) {
-      std::ofstream fileContent(FILE); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Write In");
+                           std::optional<const char> endingValue = std::nullopt,
+                           std::optional<fs::path> fileToWriteTo = std::nullopt) {
+      const auto& chosenFile = (fileToWriteTo ? *fileToWriteTo : currentFile); 
+      std::ofstream fileContent(chosenFile); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Write In");
       try {
-        for (size_t i = 0; i < AMOUNT; ++i)
+        for (size_t i = 0; i < generatedAmount; ++i)
           fileContent << generate<T, ARG>(minValue, maxValue, startingValue, endingValue) 
-                      << ((i == AMOUNT - 1) ? "" : "\n");
+                      << ((i == generatedAmount - 1) ? "" : "\n");
       } catch (const std::runtime_error& e) { fileContent.close(); throw e; }
-      /*
-      if (minValue > maxValue) std::swap(minValue, maxValue);
-      if constexpr (std::is_arithmetic_v<T>) {
-        for (size_t i = 0; i < AMOUNT; ++i) 
-          fileContent << generateNumericType<T>(minValue, maxValue) << ((i == AMOUNT - 1) ? "" : "\n");
-      }
-      else if constexpr (std::is_same_v<T, std::string>) {
-        if (maxValue == std::numeric_limits<ARG>::max()) maxValue = minValue;
-        for (size_t i = 0; i < AMOUNT; ++i) {
-          const size_t length = generateNumericType<size_t>(minValue, maxValue);
-          if (startingValue && endingValue)       fileContent << generateString(length, *startingValue, *endingValue);
-          else if (startingValue && !endingValue) fileContent << generateString(length, *startingValue);
-          else                                    fileContent << generateString(length);
-                                                  fileContent << ((i == AMOUNT - 1) ? "" : "\n");
-        }
-      }
-      else { 
-        fileContent.close(); 
-        throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
-      }
-      */
-      fileContent.close();
-      LAST_WRITTEN = typeid(T);
+      fileContent.close(); lastTypeWritten = typeid(T);
+      if (!createdFiles.empty() && [&] {
+        for (const auto& f : createdFiles) if (f == chosenFile) return false;
+        return true;
+      }())  createdFiles.push_back(chosenFile);
+      else  createdFiles.push_back(chosenFile);
       return *this;
     }
-    std::vector<std::any> readValues() {
-      if (LAST_WRITTEN == typeid(std::nullptr_t)) throw std::runtime_error("Unable To Infer Type");
-      if (!fs::exists(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
-      std::ifstream fileContent(FILE); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Read From");
+    std::vector<std::any> readValues(std::optional<fs::path> fileToRead = std::nullopt) {
+      const auto& chosenFile = (fileToRead ? *fileToRead : currentFile);
+      if (lastTypeWritten == typeid(std::nullptr_t))                     throw std::runtime_error("Unable To Infer Type");
+      if (!fs::exists(chosenFile))                                       throw std::runtime_error("File: " + chosenFile.string() + " Does Not Exist");
+      std::ifstream fileContent(chosenFile); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Read From");
       std::vector<std::any> collected = {};
 
-      if (LAST_WRITTEN == typeid(std::string))                     {
+      if (lastTypeWritten == typeid(std::string))                     {
         std::string temp; 
         while (getline(fileContent, temp)) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(bool))                       {
+      else if (lastTypeWritten == typeid(bool))                       {
         bool temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(char))                       {
+      else if (lastTypeWritten == typeid(char))                       {
         // int temp;
         char temp; 
         while (fileContent >> temp) collected.push_back(static_cast<char>(temp));
       }
-      else if (LAST_WRITTEN == typeid(signed char))                {
+      else if (lastTypeWritten == typeid(signed char))                {
         // int temp;
         signed char temp; 
         while (fileContent >> temp) collected.push_back(static_cast<signed char>(temp));
       }
-      else if (LAST_WRITTEN == typeid(unsigned char))              {
+      else if (lastTypeWritten == typeid(unsigned char))              {
         // int temp;
         unsigned char temp; 
         while (fileContent >> temp) collected.push_back(static_cast<unsigned char>(temp));
       }
-      else if (LAST_WRITTEN == typeid(short))                      {
+      else if (lastTypeWritten == typeid(short))                      {
         short temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(unsigned short))             {
+      else if (lastTypeWritten == typeid(unsigned short))             {
         unsigned short temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(int))                        {
+      else if (lastTypeWritten == typeid(int))                        {
         int temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(unsigned))                   {
+      else if (lastTypeWritten == typeid(unsigned))                   {
         unsigned temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(long))                       {
+      else if (lastTypeWritten == typeid(long))                       {
         long temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(unsigned long))              {
+      else if (lastTypeWritten == typeid(unsigned long))              {
         unsigned long temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(long long))                  {
+      else if (lastTypeWritten == typeid(long long))                  {
         long long temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(unsigned long long))         {
+      else if (lastTypeWritten == typeid(unsigned long long))         {
         unsigned long long temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(float))                      {
+      else if (lastTypeWritten == typeid(float))                      {
         float temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(double))                     {
+      else if (lastTypeWritten == typeid(double))                     {
         double temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
-      else if (LAST_WRITTEN == typeid(long double))                {
+      else if (lastTypeWritten == typeid(long double))                {
         long double temp; 
         while (fileContent >> temp) collected.push_back(temp);
       }
       else                                                         {
         fileContent.close(); 
-        throw std::runtime_error("Implicit Reading For '" + std::string(LAST_WRITTEN.name()) + "' Is Not Currently Supported");
+        throw std::runtime_error("Implicit Reading For '" + std::string(lastTypeWritten.name()) + "' Is Not Currently Supported");
       }
 
       fileContent.close();
       return collected;
     }
-    template<typename T> std::vector<T> readValues() {
-      if (!fs::exists(FILE)) throw std::runtime_error("File: " + FILE.string() + " Does Not Exist");
-      std::ifstream fileContent(FILE); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Read From");
+    template<typename T> std::vector<T> readValues(std::optional<fs::path> fileToRead = std::nullopt) {
+      const auto& chosenFile = (fileToRead ? *fileToRead : currentFile);
+      if (!fs::exists(chosenFile))                                       throw std::runtime_error("File: " + chosenFile.string() + " Does Not Exist");
+      std::ifstream fileContent(chosenFile); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Read From");
       std::vector<T> collected = {};
 
-      if constexpr (std::is_same_v<T, char> || std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char>) {
+      if      constexpr (std::is_same_v<T, char> || std::is_same_v<T, signed char> || std::is_same_v<T, unsigned char>) {
         int temp; while (fileContent >> temp) collected.push_back(static_cast<T>(temp));
       }
       else if constexpr (std::is_same_v<T, std::string>) {
