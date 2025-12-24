@@ -13,6 +13,7 @@
 #include <string>
 #include <any>
 #include <iomanip>
+#include "outputs.hpp"
 
 namespace fs = std::filesystem;
 
@@ -30,7 +31,8 @@ class Generator {
       generationEngine.seed(randomSeed());
     }
     //!  Private Value Generators
-    template <typename T> T generateNumericType(const T& minValue, const T& maxValue) {
+    template <typename T> T generateNumericType(const T& minValue = std::numeric_limits<T>::min(),
+                                                const T& maxValue = std::numeric_limits<T>::max()) {
       if      constexpr (std::is_same_v<T, bool>) {
         std::uniform_int_distribution<short> distributionRange(0, 1);
         return static_cast<T>(distributionRange(generationEngine));
@@ -107,18 +109,44 @@ class Generator {
       return *this;
     }
     //!  Generate Value(s)
-    template<typename T>
-    T generate(size_t minValue, std::optional<const char> startingValue = std::nullopt,
-                                std::optional<const char> endingValue = std::nullopt)  {
-     static_assert(std::is_same_v<T, std::string>, "❌ ERROR: This Overload Is For Strings (std::string) Only");
-     return generate<T, size_t>(minValue, minValue, startingValue, endingValue);
+    std::any generate() {
+      enum class TYPE { NATURAL, INTEGER, REAL, CHARACTER, STRING, THE_END }; std::any construct; 
+      TYPE chosen = static_cast<TYPE>(generateNumericType<size_t>(0, (static_cast<size_t>(TYPE::THE_END) - 1)));
+      switch (chosen) {
+        case TYPE::NATURAL: {
+          construct = generateNumericType<size_t>();
+          break;
+        }
+        case TYPE::INTEGER: {
+          construct = generateNumericType<ssize_t>();
+          break;
+        }
+        case TYPE::REAL: {
+          construct = generateNumericType<long double>();
+          break;
+        }
+        case TYPE::CHARACTER: {
+          construct = generateNumericType<char>(' ', '~');
+          break;
+        }
+        case TYPE::STRING: {
+          size_t length = generateNumericType<size_t>(1, 100); // Current Upper Bound Is Arbitrary
+          construct = generateString(length);
+          break;
+        }
+        default:
+          throw std::runtime_error("Invalid Number Generated - " + std::to_string(static_cast<size_t>(chosen)));
+      }
+      return construct;
     }
     template<typename T, typename ARG = T>
     T generate(ARG minValue = std::numeric_limits<ARG>::min(), 
                ARG maxValue = std::numeric_limits<ARG>::max(),
                std::optional<const char> startingValue = std::nullopt,
                std::optional<const char> endingValue = std::nullopt)  {
-      if (minValue > maxValue) std::swap(minValue, maxValue);
+      if (minValue > maxValue)                                                      std::swap(minValue, maxValue);
+      if (std::is_same_v<T, char> && minValue == std::numeric_limits<ARG>::min())   minValue = ' '; // Might Want To Change This
+
       if      constexpr (std::is_arithmetic_v<T>) return generateNumericType<T>(minValue, maxValue);
       else if constexpr (std::is_same_v<T, std::string>) {
         if (minValue < 0 || maxValue < 0)    throw std::runtime_error("String Length Cannot Be Negative Or 0");
@@ -129,18 +157,17 @@ class Generator {
         else                                     construct = generateString(length);
 
         if (!construct.empty()) return construct;
-        else throw std::runtime_error("String Somehow Empty After Generation");
+        else return generate<T, size_t>(minValue, maxValue, startingValue, endingValue); // throw std::runtime_error("String Somehow Empty After Generation");
       }
       else throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
     }
-    //! Input/Output
     template<typename T>
-    Generator& writeValues(size_t minValue, std::optional<const char> startingValue = std::nullopt,
-                                            std::optional<const char> endingValue = std::nullopt,
-                                            std::optional<fs::path> fileToWriteTo = std::nullopt)  {
+    T generate(size_t minValue, std::optional<const char> startingValue = std::nullopt,
+                                std::optional<const char> endingValue = std::nullopt)  {
      static_assert(std::is_same_v<T, std::string>, "❌ ERROR: This Overload Is For Strings (std::string) Only");
-     return writeValues<T, size_t>(minValue, minValue, startingValue, endingValue, fileToWriteTo);
+     return generate<T, size_t>(minValue, minValue, startingValue, endingValue);
     }
+    //! Input/Output
     template<typename T, typename ARG = T>
     Generator& writeValues(ARG minValue = std::numeric_limits<ARG>::min(), 
                            ARG maxValue = std::numeric_limits<ARG>::max(),
@@ -162,87 +189,26 @@ class Generator {
       else  createdFiles.push_back(chosenFile);
       return *this;
     }
-    std::vector<std::any> readValues(std::optional<fs::path> fileToRead = std::nullopt) {
-      const auto& chosenFile = (fileToRead ? *fileToRead : currentFile);
-      if (lastTypeWritten == typeid(std::nullptr_t))                     throw std::runtime_error("Unable To Infer Type");
-      if (!fs::exists(chosenFile))                                       throw std::runtime_error("File: " + chosenFile.string() + " Does Not Exist");
-      std::ifstream fileContent(chosenFile); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Read From");
-      std::vector<std::any> collected = {};
-
-      if (lastTypeWritten == typeid(std::string))                     {
-        std::string temp; 
-        while (getline(fileContent, temp)) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(bool))                       {
-        bool temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(char))                       {
-        // int temp;
-        char temp; 
-        while (fileContent >> temp) collected.push_back(static_cast<char>(temp));
-      }
-      else if (lastTypeWritten == typeid(signed char))                {
-        // int temp;
-        signed char temp; 
-        while (fileContent >> temp) collected.push_back(static_cast<signed char>(temp));
-      }
-      else if (lastTypeWritten == typeid(unsigned char))              {
-        // int temp;
-        unsigned char temp; 
-        while (fileContent >> temp) collected.push_back(static_cast<unsigned char>(temp));
-      }
-      else if (lastTypeWritten == typeid(short))                      {
-        short temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(unsigned short))             {
-        unsigned short temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(int))                        {
-        int temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(unsigned))                   {
-        unsigned temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(long))                       {
-        long temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(unsigned long))              {
-        unsigned long temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(long long))                  {
-        long long temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(unsigned long long))         {
-        unsigned long long temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(float))                      {
-        float temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(double))                     {
-        double temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else if (lastTypeWritten == typeid(long double))                {
-        long double temp; 
-        while (fileContent >> temp) collected.push_back(temp);
-      }
-      else                                                         {
-        fileContent.close(); 
-        throw std::runtime_error("Implicit Reading For '" + std::string(lastTypeWritten.name()) + "' Is Not Currently Supported");
-      }
-
+    template<typename T>
+    Generator& writeValues(size_t minValue, std::optional<const char> startingValue = std::nullopt,
+                                            std::optional<const char> endingValue = std::nullopt,
+                                            std::optional<fs::path> fileToWriteTo = std::nullopt)  {
+     static_assert(std::is_same_v<T, std::string>, "❌ ERROR: This Overload Is For Strings (std::string) Only");
+     return writeValues<T, size_t>(minValue, minValue, startingValue, endingValue, fileToWriteTo);
+    }
+    Generator& writeValues(std::optional<fs::path> fileToWriteTo = std::nullopt){
+      const auto& chosenFile = (fileToWriteTo ? *fileToWriteTo : currentFile); 
+      std::ofstream fileContent(chosenFile); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Write In");
+      try {
+        for (size_t i = 0; i < generatedAmount; ++i) fileContent << generate() << ((i == generatedAmount - 1) ? "" : "\n");
+      } catch (const std::runtime_error& e) { fileContent.close(); throw e; }
       fileContent.close();
-      return collected;
+      if (!createdFiles.empty() && [&] {
+        for (const auto& f : createdFiles) if (f == chosenFile) return false;
+        return true;
+      }())  createdFiles.push_back(chosenFile);
+      else  createdFiles.push_back(chosenFile);
+      return *this;
     }
     template<typename T> std::vector<T> readValues(std::optional<fs::path> fileToRead = std::nullopt) {
       const auto& chosenFile = (fileToRead ? *fileToRead : currentFile);
@@ -264,6 +230,89 @@ class Generator {
         throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
       }
       
+      fileContent.close();
+      return collected;
+    }
+    std::vector<std::any> readValues(std::optional<fs::path> fileToRead = std::nullopt, const bool returnStrings = false) {
+      const auto& chosenFile = (fileToRead ? *fileToRead : currentFile);
+      if (lastTypeWritten == typeid(std::nullptr_t) && !returnStrings)   throw std::runtime_error("Unable To Infer Type");
+      if (!fs::exists(chosenFile))                                       throw std::runtime_error("File: " + chosenFile.string() + " Does Not Exist");
+      std::ifstream fileContent(chosenFile); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Read From");
+      std::vector<std::any> collected = {}; collected.reserve(this->getAmount());
+      if (returnStrings) { std::string temp = ""; while (getline(fileContent, temp)) collected.push_back(temp); }
+      else {
+          if (lastTypeWritten == typeid(std::string))                     {
+            std::string temp; 
+            while (getline(fileContent, temp)) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(bool))                       {
+            bool temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(char))                       {
+            // int temp;
+            char temp; 
+            while (fileContent >> temp) collected.push_back(static_cast<char>(temp));
+          }
+          else if (lastTypeWritten == typeid(signed char))                {
+            // int temp;
+            signed char temp; 
+            while (fileContent >> temp) collected.push_back(static_cast<signed char>(temp));
+          }
+          else if (lastTypeWritten == typeid(unsigned char))              {
+            // int temp;
+            unsigned char temp; 
+            while (fileContent >> temp) collected.push_back(static_cast<unsigned char>(temp));
+          }
+          else if (lastTypeWritten == typeid(short))                      {
+            short temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(unsigned short))             {
+            unsigned short temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(int))                        {
+            int temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(unsigned))                   {
+            unsigned temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(long))                       {
+            long temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(unsigned long))              {
+            unsigned long temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(long long))                  {
+            long long temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(unsigned long long))         {
+            unsigned long long temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(float))                      {
+            float temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(double))                     {
+            double temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else if (lastTypeWritten == typeid(long double))                {
+            long double temp; 
+            while (fileContent >> temp) collected.push_back(temp);
+          }
+          else                                                            {
+        fileContent.close(); 
+        throw std::runtime_error("Implicit Reading For '" + std::string(lastTypeWritten.name()) + "' Is Not Currently Supported");
+      }
+      }
       fileContent.close();
       return collected;
     }

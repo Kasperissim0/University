@@ -10,66 +10,68 @@
 #include <map>
 #include <any>
 
+std::ostream& operator<<(std::ostream& o, const std::any a) {
+    if      (a.type() == typeid(std::string))             {
+      o << std::any_cast<const std::string&>(a);
+    }
+    else if (a.type() == typeid(bool))                    {
+      o << (std::any_cast<bool>(a) ? "true" : "false");
+    }
+    else if (a.type() == typeid(char))                    {
+      o << "'" << std::any_cast<char>(a) << "'";
+    }
+    else if (a.type() == typeid(signed char))             {
+      o << "'" << std::any_cast<signed char>(a) << "'";
+    }
+    else if (a.type() == typeid(unsigned char))           {
+      o << "'" << std::any_cast<unsigned char>(a) << "'";
+    }
+    else if (a.type() == typeid(short))                   {
+      o << std::any_cast<short>(a);
+    }
+    else if (a.type() == typeid(unsigned short))          {
+      o << std::any_cast<unsigned short>(a);
+    }
+    else if (a.type() == typeid(int))                     {
+      o << std::any_cast<int>(a);
+    }
+    else if (a.type() == typeid(unsigned))                {
+      o << std::any_cast<unsigned>(a);
+    }
+    else if (a.type() == typeid(long))                    {
+      o << std::any_cast<long>(a);
+    }
+    else if (a.type() == typeid(unsigned long))           {
+      o << std::any_cast<unsigned long>(a);
+      }
+    else if (a.type() == typeid(long long))               {
+      o << std::any_cast<long long>(a);
+    }
+    else if (a.type() == typeid(unsigned long long))      {
+      o << std::any_cast<unsigned long long>(a);
+    }
+    else if (a.type() == typeid(float))                   {
+      std::stringstream ss; ss << std::any_cast<float>(a);
+      o << ss.str(); // << "f";
+    }
+    else if (a.type() == typeid(double))                  {
+      std::stringstream ss; ss << std::any_cast<double>(a);
+      o << ss.str();
+    }
+    else if (a.type() == typeid(long double))             {
+      std::stringstream ss; ss << std::any_cast<long double>(a);
+      o << ss.str(); // << "L";
+    }
+    else throw std::runtime_error("Unknown Type Encountered - " + std::string(a.type().name()));
+  return o;
+}
 std::ostream& operator<<(std::ostream& o, const std::vector<std::any>& v) {
   for (size_t i = 0; i < v.size(); ++i) {
     const auto& item = v.at(i);
-    o << Color::FG::Bright::GREEN << "# " << Color::FG::Bright::RED 
-      << (i + 1) << r << ": " << Color::FG::Bright::BLUE;
-    
-    if      (item.type() == typeid(std::string))             {
-      o << std::any_cast<const std::string&>(item);
-    }
-    else if (item.type() == typeid(bool))                    {
-      o << (std::any_cast<bool>(item) ? "true" : "false");
-    }
-    else if (item.type() == typeid(char))                    {
-      o << "'" << std::any_cast<char>(item) << "'";
-    }
-    else if (item.type() == typeid(signed char))             {
-      o << "'" << std::any_cast<signed char>(item) << "'";
-    }
-    else if (item.type() == typeid(unsigned char))           {
-      o << "'" << std::any_cast<unsigned char>(item) << "'";
-    }
-    else if (item.type() == typeid(short))                   {
-      o << std::any_cast<short>(item);
-    }
-    else if (item.type() == typeid(unsigned short))          {
-      o << std::any_cast<unsigned short>(item);
-    }
-    else if (item.type() == typeid(int))                     {
-      o << std::any_cast<int>(item);
-    }
-    else if (item.type() == typeid(unsigned))                {
-      o << std::any_cast<unsigned>(item);
-    }
-    else if (item.type() == typeid(long))                    {
-      o << std::any_cast<long>(item);
-    }
-    else if (item.type() == typeid(unsigned long))           {
-      o << std::any_cast<unsigned long>(item);
-      }
-    else if (item.type() == typeid(long long))               {
-      o << std::any_cast<long long>(item);
-    }
-    else if (item.type() == typeid(unsigned long long))      {
-      o << std::any_cast<unsigned long long>(item);
-    }
-    else if (item.type() == typeid(float))                   {
-      std::stringstream ss; ss << std::any_cast<float>(item);
-      o << ss.str(); // << "f";
-    }
-    else if (item.type() == typeid(double))                  {
-      std::stringstream ss; ss << std::any_cast<double>(item);
-      o << ss.str();
-    }
-    else if (item.type() == typeid(long double))             {
-      std::stringstream ss; ss << std::any_cast<long double>(item);
-      o << ss.str(); // << "L";
-    }
-    else throw std::runtime_error("Unknown Type Encountered - " + std::string(item.type().name()));
-
-    o << r << ((i == v.size() - 1) ? "" : "\n");
+    o << Color::FG::Bright::GREEN << "# " 
+      << Color::FG::Bright::RED << (i + 1) << r << ": " 
+      << Color::FG::Bright::BLUE << item 
+      << r << ((i == v.size() - 1) ? "" : "\n");
   }
   return o;
 }
