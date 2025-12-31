@@ -1,4 +1,4 @@
-// 4_Archive/University/2025w/.homework/8/task3/get-data.cpp
+// Archive/University/2025w/.homework/8/task3/get-data.cpp
 //
 // This program fetches album data from a public API, parses the JSON response,
 // and formats it into the 'collection.txt' file.
@@ -121,16 +121,16 @@ int main(int argc, char** argv) {
  * 2. GET NLOhmann/JSON:
  *    - Download the 'json.hpp' file from https://github.com/nlohmann/json/releases
  *    - Place it in your project's include directory. For this project, you can create
- *      a 'nlohmann' folder inside '3_Includes' and place 'json.hpp' there.
- *      Path: 3_Includes/nlohmann/json.hpp
+ *      a 'nlohmann' folder inside 'Includes' and place 'json.hpp' there.
+ *      Path: Includes/nlohmann/json.hpp
  *
  * 3. COMPILE:
  *    Use the following command, adjusting paths if necessary. It includes the
- *    '3_Includes' directory for nlohmann/json and links against libcurl.
+ *    'Includes' directory for nlohmann/json and links against libcurl.
  *
- *    clang++ -std=c++20 -g 4_Archive/University/2025w/.homework/8/task3/get-data.cpp -o 2_Build/get-data -I3_Includes -lcurl
+ *    clang++ -std=c++20 -g Archive/University/2025w/.homework/8/task3/get-data.cpp -o Build/get-data -IIncludes -lcurl
  *
  * 4. RUN:
- *    ./2_Build/get-data
+ *    ./Build/get-data
  *
  */
