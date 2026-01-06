@@ -12,7 +12,6 @@
 #include <vector>
 #include <string>
 #include <any>
-#include <iomanip>
 #include "outputs.hpp"
 
 namespace fs = std::filesystem;
@@ -140,8 +139,8 @@ class Generator {
       return construct;
     }
     template<typename T, typename ARG = T>
-    T generate(ARG minValue = std::numeric_limits<ARG>::min(), 
-               ARG maxValue = std::numeric_limits<ARG>::max(),
+    T generate(typename std::type_identity<ARG>::type minValue = std::numeric_limits<ARG>::min(), 
+               typename std::type_identity<ARG>::type maxValue = std::numeric_limits<ARG>::max(),
                std::optional<const char> startingValue = std::nullopt,
                std::optional<const char> endingValue = std::nullopt)  {
       if (minValue > maxValue)                                                      std::swap(minValue, maxValue);
@@ -156,15 +155,16 @@ class Generator {
         else if (startingValue && !endingValue)  construct = generateString(length, *startingValue);
         else                                     construct = generateString(length);
 
-        if (!construct.empty()) return construct;
-        else return generate<T, size_t>(minValue, maxValue, startingValue, endingValue); // throw std::runtime_error("String Somehow Empty After Generation");
+        return construct;
+        // if (!construct.empty()) return construct;
+        // else return generate<T, size_t>(minValue, maxValue, startingValue, endingValue); // throw std::runtime_error("String Somehow Empty After Generation");
       }
       else throw std::runtime_error("Passed Type '" + std::string(typeid(T).name()) + "' Is Not Currently Supported");
     }
     template<typename T>
     T generate(size_t minValue, std::optional<const char> startingValue = std::nullopt,
-                                std::optional<const char> endingValue = std::nullopt)  {
-     static_assert(std::is_same_v<T, std::string>, "❌ ERROR: This Overload Is For Strings (std::string) Only");
+                                std::optional<const char> endingValue = std::nullopt) 
+                                requires(std::is_same_v<T, std::string>) {
      return generate<T, size_t>(minValue, minValue, startingValue, endingValue);
     }
     //! Input/Output
