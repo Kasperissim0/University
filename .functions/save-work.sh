@@ -148,6 +148,75 @@ commit_main_repo() {
     fi
 }
 
+# Helper function to print a line with the right border aligned
+print_row() {
+    local content="$1"
+    local border_color="$2"
+    # Strip ANSI color codes to calculate visible length for alignment
+    local clean_content=$(echo -e "$content" | sed 's/\x1b\[[0-9;]*m//g')
+    local len=${#clean_content}
+    local width=78  # Total inner width
+    local pad=$((width - len))
+
+    if [ $pad -lt 0 ]; then pad=0; fi
+    local spaces=$(printf "%${pad}s")
+    
+    echo -e "${border_color}║${NC}${content}${spaces}${border_color}║${NC}"
+}
+
+# --- Function to print repository summary ---
+print_repo_summary() {
+    local repo_name="$1"
+    local repo_path="$2"
+    local is_main="$3"
+    
+    # Choose border color based on repo type
+    local border_color="${BLUE}"
+    if [ "$is_main" = "true" ]; then
+        border_color="${RED}"
+    fi
+    
+    pushd "$repo_path" >/dev/null || return
+
+    # --- Header ---
+    echo -e "${border_color}╔══════════════════════════════════════════════════════════════════════════════╗${NC}"
+    
+    # Center the title
+    clean_title=" $repo_name "
+    left_pad=$(( (78 - ${#clean_title}) / 2 ))
+    title_spaces=$(printf "%${left_pad}s")
+    print_row "${YELLOW}${title_spaces}${repo_name}${NC}" "$border_color"
+    
+    echo -e "${border_color}╟──────────────────────────────────────────────────────────────────────────────╢${NC}"
+
+    # --- Status Line ---
+    if [ -z "$(git status --porcelain)" ]; then
+        print_row " ${CYAN}Status:${NC}      ${GREEN}Clean${NC}" "$border_color"
+    else
+        print_row " ${CYAN}Status:${NC}      ${RED}Modified${NC}" "$border_color"
+    fi
+
+    # --- Recent Commits & Changes ---
+    print_row " ${CYAN}Recent Commits:${NC}" "$border_color"
+
+    git log -n 5 --format="%h %s" | while read -r hash msg; do
+        # 1. Print Commit Hash and Message
+        print_row "               ${YELLOW}${hash}${NC} | ${RED} ${msg}" "$border_color"
+
+        # 2. Print File Stats
+        git show --format="" --stat=55 "$hash" | head -n 5 | while IFS= read -r stat_line; do
+            if [ -n "$stat_line" ]; then
+                 print_row "                  ${stat_line}" "$border_color"
+            fi
+        done
+    done
+
+    echo -e "${border_color}╚══════════════════════════════════════════════════════════════════════════════╝${NC}"
+    echo
+
+    popd >/dev/null
+}
+
 # --- Step 1: Process submodules FIRST (if any) ---
 if [ -f ".gitmodules" ]; then
     echo "Processing submodules..."
@@ -173,67 +242,19 @@ echo ""
 echo "--- Main Repository Status ---"
 git status
 echo
-echo "--- Submodule Summary ---"
 
-# Helper function to print a line with the right border aligned
-print_row() {
-    local content="$1"
-    # Strip ANSI color codes to calculate visible length for alignment
-    local clean_content=$(echo -e "$content" | sed 's/\x1b\[[0-9;]*m//g')
-    local len=${#clean_content}
-    local width=78  # Total inner width
-    local pad=$((width - len))
+# --- Step 4: Print summaries ---
+echo "--- Repository Summaries ---"
+echo
 
-    if [ $pad -lt 0 ]; then pad=0; fi
-    local spaces=$(printf "%${pad}s")
-    
-    echo -e "${BLUE}║${NC}${content}${spaces}${BLUE}║${NC}"
-}
+# Main repository summary
+print_repo_summary "Main Repository" "." "true"
 
+# Submodule summaries
 if [ -f ".gitmodules" ]; then
     for path in "${submodule_paths[@]}"; do
         [ -d "$path" ] || continue
-        pushd "$path" >/dev/null || continue
-
-        # --- Header ---
-        echo -e "${BLUE}╔══════════════════════════════════════════════════════════════════════════════╗${NC}"
-        
-        # Center the title
-        clean_title=" Submodule: $(basename "$path") "
-        left_pad=$(( (78 - ${#clean_title}) / 2 ))
-        title_spaces=$(printf "%${left_pad}s")
-        print_row "${YELLOW}${title_spaces}Submodule: $(basename "$path")${NC}"
-        
-        echo -e "${BLUE}╟──────────────────────────────────────────────────────────────────────────────╢${NC}"
-
-        # --- Status Line ---
-        if [ -z "$(git status --porcelain)" ]; then
-            print_row " ${CYAN}Status:${NC}      ${GREEN}Clean${NC}"
-        else
-            print_row " ${CYAN}Status:${NC}      ${RED}Modified${NC}"
-        fi
-
-        # --- Recent Commits & Changes ---
-        print_row " ${CYAN}Recent Commits:${NC}"
-
-        git log -n 5 --format="%h %s" | while read -r hash msg; do
-            # 1. Print Commit Hash and Message
-            print_row "               ${YELLOW}${hash}${NC} | ${RED} ${msg}"
-
-            # 2. Print File Stats
-            # --stat=55 ensures the text fits inside the box width without breaking alignment
-            git show --format="" --stat=55 "$hash" | head -n 5 | while IFS= read -r stat_line; do
-                if [ -n "$stat_line" ]; then
-                     # Removed ${MAGENTA} here. Now it prints normally.
-                     print_row "                  ${stat_line}"
-                fi
-            done
-        done
-
-        echo -e "${BLUE}╚══════════════════════════════════════════════════════════════════════════════╝${NC}"
-        echo
-
-        popd >/dev/null
+        print_repo_summary "Submodule: $(basename "$path")" "$path" "false"
     done
 fi
 
