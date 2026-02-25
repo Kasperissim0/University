@@ -16,7 +16,7 @@ NC='\033[0m'
 # --- Get commit message (optional argument or prompt) ---
 if [ "$#" -eq 0 ]; then
     echo -e "${CYAN}No commit message provided.${NC}"
-    read -p "Enter commit message: " msg
+    read -p "Enter default commit message: " msg
     [ -z "$msg" ] && { echo "Error: Commit message cannot be empty." >&2; exit 1; }
 elif [ "$#" -eq 1 ]; then
     msg="$1"

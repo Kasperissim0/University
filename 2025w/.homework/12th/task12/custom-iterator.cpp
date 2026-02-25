@@ -6,6 +6,8 @@
   using namespace std;
 //.
 
+//? Source(s):  https://moodle.univie.ac.at/mod/extserver/view.php?id=19368923
+
 namespace Data {
   template <typename T>
   class Data {
