@@ -89,6 +89,10 @@ class Generator {
       else currentFile = fileTitle + ".txt";
       return *this;
     }
+    Generator& changeSeed(const unsigned& newSeed) { // requires (std::is_integral<newSeed>) {
+      this->generationEngine.seed(newSeed);
+      return *this;
+    }
     Generator& deleteFile(std::optional<fs::path> fileToDelete = std::nullopt) {
       const auto& chosenFile = (fileToDelete ? *fileToDelete : currentFile);
       // if (!fs::exists(chosenFile))                               throw std::runtime_error("File: " + chosenFile.string() + " Does Not Exist");
@@ -108,7 +112,7 @@ class Generator {
       return *this;
     }
     //!  Generate Value(s)
-    std::any generate() {
+    std::any generateRandomType() {
       enum class TYPE { NATURAL, INTEGER, REAL, CHARACTER, STRING, THE_END }; std::any construct; 
       TYPE chosen = static_cast<TYPE>(generateNumericType<size_t>(0, (static_cast<size_t>(TYPE::THE_END) - 1)));
       switch (chosen) {
@@ -200,7 +204,7 @@ class Generator {
       const auto& chosenFile = (fileToWriteTo ? *fileToWriteTo : currentFile); 
       std::ofstream fileContent(chosenFile); if (!fileContent.is_open()) throw std::runtime_error("Could Not Open File To Write In");
       try {
-        for (size_t i = 0; i < generatedAmount; ++i) fileContent << generate() << ((i == generatedAmount - 1) ? "" : "\n");
+        for (size_t i = 0; i < generatedAmount; ++i) fileContent << generateRandomType() << ((i == generatedAmount - 1) ? "" : "\n");
       } catch (const std::runtime_error& e) { fileContent.close(); throw e; }
       fileContent.close();
       if (!createdFiles.empty() && [&] {
