@@ -16,7 +16,7 @@ template <typename T>
 class Vector {
   //§ Private Variables
     size_t savedElements { 0 }, 
-          currentCapacity { 0 };
+           currentCapacity { 0 };
     T *data { nullptr };
   //.
   //§ Helper Function(s)
@@ -54,10 +54,10 @@ class Vector {
     //.
     //§ Iterators
       class iterator {
-        
+
       };
       class const_iterator {
-        
+
       };
     //.
     //§ Methods

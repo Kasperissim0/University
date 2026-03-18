@@ -13,6 +13,9 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
+# --- Variables ---
+exit_early=false
+
 # --- Get commit message (optional argument or prompt) ---
 if [ "$#" -eq 0 ]; then
     echo -e "${CYAN}No commit message provided.${NC}"
@@ -46,7 +49,7 @@ confirm_force_push() {
 # --- Function to process a single submodule ---
 process_submodule() {
     local path="$1"
-    [ -d "$path" ] || { echo "Skipped submodule '$path' (directory not found)"; return; }
+    [ -d "$path" ] || { echo "Skipped submodule '$path' (directory not found)"; return 0; }
     pushd "$path" >/dev/null || { echo "Failed to cd into '$path'"; return 1; }
 
     local name="Submodule: $(basename "$path")"
@@ -64,8 +67,23 @@ process_submodule() {
         echo "  -> Nothing to commit."
     else
         echo -e "  Default message: ${GREEN}\"$msg\"${NC}"
-        read -p "  Press ENTER for default, or enter new message: " submodule_msg
-        [ -z "$submodule_msg" ] && submodule_msg="$msg"
+        read -p "  [ENTER] default, [s]kip, [q]uit, or enter message: " submodule_msg
+        
+        case "$submodule_msg" in
+            s|skip)
+                echo -e "  -> ${YELLOW}Skipped submodule commit.${NC}"
+                popd >/dev/null
+                return 0
+                ;;
+            q|quit)
+                echo -e "  -> ${RED}Quitting submodule processing...${NC}"
+                popd >/dev/null
+                return 2 # Special code for early exit
+                ;;
+            "")
+                submodule_msg="$msg"
+                ;;
+        esac
 
         if git commit -m "$submodule_msg"; then
             echo "  -> Committed: \"$submodule_msg\""
@@ -93,6 +111,7 @@ process_submodule() {
     fi
 
     popd >/dev/null
+    return 0
 }
 
 # --- Function to commit & push main repo ---
@@ -230,12 +249,22 @@ if [ -f ".gitmodules" ]; then
     
     # Process each submodule
     for path in "${submodule_paths[@]}"; do
-        process_submodule "$path"
+        process_submodule "$path" || {
+            ret=$?
+            if [ $ret -eq 2 ]; then
+                exit_early=true
+                break
+            fi
+        }
     done
 fi
 
 # --- Step 2: Commit & push main repo LAST ---
-commit_main_repo
+if [ "$exit_early" = "false" ]; then
+    commit_main_repo
+else
+    echo -e "\n${YELLOW}Exited early. Skipping main repository commit.${NC}"
+fi
 
 # --- Step 3: Print final summary ---
 echo ""
