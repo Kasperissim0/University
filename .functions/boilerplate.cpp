@@ -3,7 +3,7 @@
 #include "colors.hpp"  // adds color modifiers Color::FG/BG/ATTR::(Bright::)Modify
 #include "random.hpp"  // adds "gen" variable with type generation methods
 #include "outputs.hpp" // adds << overloads for common classes (vectors, maps, ...)
-//* use "clang++ -std=c++23 x.cpp -I../../../.functions-link -o x" to compile
+//! use "clang++ -std=c++23 x.cpp -I../../../.functions-link -o x" to compile
 #include <iostream>
 #include <string>
 #include <vector>
