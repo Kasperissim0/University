@@ -31,6 +31,7 @@ class Miniatur{
     int get_points() const;
     virtual std::ostream& print(std::ostream&) const;
     std::ostream& write(std::ostream&) const;
+    bool operator<(const Miniatur& other) const { return this->points < other.points; }
     virtual ~Miniatur() = default;
 };
 

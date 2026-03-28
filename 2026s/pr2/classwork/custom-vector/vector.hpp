@@ -2,10 +2,13 @@
 #define CUSTOM_VECTOR
 //§ Requisites
   //§ Includes
-    #include <iostream>
+    #include <concepts>
+#include <iostream>
     #include <cstddef>
+  #include <optional>
     #include <stdexcept>
     #include <string>
+    #include <type_traits>
     // #include "colors.hpp"
   //.
   //§ Helper Concept / Alias(es)
@@ -23,31 +26,45 @@
   }
   //.
 //.
-template <typename T> 
+template <typename T = double> 
 class Vector {
+  friend class ConstIterator;
   //§ Private Variables
-    st savedElements { 0 }, 
-       currentCapacity { 0 };
-    T *data { nullptr };
+    st savedElements    {    0    }, 
+       currentCapacity  {    0    };
+    T *data             { nullptr };
   //.
   //§ Helper Function(s)
-    Vector& resize(const st newSize) {
+    Vector& resize(const st newSize) { // TODO Update Iterators
       if (newSize == currentCapacity) {} // do nothing
       else if (newSize == 0) this->clear();
       else {
-        this->savedElements = ((newSize < this->size()) ? newSize : this->size());
+        this->savedElements = ((newSize < savedElements) ? newSize : savedElements);
         T *newData { new T[newSize] }; for (st i { 0 }; i < savedElements; ++i) 
                                         newData[i] = data[i];
         delete[] data, data = newData, currentCapacity = newSize;
       }
       return *this;
     }
-    void testValidity(std::ptrdiff_t diff, const size_t strictlySmallerThan) {
-      if (diff < 0 || static_cast<st>(diff) > strictlySmallerThan) 
+    st testValidity(std::ptrdiff_t diff, const st strictlySmallerThan) const {
+      st number = 0;
+      if (diff < 0 || ((number = static_cast<st>(diff)) && number >= strictlySmallerThan)) 
         throw std::out_of_range("Iterator Is Out Of Bounds");
+      return number;
     }
   //.
   public:
+    //§ Aliases
+      using value_type      = T;
+      using size_type       = std::size_t;
+      using difference_type = std::ptrdiff_t;
+      using reference       = value_type &;
+      using const_reference = const value_type &;
+      using pointer         = value_type *;
+      using const_pointer   = const value_type *;
+      // using iterator        = Vector::Iterator;
+      // using const_iterator  = Vector::ConstIterator;
+    //.
     //§ Constructor(s)
       Vector() {}
       Vector(const st toReserve, const st savedCurrently = 0)
@@ -69,41 +86,106 @@ class Vector {
     //.
     //§ Iterators
       class ConstIterator;
+      friend class Vector;
       class Iterator {
-          friend class Vector;
+        template <typename U> friend class Vector;
         protected:
-          T *element { nullptr }; // static st lastID; st instanceID;
+        //§ Private Variables
+            T         *element        { nullptr }; // ,
+            //          *dataSnapshot   { nullptr };
+            Vector<T> *container      { nullptr };
+            bool      insideRange     {  false  },
+                      dereferencable  {  false  };
+            // static st lastID; const st instanceID;
+          //.
+        //§ Helper Function(s)
+          bool isInitialized()                                                 const {
+            return (element and container);
+          }
+          bool isInRange(const std::optional<T*> toTest = std::nullopt)        const {
+            return  ((isInitialized()) ? (((((toTest) ? *toTest : element) <= (container->data + container->savedElements)) and (((toTest) ? *toTest : element) >= container->data)) ? true : false) : false);
+          }
+          bool isDereferencable(const std::optional<T*> toTest = std::nullopt) const {
+            return (isInitialized() and isInRange(((toTest) ? *toTest : element)) and (((toTest) ? *toTest : element) != (container->data + container->savedElements)));
+          }
+          void validateIterator() {
+            insideRange = isInRange();
+            dereferencable = isDereferencable();
+          }
+          //.
         public:
-          Iterator() {
-            std::clog << "Created Uninitialized Iterator" << std::endl;
-          }
-          Iterator(T *ptr) : element{ptr} { // , instanceID{++lastID} {
-              // if (isPrintable<T> && element) std::clog << "Element Pointed To By Iterator: " << *element << std::endl;
-          }
+        //§ Aliases
+            using value_type = typename Vector::value_type;
+            using reference = typename Vector::reference;
+            using pointer = typename Vector::pointer;
+            using difference_type = typename Vector::difference_type;
+            using iterator_category = std::forward_iterator_tag;
+        //.
+        //§ Constructor(s)
+            Iterator() {
+              std::cerr << "Created Uninitialized Iterator" << std::endl;
+            }
+            Iterator (T *ptr, Vector<T> *objPtr = nullptr) 
+              : element{ptr}, container{objPtr}, // dataSnapshot{((objPtr) ? objPtr->data : nullptr)}, 
+                insideRange{isInRange()}, dereferencable{isDereferencable()} { // , instanceID{++lastID} {
+                // TODO do something ?
+                if (isPrintable<T> && dereferencable) 
+                  std::clog << "Element Pointed To By Iterator: " << *element << std::endl;
+                else std::clog << "Element Pointed To By Iterator: nullptr" << std::endl;
+            }
+            template <typename U> Iterator(const U *ptr, const Vector<U> *objPtr = nullptr) requires(std::convertible_to<T, U>)
+              : Iterator(reinterpret_cast<T*>(const_cast<std::remove_const_t<U>*>(ptr)), 
+                         reinterpret_cast<Vector<T>*>(const_cast<std::remove_const_t<Vector<U>>*>(objPtr))) {
+                // TODO do something ?
+            }
+            Iterator(const Iterator &it) : Iterator(it.element, it.container) {
+                // TODO do something ?
+            }
+        //.
         //§ Operator(s)
-          T& operator*() {
-            return ((element) ? *element : throw std::logic_error("Iterator Is Unitialized"));
+          T& operator*() const {
+            return ((isDereferencable()) ? *element : throw std::logic_error("Iterator Is Unitialized"));
           }
-          T* operator->() {
-            return ((element) ? element : throw std::logic_error("Iterator Is Unitialized"));
+          T* operator->() const {
+            return ((isDereferencable()) ? element : throw std::logic_error("Iterator Is Unitialized"));
           }
           Iterator& operator++() {
-            return ++element, *this;
+            if (isInRange((element + 1))) ++element;
+            return *this;
           }
           Iterator operator++(int) {
-            return ++element, (*this - static_cast<st>(1));
+            return (((isInRange((element + 1))) ? Iterator((++element - static_cast<st>(1)), container) : *this));
+          }
+          Iterator& operator--() {
+            if (isInRange((element - 1))) --element;
+            return *this;
+          }
+          Iterator operator--(int) {
+            return (((isInRange((element - 1))) ? Iterator((--element + static_cast<st>(1)), container) : *this));
           }
           bool operator==(const Iterator &it) const {
-            return (this->element == it.element);
+            return (this->element == it.element && this->container == it.container);
           }
           bool operator!=(const Iterator &it) const {
             return !(*this == it);
           }
+          bool operator>(const Iterator &it) const {
+            return (element > it.element);
+          }
+          bool operator>=(const Iterator &it) const {
+            return (element >= it.element);
+          }
+          bool operator<(const Iterator &it) const {
+            return (element < it.element);
+          }
+          bool operator<=(const Iterator &it) const {
+            return (element <= it.element);
+          }
           Iterator operator+(const st offset) const {
-            return Iterator(this->element + offset);
+            return Iterator((this->element + offset), container);
           }
           Iterator operator-(const st offset) const {
-            return Iterator(this->element - offset);
+            return Iterator((this->element - offset), container);
           }
           std::ptrdiff_t operator-(const Iterator &it) const {
             return (this->element - it.element);
@@ -114,28 +196,41 @@ class Vector {
         //.
       };
       class ConstIterator : public Iterator {
+        friend class Iterator;
         public:
-          using Iterator::Iterator;
-          ConstIterator(const Iterator &it) : Iterator(it) {}
+          //§ Aliases
+            using value_type = typename Vector::value_type;
+            using reference = typename Vector::const_reference;
+            using pointer = typename Vector::const_pointer;
+            using difference_type = typename Vector::difference_type;
+            using iterator_category = std::forward_iterator_tag;
+          //.
+          //§ Constructor(s)
+            using Iterator::Iterator;
+            template <typename U> ConstIterator(const U *ptr, const Vector<U> *objPtr = nullptr) : Iterator(ptr, objPtr) {}
+            template <typename EdgCase> ConstIterator(EdgCase it) requires(std::convertible_to<typename EdgCase::value_type, T>)
+                 : ConstIterator(it.element, it.container) {} 
+              // : ConstIterator(reinterpret_cast<T*>(const_cast<void*>(reinterpret_cast<const void*>(it.operator->()))), nullptr {}
+            //.
           const T& operator*() const {
-            return ((this->element) ? *this->element : throw std::logic_error("Iterator Is Unitialized"));
+            return ((this->isDereferencable()) ? *(this->element) : throw std::logic_error("Iterator Is Unitialized"));
           }
           const T* operator->() const {
-            return ((this->element) ? this->element : throw std::logic_error("Iterator Is Unitialized"));
+            return ((this->isDereferencable()) ? this->element : throw std::logic_error("Iterator Is Unitialized"));
           }
       };
     //.
     //§ Methods
-      bool empty() const noexcept {
+      bool empty()  const noexcept {
         return (savedElements == 0);
       }
-      st size() const noexcept {
+      st size()     const noexcept {
         return savedElements;
       }
       st capacity() const noexcept {
         return currentCapacity;
       }
-      Vector& clear() noexcept {
+      Vector& clear()     noexcept {
         if (data) delete[] data, data = nullptr;
         return (savedElements = 0, *this); // = currentCapacity = 0, *this);
       }
@@ -153,28 +248,32 @@ class Vector {
       return (((savedElements == 0) ? throw std::out_of_range("Cannot Pop Back, Vector Is Empty") : --savedElements), *this);
     }
       ConstIterator begin() const noexcept {
-        return ((this->empty()) ? this->end() : this->data);
+        return ((this->empty()) ? ConstIterator(this->end()) : ConstIterator((this->data), this));
       }
-      ConstIterator end() const noexcept {
-        return (this->data + savedElements);
+      ConstIterator end()   const noexcept {
+        return ConstIterator((this->data + savedElements), this);
       }
-      Iterator begin() noexcept {
-        return ((this->empty()) ? this->end() : this->data);
+      Iterator begin()            noexcept {
+        return ((this->empty()) ? Iterator(this->end()) : Iterator((this->data), this));
       }
-      Iterator end() noexcept {
-        return (this->data + savedElements);
+      Iterator end()              noexcept {
+        return Iterator((this->data + savedElements), this);
       }
-      Iterator insert(const ConstIterator position, const T value) {
-        auto diff { position - this->begin() }; testValidity(diff, savedElements);
-        // TODO Finish this
+      Iterator insert(const Iterator position, const T &value) { // TODO Update Iterators
+        auto diff { position - this->begin() }; const st index = testValidity(diff, (savedElements + 1));
+        
+        if (savedElements >= currentCapacity) this->resize((savedElements + 1) * 2);
+        for (st i = savedElements; i > index; --i)
+          data[i] = data[i - 1]; data[index] = value;
+        return ++savedElements, Iterator((data + index), this);
       }
-      Iterator erase(const ConstIterator position) {
+      Iterator erase(const Iterator position) { // TODO Update Iterators
         if (this->empty()) throw std::logic_error("Vector Is Empty, Cannot Erase");
-        auto diff { position - this->begin() }; testValidity(diff, (savedElements + 1));
-        st index = static_cast<st>(diff);
+        auto diff { position - this->begin() }; const st index = testValidity(diff, savedElements);
+
         for (st i = index; i < (savedElements - 1); ++i) 
-          data[i] = data[(i + 1)];
-        return --savedElements, Iterator(data + index);
+          data[i] = data[i + 1];
+        return --savedElements, Iterator((data + index), this);
       }
     //.
     //§ Operators
@@ -206,6 +305,7 @@ class Vector {
     //§ Aliases
       using iterator       = Iterator;
       using const_iterator = ConstIterator;
+      friend class ConstIterator;
     //.
 }; // template <typename T> Vector<T>::Iterator::lastID = 0;
 #endif

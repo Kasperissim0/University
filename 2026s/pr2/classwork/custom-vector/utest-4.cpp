@@ -1,3 +1,4 @@
+#include <cstddef>
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include "doctest.h"
 #include "vector.hpp"
@@ -46,7 +47,7 @@ TEST_CASE("SecureIterator, IteratorRange") {
   Vector v({0,1,2,3,4,5,6,7,8,9});
 	
 	auto it{v.begin()};
-	for (Vector::size_type i{0}; i<v.size()-1; ++i)
+	for (size_t i{0}; i<v.size()-1; ++i)
 		CHECK_NOTHROW( ++it );
 	CHECK( *it == 9);
 	CHECK( *(it.operator->()) == 9);
@@ -64,7 +65,7 @@ TEST_CASE("SecureConstIterator, IteratorRange") {
   const Vector v({0,1,2,3,4,5,6,7,8,9});
 	
 	auto it{v.begin()};
-	for (Vector::size_type i{0}; i<v.size()-1; ++i)
+	for (size_t i{0}; i<v.size()-1; ++i)
 		CHECK_NOTHROW( ++it );
 	CHECK( *it == 9);
 	CHECK( *(it.operator->()) == 9);
@@ -79,19 +80,19 @@ TEST_CASE("SecureConstIterator, IteratorRange") {
 }
 
 TEST_CASE("SecureIterator, DefaultIterator") {
-	Vector::iterator test;
+	Vector<double>::iterator test;
 	CHECK_NOTHROW( ++test );
 	CHECK_NOTHROW( test++ );
-	CHECK( test == Vector::iterator{} );
+	CHECK( test == Vector<double>::iterator{} );
 	CHECK_THROWS( *test );
 	CHECK_THROWS( test.operator->());
 }
 
 TEST_CASE("SecureConstIterator, DefaultIterator") {
-	Vector::const_iterator test;
+	Vector<double>::const_iterator test;
 	CHECK_NOTHROW( ++test );
 	CHECK_NOTHROW( test++ );
-	CHECK( test == Vector::const_iterator{} );
+	CHECK( test == Vector<double>::const_iterator{} );
 	CHECK_THROWS( *test );
 	CHECK_THROWS( test.operator->());
 }
@@ -109,20 +110,20 @@ TEST_CASE("StronglySecuredIterator, RandomPointer") {
   CHECK_THROWS( stop.operator->() );
 
   double val{3.1415};
-  Vector::iterator it{&val};
+  Vector<double>::iterator it{&val};
   std::cout << &val << " " << v.begin().operator->() << '\n';
   CHECK_THROWS( *it );
   CHECK_THROWS( it.operator->() );
   CHECK_NOTHROW( ++it );
   CHECK_NOTHROW( it++ );
-  CHECK( it == Vector::iterator{&val} );
+  CHECK( it == Vector<double>::iterator{&val} );
 
-  Vector::iterator it1{start.operator->()-10};
+  Vector<double>::iterator it1{start.operator->()-10};
   CHECK_THROWS( *it1 );
   CHECK_THROWS( it1.operator->() );
   CHECK_NOTHROW( ++it1 );
   CHECK_NOTHROW( it1++ );
-  CHECK( it1 == Vector::iterator{start.operator->()-10} );
+  CHECK( it1 == Vector<double>::iterator{start.operator->()-10} );
 }
 
 TEST_CASE("StronglySecuredConstIterator, RandomPointer") {
@@ -138,20 +139,20 @@ TEST_CASE("StronglySecuredConstIterator, RandomPointer") {
   CHECK_THROWS( stop.operator->() );
 
   double val{3.1415};
-  Vector::const_iterator it{&val};
+  Vector<double>::const_iterator it{&val};
   std::cout << &val << " " << v.begin().operator->() << '\n';
   CHECK_THROWS( *it );
   CHECK_THROWS( it.operator->() );
   CHECK_NOTHROW( ++it );
   CHECK_NOTHROW( it++ );
-  CHECK( it == Vector::const_iterator{&val} );
+  CHECK( it == Vector<double>::const_iterator{&val} );
 
-  Vector::const_iterator it1{start.operator->()-10};
+  Vector<double>::const_iterator it1{start.operator->()-10};
   CHECK_THROWS( *it1 );
   CHECK_THROWS( it1.operator->() );
   CHECK_NOTHROW( ++it1 );
   CHECK_NOTHROW( it1++ );
-  CHECK( it1 == Vector::const_iterator{start.operator->()-10} );
+  CHECK( it1 == Vector<double>::const_iterator{start.operator->()-10} );
 }
 
 TEST_CASE("StronglySecuredIterator, Realloc") {
@@ -168,7 +169,7 @@ TEST_CASE("StronglySecuredIterator, Realloc") {
 
 TEST_CASE("StronglySecuredConstIterator, Realloc") {
   Vector v({0,1,2,3,4,5,6,7,8,9});
-  Vector::const_iterator it{v.begin()};
+  Vector<double>::const_iterator it{v.begin()};
   auto orig{it};
   v.reserve(v.capacity()*2);
   CHECK_NOTHROW( ++it );
@@ -179,7 +180,7 @@ TEST_CASE("StronglySecuredConstIterator, Realloc") {
 }
 
 TEST_CASE("StronglySecuredIterator, Insert") {
-	Vector v(2);
+	Vector<double> v(2);
 	v.push_back(7.5);
 	auto it{v.begin()};
 	v.insert(v.end(),1.2);

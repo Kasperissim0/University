@@ -11,21 +11,18 @@
     using st = size_t;
   //.
 //.
-// output: 506128108109782787219207541247589993221416922442134626965530
 st lengthOfSubArrayMeetingCondition(const st arr[], const st amountOfElements, const st sumLessOrEqualTo) {
   const st *start = arr, *end = start; 
   st sum = 0, length = 0; 
 
-  while (end < (arr + amountOfElements)) {
-    if (length >= (amountOfElements - (start - arr))) return length;
-                                        sum += *(end++);
-    while (sum > sumLessOrEqualTo)      sum -= *(start++);
-                                        length = max<st>(length, end - start);
-  }
-
-  return length;
+  while   (end < (arr + amountOfElements)) {
+                                                          sum += *(end++);
+    while (sum > sumLessOrEqualTo)                        sum -= *(start++);
+                                                          length = max<st>(length, end - start);
+    if    (length >= (amountOfElements - (start - arr)))  break;
+  } return length;
 }
-int main() {
+int main() { // output: 506128108109782787219207541247589993221416922442134626965530
   ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-1/input.txt")); 
   st amountOfArrays; dataSource >> amountOfArrays; // if this is meant to be tested, then the path for the input file (obviously) needs to be changed 
                                                    // i couldn't get it to work with relative paths for some reason

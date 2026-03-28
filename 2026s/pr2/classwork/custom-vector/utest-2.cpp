@@ -188,7 +188,7 @@ TEST_CASE("IteratorTest, Insert/Erase") {
   auto x = v.insert(++v.begin(),4);
   CHECK_EQ(v[1],4);
   CHECK_EQ(*x,4);
-  auto it =v.begin();
+  auto it = v.begin();
   ++it;
   ++it;
   auto y = v.erase(it);
