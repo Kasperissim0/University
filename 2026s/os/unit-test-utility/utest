@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO Should Probably Make This A Git Directory / Submodule
+
 # --- COLORS ---
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -9,7 +11,7 @@ BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m'
 
-VERSION="3.2.0"
+VERSION="3.3.8"
 START_TIME=$(date +%s)
 
 # --- TERMINAL WIDTH ---
@@ -74,9 +76,9 @@ banner() {
     local d_right
     d_right=$(printf "%${right}s" | tr ' ' '-')
 
-    echo ""
+    log ""
     log "${color}${BOLD}${d_left}  ${label}  ${d_right}${NC}"
-    echo ""
+    log ""
 }
 
 # --- USAGE ---
@@ -91,7 +93,7 @@ usage() {
     echo -e "  -v          Verbose: show full output and examples in help"
     echo -e "  -n <nums>   Run only tests by number, comma-separated (e.g. -n 3,5,8)"
     echo -e "  -i <nums>   Ignore tests by number, comma-separated (e.g. -i 3,5,8)"
-    echo -e "  -r <0|1>    Result filter: 0 for ${RED}FAILED${NC}, 1 for ${GREEN}PASSED${NC}"
+    echo -e "  -f <0|1>    Result filter: 0 for ${RED}FAILED${NC}, 1 for ${GREEN}PASSED${NC}"
     echo -e "  -l <file>   Log results to <file>"
     echo -e "  -j          JSON output: print results in JSON format at the end"
     echo -e "  -s          Per-file compile status + summary (no test output)"
@@ -104,7 +106,8 @@ usage() {
     echo -e "  -t          Test (dry run): show what would be done without executing"
     echo -e "  -q          Quiet: suppress all output except results or errors"
     echo -e "  -H          Hide: hides the summary at the end"
-    echo -e "  -d          Delete: deletes the tests/ directory after execution"
+    echo -e "  -d          Delete: deletes the ${EXEC_DIR} directory after execution"
+    echo -e "  -r          Recursive search: finds tests in subdirectories"
     echo ""
     echo -e "  -V          Show version"
     echo -e "  -h          Show this help message (run with -v to see usage examples)"
@@ -113,7 +116,7 @@ usage() {
     if $VERBOSE; then
         echo ""
         echo -e "${BOLD}${RED}EXAMPLES:${NC}"
-        echo -e "  utu -o -r 0            # Rebuild only changed files, run in parallel, show only failures"
+        echo -e "  utu -o -f 0            # Rebuild only changed files, run in parallel, show only failures"
         echo -e "  utu -n 1,3,5 -v        # Run tests 1, 3, and 5 with full output including print statements"
         echo -e "  utu -o -q -j           # Optimal build, run quietly, output final results in JSON format"
         echo -e "  utu -E -i 2,4 -H       # Run only existing binaries, skip tests 2 and 4, hide the final summary"
@@ -129,6 +132,7 @@ NUMBERS=""
 IGNORE_NUMBERS=""
 FAILED_ONLY=false
 PASSED_ONLY=false
+RECURSIVE=false
 VERBOSE=false
 LOGFILE=""
 JSON_OUTPUT=false
@@ -145,7 +149,11 @@ JOBS=1
 OPTIMAL=false
 SHOW_HELP=false
 
-while getopts "n:i:r:dvl:sVShuHeEctopjq" opt; do
+
+EXEC_DIR='executables/'
+
+
+while getopts "n:i:f:rdvl:sVShuHeEctopjq" opt; do
     case $opt in
         n)
             NUMBERS="$OPTARG"
@@ -161,7 +169,7 @@ while getopts "n:i:r:dvl:sVShuHeEctopjq" opt; do
                 OPTIND=$((OPTIND + 1))
             done
             ;;
-        r)
+        f)
             if [[ "$OPTARG" == "0" ]]; then FAILED_ONLY=true;
             elif [[ "$OPTARG" == "1" ]]; then PASSED_ONLY=true;
             else
@@ -169,6 +177,7 @@ while getopts "n:i:r:dvl:sVShuHeEctopjq" opt; do
                 exit 1
             fi
             ;;
+        r) RECURSIVE=true ;;
         d) REMOVE_TESTS=true ;;
         v) VERBOSE=true ;;
         l) LOGFILE="$OPTARG" ;;
@@ -222,7 +231,7 @@ if [[ $MODES_COUNT -gt 1 ]]; then
 fi
 
 if $FAILED_ONLY && $PASSED_ONLY; then
-    echo -e "${RED}❌ Conflict: -r 0 and -r 1 are mutually exclusive.${NC}"
+    echo -e "${RED}❌ Conflict: -f 0 and -f 1 are mutually exclusive.${NC}"
     exit 1
 fi
 
@@ -283,26 +292,38 @@ if [[ -n "$LOGFILE" ]]; then
     printf '%*s\n' "$TERM_WIDTH" '' | tr ' ' '=' >> "$LOGFILE"
 fi
 
-# --- FIND PROJECT ROOT ---
-SEARCH_DIR="$PWD"
-while [[ "$SEARCH_DIR" != "/" ]]; do
-    if ls "$SEARCH_DIR"/utest*.cpp &>/dev/null; then break; fi
-    SEARCH_DIR="$(dirname "$SEARCH_DIR")"
-done
+# --- FIND TESTS ---
+if $RECURSIVE; then
+    while IFS= read -r -d '' file; do
+        FILES+=("$file")
+    done < <(find . -maxdepth 4 -name "utest*.cpp" -print0)
+    if [[ ${#FILES[@]} -eq 0 ]]; then
+        echo -e "${RED}❌ No utest*.cpp files found in current or subdirectories.${NC}"
+        exit 1
+    fi
+else
+    SEARCH_DIR="$PWD"
+    while [[ "$SEARCH_DIR" != "/" ]]; do
+        if ls "$SEARCH_DIR"/utest*.cpp &>/dev/null; then break; fi
+        SEARCH_DIR="$(dirname "$SEARCH_DIR")"
+    done
 
-if ! ls "$SEARCH_DIR"/utest*.cpp &>/dev/null; then
-    echo -e "${RED}❌ No utest*.cpp files found in current or parent directories.${NC}"
-    exit 1
+    if ! ls "$SEARCH_DIR"/utest*.cpp &>/dev/null; then
+        echo -e "${RED}❌ No utest*.cpp files found in current or parent directories.${NC}"
+        exit 1
+    fi
+
+    cd "$SEARCH_DIR" || exit 1
+    FILES=(./utest*.cpp)
 fi
 
-cd "$SEARCH_DIR" || exit 1
-[[ $DRY_RUN == false ]] && mkdir -p tests
+[[ $DRY_RUN == false ]] && mkdir -p "${EXEC_DIR}"
 
-FLAGS="-fcolor-diagnostics -fansi-escape-codes -std=c++23 -g"
+FLAGS="-fcolor-diagnostics -fansi-escape-codes -std=c++23 -g -I."
 
 # --- COUNT TOTAL FILES TO PROCESS ---
 TOTAL_FILES=0
-for f in utest*.cpp; do
+for f in "${FILES[@]}"; do
     TNAME=$(basename "$f" .cpp)
     matches_filter "$TNAME" && TOTAL_FILES=$((TOTAL_FILES + 1))
 done
@@ -328,14 +349,14 @@ MISSING_BINARIES=()
 FILES_TO_COMPILE=()
 
 # --- SMART REBUILD CHECK ---
-for f in utest*.cpp; do
+for f in "${FILES[@]}"; do
     TNAME=$(basename "$f" .cpp)
     if ! matches_filter "$TNAME"; then
         COMPILE_SKIPPED=$((COMPILE_SKIPPED + 1))
         continue
     fi
 
-    if [[ ! -x "tests/$TNAME" ]]; then
+    if [[ ! -x "${EXEC_DIR}${TNAME}" ]]; then
         MISSING_BINARIES+=("$TNAME")
         if ! $STRICT_EXEC; then
             FILES_TO_COMPILE+=("$f")
@@ -347,11 +368,11 @@ for f in utest*.cpp; do
             REASON="Force recompile (-c)"
             FILES_TO_COMPILE+=("$f")
         elif $OPTIMAL || $EXEC_ONLY; then
-            if [[ ! -x "tests/$TNAME" ]]; then REASON="Binary missing"
-            elif [[ "$f" -nt "tests/$TNAME" ]]; then REASON="Source file changed"
+            if [[ ! -x "${EXEC_DIR}${TNAME}" ]]; then REASON="Binary missing"
+            elif [[ "$f" -nt "${EXEC_DIR}${TNAME}" ]]; then REASON="Source file changed"
             else
                 for h in *.h *.hpp; do
-                    if [[ -e "$h" && "$h" -nt "tests/$TNAME" ]]; then
+                    if [[ -e "$h" && "$h" -nt "${EXEC_DIR}${TNAME}" ]]; then
                         REASON="Header '$h' changed"
                         break
                     fi
@@ -377,10 +398,10 @@ for f in utest*.cpp; do
         if $STRICT_EXEC || [[ $MODES_COUNT -eq 0 ]]; then
             if [[ -z "$REASON" ]]; then
                 # Recalculate reason if not already done
-                if [[ "$f" -nt "tests/$TNAME" ]]; then REASON="Source file changed"
+                if [[ "$f" -nt "${EXEC_DIR}${TNAME}" ]]; then REASON="Source file changed"
                 else
                     for h in *.h *.hpp; do
-                        if [[ -e "$h" && "$h" -nt "tests/$TNAME" ]]; then
+                        if [[ -e "$h" && "$h" -nt "${EXEC_DIR}${TNAME}" ]]; then
                             REASON="Header '$h' changed"
                             break
                         fi
@@ -425,10 +446,11 @@ if [[ ${#FILES_TO_COMPILE[@]} -gt 0 ]]; then
     
     for f in "${FILES_TO_COMPILE[@]}"; do
         TNAME=$(basename "$f" .cpp)
+        TDIR=$(dirname "$f")
         CURRENT=$((CURRENT + 1))
 
         if $DRY_RUN; then
-            log "  ${DIM}[DRY RUN] Would compile $f -> tests/$TNAME${NC}"
+            log "  ${DIM}[DRY RUN] Would compile $f -> ${EXEC_DIR}${TNAME}${NC}"
             COMPILE_OK=$((COMPILE_OK + 1))
             COMPILE_OK_LIST+=("$f")
             continue
@@ -436,21 +458,24 @@ if [[ ${#FILES_TO_COMPILE[@]} -gt 0 ]]; then
 
         EXTRA_SOURCES=""
         [[ -f "miniatur.cpp" ]] && EXTRA_SOURCES="miniatur.cpp"
+        [[ -f "$TDIR/miniatur.cpp" ]] && [[ "$TDIR" != "." ]] && EXTRA_SOURCES="$TDIR/miniatur.cpp"
 
         # Compilation task function
         run_compile() {
             local file="$1"
             local target="$2"
             local idx="$3"
+            local extra="$4"
+            local tdir="$5"
             local out_file="$TEMP_OUT_DIR/out_$idx"
             
-            rm -f "tests/$target"
-            clang++ $FLAGS "$file" $EXTRA_SOURCES -o "tests/$target" > "$out_file" 2>&1
+            rm -f "${EXEC_DIR}${target}"
+            clang++ $FLAGS -I"$tdir" "$file" $extra -o "${EXEC_DIR}${target}" > "$out_file" 2>&1
             echo $? > "$TEMP_OUT_DIR/res_$idx"
         }
 
         if [[ $JOBS -gt 1 ]]; then
-            run_compile "$f" "$TNAME" "$CURRENT" &
+            run_compile "$f" "$TNAME" "$CURRENT" "$EXTRA_SOURCES" "$TDIR" &
             
             # Job control: wait if we hit the limit
             while [[ $(jobs -r | wc -l) -ge $JOBS ]]; do
@@ -461,13 +486,15 @@ if [[ ${#FILES_TO_COMPILE[@]} -gt 0 ]]; then
             if $SUMMARY_ONLY; then
                 printf "\r${CYAN}==> Compiling [${CURRENT}/${TOTAL_TO_COMPILE}] %-30s${NC}" "$f"
             elif $COMPACT; then
-                printf "${CYAN}  ▸ ⚙️ COMPILING: ${BOLD}%-30s${NC}" "$f"
+                if ! $QUIET_MODE; then
+                    printf "${CYAN}  ▸ ⚙️ COMPILING: ${BOLD}%-30s${NC}" "$f"
+                fi
             else
                 log "${CYAN}${BOLD}▸ ⚙️ COMPILING: $f${NC}"
             fi
 
-            rm -f "tests/$TNAME"
-            COMPILE_OUT=$(clang++ $FLAGS "$f" $EXTRA_SOURCES -o "tests/$TNAME" 2>&1)
+            rm -f "${EXEC_DIR}${TNAME}"
+            COMPILE_OUT=$(clang++ $FLAGS -I"$TDIR" "$f" $EXTRA_SOURCES -o "${EXEC_DIR}${TNAME}" 2>&1)
             RES=$?
             
             if [ $RES -ne 0 ]; then
@@ -475,19 +502,23 @@ if [[ ${#FILES_TO_COMPILE[@]} -gt 0 ]]; then
                 COMPILE_FAIL_LIST+=("$f")
                 if $SUMMARY_ONLY; then :;
                 elif $COMPACT; then
-                    FILE_ERRORS=$(echo "$COMPILE_OUT" | grep -c 'error:')
-                    echo -e "  ${RED}❌ ${FILE_ERRORS} error(s)${NC}"
+                    if ! $QUIET_MODE; then
+                        FILE_ERRORS=$(echo "$COMPILE_OUT" | grep -c 'error:')
+                        echo -e "  ${RED}❌ ${FILE_ERRORS} error(s)${NC}"
+                    fi
                 else
                     log "  ${RED}${BOLD}❌ FAILED TO COMPILE${NC}"
                     log "  ${BOLD}${YELLOW}🔧 Problem(s):${NC}"
                     log "$COMPILE_OUT"
-                    echo ""
+                    log ""
                 fi
             else
                 COMPILE_OK=$((COMPILE_OK + 1))
                 COMPILE_OK_LIST+=("$f")
                 if $COMPACT; then
-                    echo -e "  ${GREEN}✅ COMPILED SUCCESSFULLY${NC}"
+                    if ! $QUIET_MODE; then
+                        echo -e "  ${GREEN}✅ COMPILED SUCCESSFULLY${NC}"
+                    fi
                 elif ! $SUMMARY_ONLY; then
                     log "${GREEN}  ✅ COMPILED SUCCESSFULLY${NC}"
                 fi
@@ -504,7 +535,7 @@ if [[ ${#FILES_TO_COMPILE[@]} -gt 0 ]]; then
             RES=$(cat "$TEMP_OUT_DIR/res_$i")
             COMPILE_OUT=$(cat "$TEMP_OUT_DIR/out_$i")
 
-            if ! $SUMMARY_ONLY; then
+            if ! $SUMMARY_ONLY && ! $QUIET_MODE; then
                 if $COMPACT; then
                     printf "${CYAN}  ▸ ⚙️ COMPILING: ${BOLD}%-30s${NC}" "$f"
                 else
@@ -517,19 +548,21 @@ if [[ ${#FILES_TO_COMPILE[@]} -gt 0 ]]; then
                 COMPILE_FAIL_LIST+=("$f")
                 if ! $SUMMARY_ONLY; then
                     if $COMPACT; then
-                        FILE_ERRORS=$(echo "$COMPILE_OUT" | grep -c 'error:')
-                        echo -e "  ${RED}❌ ${FILE_ERRORS} error(s)${NC}"
+                        if ! $QUIET_MODE; then
+                            FILE_ERRORS=$(echo "$COMPILE_OUT" | grep -c 'error:')
+                            echo -e "  ${RED}❌ ${FILE_ERRORS} error(s)${NC}"
+                        fi
                     else
                         log "  ${RED}${BOLD}❌ FAILED TO COMPILE${NC}"
                         log "  ${BOLD}${YELLOW}🔧 Problem(s):${NC}"
                         log "$COMPILE_OUT"
-                        echo ""
+                        log ""
                     fi
                 fi
             else
                 COMPILE_OK=$((COMPILE_OK + 1))
                 COMPILE_OK_LIST+=("$f")
-                if ! $SUMMARY_ONLY; then
+                if ! $SUMMARY_ONLY && ! $QUIET_MODE; then
                     if $COMPACT; then
                         echo -e "  ${GREEN}✅ COMPILED SUCCESSFULLY${NC}"
                     else
@@ -563,7 +596,7 @@ PASS_LIST=()
 SLOWEST_TESTS=()
 
 TESTS_TO_RUN=()
-for t in tests/utest*; do
+for t in "${EXEC_DIR}"utest*; do
     [[ -d "$t" ]] && continue
     TNAME=$(basename "$t")
     if matches_filter "$TNAME" && [ -x "$t" ]; then
@@ -577,10 +610,19 @@ for t in "${TESTS_TO_RUN[@]}"; do
     TNAME=$(basename "$t")
     CURRENT=$((CURRENT + 1))
 
+    # Trace source path for reporting
+    TPATH="$TNAME"
+    for f in "${FILES[@]}"; do
+        if [[ "$(basename "$f" .cpp)" == "$TNAME" ]]; then
+            TPATH="$f"
+            break
+        fi
+    done
+
     if $DRY_RUN; then
-        log "  ${DIM}[DRY RUN] Would execute tests/$TNAME${NC}"
+        log "  ${DIM}[DRY RUN] Would execute ${EXEC_DIR}${TNAME}${NC}"
         PASS=$((PASS + 1))
-        PASS_LIST+=("$TNAME")
+        PASS_LIST+=("$TPATH")
         continue
     fi
 
@@ -612,19 +654,19 @@ for t in "${TESTS_TO_RUN[@]}"; do
     fi
 
     # Strip doctest noise
-    OUTPUT=$(echo "$OUTPUT_RAW" | sed 's/\[doctest\] //g' | grep -vE "doctest version is|run with \"--help\" for options|^[=-]{5,}|^[a-zA-Z0-9._-]+\.cpp:[0-9]+:$")
-    FAILED_LINES=$(echo "$OUTPUT" | grep -iE "FAILED\!|ERROR|❌|[1-9][0-9]* (failed|error)")
+    OUTPUT=$(echo "$OUTPUT_RAW" | sed 's/\[doctest\] //g' | grep -vE "doctest version is|run with \"--help\" for options|^[=-]{5,}|^[a-zA-Z0-9._-]+\.cpp:[0-9]+:$" | grep .)
+    FAILED_LINES=$(echo "$OUTPUT" | grep -iE "FAILED\!|ERROR|❌|[1-9][0-9]* (failed|error)" | grep .)
 
     if [[ $EXIT_CODE -ne 0 || -n "$FAILED_LINES" ]]; then
         FAIL=$((FAIL + 1))
-        FAILED_LIST+=("$TNAME")
+        FAILED_LIST+=("$TPATH")
         if ! echo "$OUTPUT" | grep -q "Status:"; then
             OUTPUT="${OUTPUT}\nStatus: FAILURE!"
         fi
         IS_FAILURE=true
     else
         PASS=$((PASS + 1))
-        PASS_LIST+=("$TNAME")
+        PASS_LIST+=("$TPATH")
         IS_FAILURE=false
     fi
 
@@ -662,19 +704,19 @@ for t in "${TESTS_TO_RUN[@]}"; do
                     err_log "${NC}  >> $line${NC}"
                 done
             fi
-            echo ""
+            log ""
         fi
     else
         if ! $SUMMARY_ONLY && ! $COMPACT && ! $FAILED_ONLY; then
             log "${YELLOW}${BOLD}▸ 📝 EXECUTING: $TNAME${NC}"
             if $VERBOSE; then
-                echo ""; echo -e "$OUTPUT" | sed 's/^/  /' | while IFS= read -r line; do log "$line"; done
+                echo -e "$OUTPUT" | sed 's/^/  /' | while IFS= read -r line; do log "$line"; done
             else
                 echo -e "$OUTPUT" | grep -iE "test cases:|assertions:|Status:" | while IFS= read -r line; do
                     log "${NC}  >> $line${NC}"
                 done
             fi
-            echo ""
+            log ""
         fi
     fi
 done
@@ -722,7 +764,7 @@ if ! $HIDE_SUMMARY; then
         if [[ ${#COMPILE_OK_LIST[@]} -eq 0 && ${#COMPILE_FAIL_LIST[@]} -eq 0 ]] && ! $QUIET_MODE; then
             log "    ${DIM}(skipped — using existing binaries)${NC}"
         fi
-        echo ""
+        log ""
     fi
 
     # 2. Test Execution
@@ -735,7 +777,7 @@ if ! $HIDE_SUMMARY; then
             if [[ ${#FAILED_LIST[@]} -gt 0 ]]; then
                 format_file_list "${RED}❌ Failed:${NC}" "${RED}" "err_log" "${FAILED_LIST[@]}"
             fi
-            echo ""
+            log ""
         fi
 
         # 3. Global Stats (Centered as a unified block)
@@ -751,26 +793,31 @@ if ! $HIDE_SUMMARY; then
         END_TIME=$(date +%s)
         ELAPSED=$((END_TIME - START_TIME))
 
-        # Build the block to center
+        # Build the block to display
         STATS_BLOCK="${BOLD}📊 Global Stats${NC}
 ────────────────────────────────
 Test Cases:   ${STAT_TC_TOTAL} total | ${GREEN}${STAT_TC_PASS} passed${NC} | ${RED}${STAT_TC_FAIL} failed${NC} | ${DIM}${STAT_TC_SKIP} skipped${NC}
 Assertions:   ${TOTAL_AS} total | ${GREEN}${STAT_AS_PASS} passed${NC} | ${RED}${STAT_AS_FAIL} failed${NC}
-Success Rate: ${BOLD}${CYAN}${SUCCESS_RATE}%${NC}"
+Success Rate: ${BOLD}${CYAN}${SUCCESS_RATE}%${NC}
+────────────────────────────────"
 
-        if [[ ${#SLOWEST_TESTS[@]} -gt 0 ]]; then
-            STATS_BLOCK+="\n────────────────────────────────\n${BOLD}🐌 Slowest Tests${NC}"
-            IFS=$'\n' read -r -d '' -a SORTED_SLOWEST < <(printf "%s\n" "${SLOWEST_TESTS[@]}" | sort -t: -k1 -nr | head -n 3 && printf '\0')
-            for entry in "${SORTED_SLOWEST[@]}"; do
-                dur="${entry%%:*}"
-                name="${entry#*:}"
-                STATS_BLOCK+="\n  ${name}: ${YELLOW}${dur}s${NC}"
-            done
+        # if [[ ${#SLOWEST_TESTS[@]} -gt 0 ]]; then
+        #     STATS_BLOCK+="\n────────────────────────────────\n${BOLD}🐌 Slowest Tests${NC}"
+        #     IFS=$'\n' read -r -d '' -a SORTED_SLOWEST < <(printf "%s\n" "${SLOWEST_TESTS[@]}" | sort -t: -k1 -nr | head -n 3 && printf '\0')
+        #     for entry in "${SORTED_SLOWEST[@]}"; do
+        #         dur="${entry%%:*}"
+        #         name="${entry#*:}"
+        #         STATS_BLOCK+="\n  ${name}: ${YELLOW}${dur}s${NC}"
+        #     done
+        # fi
+
+        if ! $QUIET_MODE; then
+            STATS_BLOCK+="\n⏱️  Total Time: ${CYAN}${ELAPSED}s${NC}\n📈 Avg Assertions/Test: ${CYAN}${AVG_ASSERTIONS}${NC}\n────────────────────────────────"
         fi
 
-        STATS_BLOCK+="\n────────────────────────────────\n⏱️  Total Time: ${CYAN}${ELAPSED}s${NC}\n📈 Avg Assertions/Test: ${CYAN}${AVG_ASSERTIONS}${NC}"
-
-        center_block "$STATS_BLOCK"
+        echo -e "$STATS_BLOCK" | while IFS= read -r line; do
+            echo -e "  ${line}"
+        done
     fi
 
     banner "SUMMARY" "$GREEN"
@@ -782,9 +829,9 @@ fi
 
 if $REMOVE_TESTS; then
     if $VERBOSE; then
-        echo -e "${CYAN}🗑️  Deleting tests/ directory and all its contents...${NC}"
+        echo -e "${CYAN}🗑️  Deleting ${EXEC_DIR} directory and all its contents...${NC}"
     fi
-    rm -rf tests/
+    rm -rf "${EXEC_DIR}"
 fi
 
 [[ $FAIL -eq 0 && $COMPILE_ERRORS -eq 0 ]]

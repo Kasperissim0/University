@@ -1,0 +1,3577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculus From Scratch</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']]
+  },
+  options: {
+    skipHtmlTags: ['script','noscript','style','textarea']
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,500;0,700;1,300;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0e0c;
+  --surface: #1a1916;
+  --surface2: #242220;
+  --border: #2e2c28;
+  --text: #e8e4dc;
+  --muted: #7a7468;
+  --accent: #e8a838;
+  --accent2: #5b9cf6;
+  --accent3: #6bcf8f;
+  --accent4: #f06b6b;
+  --accent5: #c084fc;
+  --gutter: clamp(16px, 5vw, 80px);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:16px;
+  line-height:1.8;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(15,14,12,0.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:0 var(--gutter);
+  display:flex;align-items:center;gap:6px;
+  overflow-x:auto;white-space:nowrap;
+  scrollbar-width:none;
+}
+nav::-webkit-scrollbar{display:none;}
+nav a{
+  font-family:'DM Mono',monospace;
+  font-size:0.7rem;letter-spacing:.5px;
+  color:var(--muted);
+  text-decoration:none;
+  padding:14px 8px;
+  border-bottom:2px solid transparent;
+  transition:all .2s;
+  flex-shrink:0;
+}
+nav a:hover,nav a.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────── */
+.hero{
+  padding:80px var(--gutter) 60px;
+  border-bottom:1px solid var(--border);
+}
+.hero-label{
+  font-family:'DM Mono',monospace;
+  font-size:.72rem;letter-spacing:2px;
+  color:var(--accent);
+  text-transform:uppercase;
+  margin-bottom:16px;
+}
+.hero h1{
+  font-family:'Fraunces',serif;
+  font-size:clamp(2.2rem,6vw,4.5rem);
+  font-weight:700;
+  line-height:1.1;
+  max-width:780px;
+}
+.hero h1 em{color:var(--accent);font-style:italic;}
+.hero p{
+  max-width:600px;
+  color:var(--muted);
+  margin-top:20px;
+  font-size:1.05rem;
+}
+
+section{
+  padding:72px var(--gutter);
+  border-bottom:1px solid var(--border);
+  max-width:1000px;
+  margin:0 auto;
+  width:100%;
+}
+
+/* ── CHAPTER HEADER ──────────────────────────────────────────────── */
+.ch-label{
+  font-family:'DM Mono',monospace;
+  font-size:.68rem;letter-spacing:2px;
+  color:var(--accent);text-transform:uppercase;
+  margin-bottom:8px;
+}
+h2{
+  font-family:'Fraunces',serif;
+  font-size:clamp(1.6rem,3.5vw,2.4rem);
+  font-weight:500;
+  line-height:1.2;
+  margin-bottom:24px;
+}
+h3{
+  font-family:'Fraunces',serif;
+  font-size:1.25rem;
+  font-weight:500;
+  color:var(--accent2);
+  margin:36px 0 12px;
+}
+h4{
+  font-family:'DM Mono',monospace;
+  font-size:.82rem;letter-spacing:.5px;
+  color:var(--accent3);
+  text-transform:uppercase;
+  margin:24px 0 8px;
+}
+p{margin-bottom:14px;color:#ccc9c0;}
+p strong{color:var(--text);}
+p em{color:var(--accent);font-style:normal;font-weight:500;}
+
+/* ── CALLOUT BOXES ───────────────────────────────────────────────── */
+.box{
+  border-radius:6px;
+  padding:20px 24px;
+  margin:24px 0;
+  border:1px solid;
+}
+.box-concept{background:rgba(91,156,246,.08);border-color:rgba(91,156,246,.25);}
+.box-rule{background:rgba(232,168,56,.08);border-color:rgba(232,168,56,.3);}
+.box-intuition{background:rgba(107,207,143,.08);border-color:rgba(107,207,143,.25);}
+.box-warning{background:rgba(240,107,107,.08);border-color:rgba(240,107,107,.25);}
+.box-result{
+  background:rgba(232,168,56,.12);
+  border:2px solid var(--accent);
+  border-radius:6px;
+  padding:18px 24px;
+  margin:24px 0;
+  text-align:center;
+  font-size:1.1rem;
+}
+.box-label{
+  font-family:'DM Mono',monospace;
+  font-size:.65rem;letter-spacing:1.5px;
+  text-transform:uppercase;
+  margin-bottom:8px;
+  opacity:.7;
+}
+
+/* ── CANVAS WRAPPER ──────────────────────────────────────────────── */
+.chart-wrap{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:20px;
+  margin:28px 0;
+  position:relative;
+}
+.chart-title{
+  font-family:'DM Mono',monospace;
+  font-size:.72rem;letter-spacing:1px;
+  color:var(--muted);
+  text-transform:uppercase;
+  margin-bottom:12px;
+}
+canvas{display:block;width:100%!important;background:var(--surface);border-radius:4px;}
+
+/* ── INTERACTIVE SLIDER ──────────────────────────────────────────── */
+.slider-row{
+  display:flex;align-items:center;gap:14px;
+  margin:12px 0;
+  flex-wrap:wrap;
+}
+.slider-row label{
+  font-family:'DM Mono',monospace;
+  font-size:.78rem;
+  color:var(--muted);
+  min-width:80px;
+}
+input[type=range]{
+  -webkit-appearance:none;
+  flex:1;min-width:120px;
+  height:3px;
+  background:var(--border);
+  border-radius:2px;
+  outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:16px;height:16px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+}
+.slider-val{
+  font-family:'DM Mono',monospace;
+  font-size:.85rem;
+  color:var(--accent);
+  min-width:48px;text-align:right;
+}
+
+/* ── STEP LIST ───────────────────────────────────────────────────── */
+.steps{counter-reset:s;margin:20px 0;}
+.step{
+  display:grid;
+  grid-template-columns:36px 1fr;
+  gap:0 14px;
+  margin-bottom:20px;
+  align-items:start;
+}
+.step::before{
+  counter-increment:s;
+  content:counter(s);
+  background:var(--accent2);
+  color:#fff;
+  font-family:'DM Mono',monospace;
+  font-size:.72rem;
+  width:28px;height:28px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  margin-top:3px;
+  flex-shrink:0;
+}
+.step-body{}
+.step-title{
+  font-weight:500;
+  color:var(--text);
+  margin-bottom:4px;
+}
+
+/* ── TASK BLOCK ──────────────────────────────────────────────────── */
+.task{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-left:3px solid var(--accent);
+  border-radius:6px;
+  margin:32px 0;
+  overflow:hidden;
+}
+.task-hd{
+  background:var(--surface2);
+  padding:14px 20px;
+  display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border);
+}
+.task-num{
+  font-family:'DM Mono',monospace;
+  font-size:.7rem;letter-spacing:1px;
+  background:var(--accent);color:#000;
+  padding:3px 9px;border-radius:3px;
+  font-weight:500;
+}
+.task-subtitle{font-size:.9rem;color:var(--muted);}
+.task-body{padding:20px 24px;}
+
+/* ── TABLE ───────────────────────────────────────────────────────── */
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.9rem;}
+th{
+  background:var(--surface2);
+  padding:10px 14px;text-align:left;
+  font-family:'DM Mono',monospace;
+  font-size:.72rem;letter-spacing:.5px;
+  color:var(--muted);
+  border-bottom:1px solid var(--border);
+}
+td{padding:9px 14px;border-bottom:1px solid var(--border);color:#ccc9c0;}
+tr:last-child td{border-bottom:none;}
+
+/* ── GRID ────────────────────────────────────────────────────────── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:640px){.two-col{grid-template-columns:1fr;}}
+
+/* ── PILL TAGS ───────────────────────────────────────────────────── */
+.tag{
+  display:inline-block;
+  font-family:'DM Mono',monospace;font-size:.68rem;letter-spacing:.5px;
+  padding:3px 9px;border-radius:3px;
+  margin:2px;
+}
+.tag-rule{background:rgba(232,168,56,.18);color:var(--accent);}
+.tag-blue{background:rgba(91,156,246,.18);color:var(--accent2);}
+.tag-green{background:rgba(107,207,143,.18);color:var(--accent3);}
+
+/* ── DIVIDER ─────────────────────────────────────────────────────── */
+.divider{height:1px;background:var(--border);margin:40px 0;}
+
+/* no fade-in animation - all content visible immediately */
+section{opacity:1;transform:none;}
+</style>
+</head>
+<body>
+
+<nav id="topnav">
+  <a href="#ch0">What is Calculus?</a>
+  <a href="#ch1">Functions</a>
+  <a href="#ch2">The Derivative</a>
+  <a href="#ch3">Basic Rules</a>
+  <a href="#ch4">Chain Rule</a>
+  <a href="#ch5">Product &amp; Quotient</a>
+  <a href="#ch6">Trig &amp; Inverses</a>
+  <a href="#ch7">Curve Analysis</a>
+  <a href="#ch8">Sheet 1 Problems</a>
+  <a href="#ch9">Via Limits</a>
+  <a href="#ab2-intro">Sheet 2 — New Ideas</a>
+  <a href="#ab2">Sheet 2</a>
+  <a href="#ab3-intro">Sheet 3 — Curves</a>
+  <a href="#ab3">Sheet 3</a>
+  <a href="#ab4-intro">Sheet 4 — Limits</a>
+  <a href="#ab4">Sheet 4</a>
+  <a href="#ab5-intro">Sheet 5 — Taylor</a>
+  <a href="#ab5">Sheet 5</a>
+  <a href="#ab6-intro">Sheet 6 — Integration</a>
+  <a href="#ab6">Sheet 6</a>
+  <a href="#ab7-intro">Sheet 7 — Definite Int.</a>
+  <a href="#ab7">Sheet 7</a>
+  <a href="#ab8-intro">Sheet 8 — Partial Deriv.</a>
+  <a href="#ab8">Sheet 8</a>
+  <a href="#ab9-intro">Sheet 9 — Partial 2</a>
+  <a href="#ab9">Sheet 9</a>
+  <a href="#ab10-intro">Sheet 10 — Extrema</a>
+  <a href="#ab10">Sheet 10</a>
+  <a href="#ab11-intro">Sheet 11 — Multiple Int.</a>
+  <a href="#ab11">Sheet 11</a>
+  <a href="#ab12-intro">Sheet 12 — Multiple 2</a>
+  <a href="#ab12">Sheet 12</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-label">Aufgabenblatt 1–12 · Complete Guide</div>
+  <h1>Calculus<br><em>from scratch.</em></h1>
+  <p>You've never seen calculus before. This guide builds every idea from the ground up — with interactive charts — until all problems on all 12 sheets feel completely obvious.</p>
+</div>
+
+<!-- ═══════════════════ CH 0: WHAT IS CALCULUS ═══════════════════ -->
+<section id="ch0">
+  <div class="ch-label">Chapter 0</div>
+  <h2>What is Calculus, really?</h2>
+
+  <p>Calculus is the mathematics of <em>change</em>. That's it. Every single formula in your problem sheet is just a precise way to answer one question:</p>
+
+  <div class="box box-concept">
+    <div class="box-label">The Core Question</div>
+    <strong>If I change $x$ a tiny bit, how much does $f(x)$ change?</strong><br>
+    In other words: <em>how steep is the curve at this exact point?</em>
+  </div>
+
+  <p>Think about driving a car. Your <strong>position</strong> changes over time — that's a function. Your <strong>speed</strong> is how fast your position is changing — that's the derivative. Calculus connects these two things.</p>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Steepness demo — drag the slider to move a point along the curve</div>
+    <canvas id="c0" height="260"></canvas>
+    <div class="slider-row">
+      <label>Point x =</label>
+      <input type="range" id="s0" min="-25" max="25" value="5" step="1">
+      <span class="slider-val" id="v0">0.5</span>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);margin-top:8px;">The orange line is the <strong>tangent</strong> — it shows the steepness at that exact point. Its slope IS the derivative.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH 1: FUNCTIONS ═══════════════════════════ -->
+<section id="ch1">
+  <div class="ch-label">Chapter 1</div>
+  <h2>Functions — input, output, graph</h2>
+
+  <p>A <em>function</em> $f(x)$ is simply a rule: you put in a number $x$, you get out a number $f(x)$. Think of it as a machine.</p>
+
+  <div class="box box-intuition">
+    <div class="box-label">Analogy</div>
+    $f(x) = x^2$ means: "square whatever you give me".<br>
+    Put in $3$ → get out $9$. Put in $-2$ → get out $4$.
+  </div>
+
+  <p>The <strong>graph</strong> of a function is just every point $(x,\, f(x))$ drawn on a plane. All of your problems are about graphs like these:</p>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Common function shapes you'll encounter</div>
+    <canvas id="c1" height="280"></canvas>
+  </div>
+
+  <h3>Reading a graph</h3>
+  <p>Three things to notice on any graph:</p>
+  <table>
+    <thead><tr><th>Feature</th><th>What it means</th><th>How to see it</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Zeros / roots</strong></td><td>Where the curve crosses the x-axis</td><td>$f(x) = 0$</td></tr>
+      <tr><td><strong>High/low points</strong></td><td>Peaks and valleys</td><td>Curve is flat there (slope = 0)</td></tr>
+      <tr><td><strong>Steepness</strong></td><td>How fast $f$ rises or falls</td><td>The tangent line's angle</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════ CH 2: THE DERIVATIVE ═════════════════════ -->
+<section id="ch2">
+  <div class="ch-label">Chapter 2</div>
+  <h2>The Derivative — the slope machine</h2>
+
+  <p>Imagine zooming in on a curve at one point until the curve <em>looks like a straight line</em>. That straight line's slope is the derivative.</p>
+
+  <p>More precisely: take two points on the curve, $x$ and $x + h$. Draw the line through them (a "secant"). Now shrink $h$ toward zero. The secant becomes the tangent:</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Definition of the Derivative</div>
+    $$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$
+    <p style="margin-top:8px;font-size:.9rem;">Read: "the limit as h approaches zero of [rise over run]"</p>
+  </div>
+
+  <p>You never have to use this formula directly — we derive <em>rules</em> from it once, then use those rules forever. But understanding it means you always know <em>what you're computing</em>.</p>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Watch the secant become the tangent — drag h toward 0</div>
+    <canvas id="c2" height="280"></canvas>
+    <div class="slider-row">
+      <label>h =</label>
+      <input type="range" id="s2" min="1" max="40" value="30" step="1">
+      <span class="slider-val" id="v2">3.0</span>
+    </div>
+    <div id="slopeDisplay" style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--accent3);margin-top:8px;"></div>
+  </div>
+
+  <h3>Notation</h3>
+  <p>The derivative of $f(x)$ is written several ways — they all mean the same thing:</p>
+  <div class="box box-concept">
+    $f'(x)$ &nbsp;=&nbsp; $\dfrac{df}{dx}$ &nbsp;=&nbsp; $\dfrac{d}{dx}f(x)$ &nbsp;=&nbsp; $\dot{f}$ (physics)
+  </div>
+
+  <h3>What the sign of $f'(x)$ tells you</h3>
+  <table>
+    <thead><tr><th>$f'(x)$</th><th>Meaning</th><th>Shape</th></tr></thead>
+    <tbody>
+      <tr><td>$> 0$</td><td>$f$ is <strong>increasing</strong></td><td>Slope goes up ↗</td></tr>
+      <tr><td>$= 0$</td><td>$f$ is <strong>flat</strong> (potential peak/valley)</td><td>Horizontal →</td></tr>
+      <tr><td>$< 0$</td><td>$f$ is <strong>decreasing</strong></td><td>Slope goes down ↘</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════ CH 3: BASIC RULES ════════════════════════ -->
+<section id="ch3">
+  <div class="ch-label">Chapter 3</div>
+  <h2>The Basic Rules — your toolkit</h2>
+
+  <p>Instead of using the limit definition every time, mathematicians worked out rules once and for all. Here are every rule you need for this problem sheet:</p>
+
+  <h3>Rule 1: The Power Rule</h3>
+  <div class="box box-rule">
+    <div class="box-label">Power Rule</div>
+    $$\frac{d}{dx} x^n = n \cdot x^{n-1}$$
+    <p style="margin-top:8px;font-size:.9rem;">Bring the exponent down front, reduce the exponent by 1.</p>
+  </div>
+
+  <div class="box box-intuition">
+    <div class="box-label">Examples</div>
+    $\frac{d}{dx} x^3 = 3x^2$ &emsp; $\frac{d}{dx} x^2 = 2x$ &emsp; $\frac{d}{dx} x = 1$ &emsp; $\frac{d}{dx} 5 = 0$<br><br>
+    Works for fractions too: $\frac{d}{dx}\sqrt{x} = \frac{d}{dx}x^{1/2} = \frac{1}{2}x^{-1/2} = \frac{1}{2\sqrt{x}}$<br>
+    And negatives: $\frac{d}{dx}\frac{1}{x} = \frac{d}{dx}x^{-1} = -x^{-2} = -\frac{1}{x^2}$
+  </div>
+
+  <h3>Rule 2: Constants just multiply through</h3>
+  <div class="box box-rule">
+    <div class="box-label">Constant Multiple Rule</div>
+    $$\frac{d}{dx}[c \cdot f(x)] = c \cdot f'(x)$$
+  </div>
+
+  <h3>Rule 3: Add/subtract term by term</h3>
+  <div class="box box-rule">
+    <div class="box-label">Sum Rule</div>
+    $$\frac{d}{dx}[f(x) + g(x)] = f'(x) + g'(x)$$
+  </div>
+
+  <h3>Special functions you must know</h3>
+  <table>
+    <thead><tr><th>Function</th><th>Derivative</th><th>Memory hook</th></tr></thead>
+    <tbody>
+      <tr><td>$\sin x$</td><td>$\cos x$</td><td>sin → cos → −sin → −cos → sin (cycles)</td></tr>
+      <tr><td>$\cos x$</td><td>$-\sin x$</td><td>cos → −sin (note the minus!)</td></tr>
+      <tr><td>$\tan x$</td><td>$\dfrac{1}{\cos^2 x} = \sec^2 x$</td><td>tan → sec²</td></tr>
+      <tr><td>$e^x$</td><td>$e^x$</td><td>$e^x$ is its own derivative — unique!</td></tr>
+      <tr><td>$\ln x$</td><td>$\dfrac{1}{x}$</td><td>ln → 1/x</td></tr>
+      <tr><td>$\arctan x$</td><td>$\dfrac{1}{1+x^2}$</td><td>arctan → 1/(1+x²)</td></tr>
+      <tr><td>$\arccos x$</td><td>$-\dfrac{1}{\sqrt{1-x^2}}$</td><td>arccos → −1/√(1−x²) (minus!)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Power rule in action — select a function</div>
+    <canvas id="c3" height="260"></canvas>
+    <div class="slider-row" style="margin-top:10px;">
+      <label>Power n =</label>
+      <input type="range" id="s3" min="1" max="5" value="2" step="1">
+      <span class="slider-val" id="v3">2</span>
+    </div>
+    <div id="powerDisplay" style="font-family:'DM Mono',monospace;font-size:.85rem;color:var(--accent);margin-top:8px;"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH 4: CHAIN RULE ═════════════════════════ -->
+<section id="ch4">
+  <div class="ch-label">Chapter 4</div>
+  <h2>The Chain Rule — functions inside functions</h2>
+
+  <p>What if a function is <em>nested inside</em> another? Like $\sin(x^2)$ — that's "sine of (something)", where the something is $x^2$.</p>
+
+  <p>The Chain Rule says: differentiate the <em>outside</em> first, then multiply by the derivative of the <em>inside</em>.</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Chain Rule</div>
+    $$\frac{d}{dx}\Big[f\big(g(x)\big)\Big] = f'\big(g(x)\big) \cdot g'(x)$$
+    <p style="margin-top:8px;font-size:.9rem;"><em>outer derivative (evaluated at inner)</em> × <em>inner derivative</em></p>
+  </div>
+
+  <div class="box box-intuition">
+    <div class="box-label">Analogy — gears</div>
+    If gear A turns gear B, and gear B turns gear C:<br>
+    speed of C = (speed ratio B→C) × (speed ratio A→B)<br><br>
+    The chain rule is exactly this: rates of change multiply.
+  </div>
+
+  <h3>Step-by-step method</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-body">
+        <div class="step-title">Identify the outer and inner function</div>
+        For $\sqrt{x^3-2x}$: outer = $\sqrt{\,\cdot\,}$, inner = $x^3-2x$
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-body">
+        <div class="step-title">Differentiate the outer function (treating the inner as one chunk)</div>
+        $\frac{d}{du}\sqrt{u} = \frac{1}{2\sqrt{u}}$ — but leave $u = x^3-2x$ inside
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-body">
+        <div class="step-title">Differentiate the inner function separately</div>
+        $\frac{d}{dx}(x^3-2x) = 3x^2-2$
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-body">
+        <div class="step-title">Multiply them together</div>
+        $\frac{1}{2\sqrt{x^3-2x}} \cdot (3x^2-2)$
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Chain rule: $f(x) = \sin(ax)$ — watch how frequency changes the derivative</div>
+    <canvas id="c4" height="260"></canvas>
+    <div class="slider-row">
+      <label>a (inner) =</label>
+      <input type="range" id="s4" min="1" max="40" value="10" step="1">
+      <span class="slider-val" id="v4">1.0</span>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);margin-top:6px;">Notice: faster oscillation (bigger $a$) → bigger derivative (orange). That "×a" factor IS the chain rule.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH 5: PRODUCT & QUOTIENT ═════════════════ -->
+<section id="ch5">
+  <div class="ch-label">Chapter 5</div>
+  <h2>Product &amp; Quotient Rules — multiplied and divided functions</h2>
+
+  <h3>Product Rule</h3>
+  <p>For $f(x) = u(x) \cdot v(x)$ — two functions <em>multiplied</em> together:</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Product Rule</div>
+    $$(u \cdot v)' = u'v + uv'$$
+    <p style="margin-top:8px;font-size:.9rem;">Each term gets differentiated once. Think: "first-times-derivative-of-second plus second-times-derivative-of-first"</p>
+  </div>
+
+  <div class="box box-warning">
+    <div class="box-label">Common Mistake</div>
+    $(u \cdot v)' \neq u' \cdot v'$ — you CANNOT just differentiate each part separately when multiplying!
+  </div>
+
+  <h3>Quotient Rule</h3>
+  <p>For $f(x) = \dfrac{u(x)}{v(x)}$ — one function <em>divided</em> by another:</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Quotient Rule</div>
+    $$\left(\frac{u}{v}\right)' = \frac{u'v - uv'}{v^2}$$
+    <p style="margin-top:8px;font-size:.9rem;">Memory trick: "low d-high minus high d-low, all over low squared" (low=denominator, high=numerator, d=derivative)</p>
+  </div>
+
+  <div class="box box-intuition">
+    <div class="box-label">Why does the minus sign appear?</div>
+    When the denominator $v$ gets bigger, the whole fraction gets smaller — so the denominator's growth <em>opposes</em> the fraction's growth. That's the minus sign.
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Product rule: $f = x^n \cdot \sin(x)$ — see how each part contributes to f'</div>
+    <canvas id="c5" height="260"></canvas>
+    <div class="slider-row">
+      <label>power n =</label>
+      <input type="range" id="s5" min="1" max="4" value="1" step="1">
+      <span class="slider-val" id="v5">1</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH 6: TRIG & INVERSE ═════════════════════ -->
+<section id="ch6">
+  <div class="ch-label">Chapter 6</div>
+  <h2>Trig &amp; Inverse Trig — the special cases</h2>
+
+  <h3>Trig functions — why do they cycle?</h3>
+  <p>$\sin$ and $\cos$ describe circular motion. Their derivatives describe how fast they change — which is also circular. The <em>slope</em> of $\sin$ at any point equals the <em>height</em> of $\cos$:</p>
+
+  <div class="chart-wrap">
+    <div class="chart-title">sin and its derivative cos — the slope of sin IS cos</div>
+    <canvas id="c6a" height="240"></canvas>
+  </div>
+
+  <h3>Inverse trig functions</h3>
+  <p>$\arctan$ and $\arccos$ are the <em>reverse</em> of $\tan$ and $\cos$. If $\cos(\theta) = x$, then $\arccos(x) = \theta$ — they undo each other.</p>
+
+  <p>Their derivatives look complicated but come directly from the chain rule applied to the "undo" relationship:</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Key Inverse Trig Derivatives</div>
+    $$\frac{d}{dx}\arctan(x) = \frac{1}{1+x^2} \qquad \frac{d}{dx}\arccos(x) = \frac{-1}{\sqrt{1-x^2}}$$
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">arctan(x) and its derivative 1/(1+x²) — derivative is always positive (arctan always rises)</div>
+    <canvas id="c6b" height="240"></canvas>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH 7: CURVE ANALYSIS ═════════════════════ -->
+<section id="ch7">
+  <div class="ch-label">Chapter 7</div>
+  <h2>Curve Analysis — reading a function's full story</h2>
+
+  <p>Aufgabe 8 asks you to "discuss" a function completely. Here's every concept:</p>
+
+  <h3>Zeros (Nullstellen)</h3>
+  <p>Set $f(x) = 0$ and solve. These are where the curve <em>crosses the x-axis</em>.</p>
+
+  <h3>Extrema — maxima and minima</h3>
+  <p>At a peak or valley, the curve is momentarily flat — so $f'(x) = 0$. But $f' = 0$ doesn't guarantee an extremum (could be a "flat wiggle"). You then check the <strong>second derivative</strong>:</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Second Derivative Test</div>
+    Compute $f''(x)$ (the derivative of $f'$).<br><br>
+    • If $f'(a) = 0$ and $f''(a) < 0$ → <strong>local maximum</strong> (curve is concave-down, like ∩)<br>
+    • If $f'(a) = 0$ and $f''(a) > 0$ → <strong>local minimum</strong> (curve is concave-up, like ∪)
+  </div>
+
+  <h3>Monotonicity (Monotonie)</h3>
+  <p>Just check the sign of $f'$:</p>
+  <table>
+    <thead><tr><th>$f'(x) > 0$ on interval</th><th>$f'(x) < 0$ on interval</th></tr></thead>
+    <tbody>
+      <tr><td>$f$ is <strong>increasing</strong> (steigend) ↗</td><td>$f$ is <strong>decreasing</strong> (fallend) ↘</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Inflection Points (Wendepunkte)</h3>
+  <p>Where the curve changes its <em>bend direction</em> — from ∩ to ∪ or vice versa. Find them by:</p>
+  <div class="steps">
+    <div class="step"><div class="step-body"><div class="step-title">Solve $f''(x) = 0$</div>These are <em>candidates</em>.</div></div>
+    <div class="step"><div class="step-body"><div class="step-title">Confirm with $f'''(x) \neq 0$</div>If $f''' \neq 0$ at that point, it truly is an inflection point.</div></div>
+  </div>
+
+  <h3>Curvature (Krümmung)</h3>
+  <table>
+    <thead><tr><th>$f''(x) > 0$</th><th>$f''(x) < 0$</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Convex</strong> (konvex) — shaped like ∪ — "holds water"</td><td><strong>Concave</strong> (konkav) — shaped like ∩ — "spills water"</td></tr>
+    </tbody>
+  </table>
+
+  <div class="chart-wrap">
+    <div class="chart-title">All features on one curve — $f(x) = x^3 - 3x$</div>
+    <canvas id="c7" height="300"></canvas>
+    <p style="font-size:.82rem;color:var(--muted);margin-top:8px;">Hover to explore. Gold = f, Red dashed = f', Green dotted = f''</p>
+  </div>
+</section>
+
+<!-- ═══════════════════ CH 8: YOUR PROBLEMS ══════════════════════ -->
+<section id="ch8">
+  <div class="ch-label">Chapter 8 · The Problems</div>
+  <h2>Now let's solve all 8 problems</h2>
+  <p>Everything below follows directly from the chapters above. Each solution names the rule used and shows every step.</p>
+
+  <!-- ── PROBLEM 1 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 1</span>
+      <span class="task-subtitle">$f(x)=\dfrac{1-x^2}{1+x^2}$ &nbsp;—&nbsp; rational function</span>
+      <span class="tag tag-rule">Quotient Rule</span>
+    </div>
+    <div class="task-body">
+      <p>This is a fraction of two polynomials → use the <strong>Quotient Rule</strong>: $\left(\tfrac{u}{v}\right)' = \tfrac{u'v - uv'}{v^2}$</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Label top and bottom</div>$u = 1 - x^2 \quad v = 1 + x^2$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Differentiate each (Power Rule)</div>$u' = -2x \quad v' = 2x$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Plug into the quotient rule</div>$$f'(x) = \frac{(-2x)(1+x^2) - (1-x^2)(2x)}{(1+x^2)^2}$$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Expand the numerator</div>$$= \frac{-2x - 2x^3 - 2x + 2x^3}{(1+x^2)^2} = \frac{-4x}{(1+x^2)^2}$$<br>The $\pm 2x^3$ cancel completely.</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = \frac{-4x}{(1+x^2)^2}$$</div>
+      <div class="chart-wrap"><canvas id="p1" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 2 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 2</span>
+      <span class="task-subtitle">$f(x)=\sqrt{x^3-2x}$</span>
+      <span class="tag tag-blue">Chain Rule</span>
+    </div>
+    <div class="task-body">
+      <p>A square root of a polynomial → rewrite as power, then apply <strong>Chain Rule</strong>.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Rewrite as a power</div>$f(x) = (x^3-2x)^{1/2}$ — now it's clearly "something to the power ½"</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Outer function derivative (treat inner as one lump "u")</div>$\frac{d}{du}u^{1/2} = \frac{1}{2}u^{-1/2} = \frac{1}{2\sqrt{u}}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Inner function derivative</div>$\frac{d}{dx}(x^3 - 2x) = 3x^2 - 2$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Chain Rule: multiply them, substitute back $u = x^3-2x$</div>$$f'(x) = \frac{1}{2\sqrt{x^3-2x}} \cdot (3x^2-2)$$</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = \frac{3x^2-2}{2\sqrt{x^3-2x}}$$</div>
+      <div class="box box-concept"><div class="box-label">Domain note</div>The square root forces $x^3 - 2x \geq 0$, i.e. $x(x^2-2)\geq 0$, giving $x \in [-\sqrt{2},0]\cup[\sqrt{2},\infty)$.</div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 3 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 3</span>
+      <span class="task-subtitle">$f(x)=\dfrac{1}{\sqrt{x-1}}$</span>
+      <span class="tag tag-blue">Chain Rule</span>
+    </div>
+    <div class="task-body">
+      <p>Rewrite as a negative power, then chain rule.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Rewrite: $\frac{1}{\sqrt{x-1}} = (x-1)^{-1/2}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Outer derivative: $\frac{d}{du}u^{-1/2} = -\frac{1}{2}u^{-3/2}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Inner derivative: $\frac{d}{dx}(x-1) = 1$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Multiply: $-\frac{1}{2}(x-1)^{-3/2} \cdot 1$</div></div></div>
+      </div>
+      <div class="box-result">$$f'(x) = -\frac{1}{2(x-1)^{3/2}}$$</div>
+      <div class="box box-concept"><div class="box-label">Why negative?</div>As $x$ increases (moving away from 1), $\frac{1}{\sqrt{x-1}}$ decreases — the function falls, so the derivative must be negative. ✓</div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 4 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 4</span>
+      <span class="task-subtitle">a) $\sin x\cos x$ &nbsp; b) $\sin^2 x$</span>
+      <span class="tag tag-rule">Product Rule</span>
+      <span class="tag tag-blue">Chain Rule</span>
+    </div>
+    <div class="task-body">
+      <p><strong>Part a)</strong> — Two trig functions multiplied → <strong>Product Rule</strong></p>
+      <div class="steps">
+        <div class="step"><div class="step-body">$u=\sin x,\; u'=\cos x \quad v=\cos x,\; v'=-\sin x$</div></div>
+        <div class="step"><div class="step-body">$(u\cdot v)' = \cos x \cdot \cos x + \sin x \cdot(-\sin x) = \cos^2 x - \sin^2 x$</div></div>
+        <div class="step"><div class="step-body">Apply identity $\cos(2x) = \cos^2 x - \sin^2 x$</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = \cos(2x)$$</div>
+
+      <p><strong>Part b)</strong> — $\sin^2 x$ means $(\sin x)^2$ — a function inside a power → <strong>Chain Rule</strong></p>
+      <div class="steps">
+        <div class="step"><div class="step-body">Outer: $u^2$, derivative = $2u$. Inner: $\sin x$, derivative = $\cos x$</div></div>
+        <div class="step"><div class="step-body">Multiply: $2\sin x \cdot \cos x$</div></div>
+        <div class="step"><div class="step-body">Identity: $2\sin x\cos x = \sin(2x)$</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = \sin(2x)$$</div>
+      <div class="chart-wrap"><canvas id="p4" height="230"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 5 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 5</span>
+      <span class="task-subtitle">a) $\sin(x^2)$ &nbsp; b) $\tan x \cdot \sin x$</span>
+      <span class="tag tag-blue">Chain Rule</span>
+      <span class="tag tag-rule">Product Rule</span>
+    </div>
+    <div class="task-body">
+      <p><strong>Part a)</strong> — $\sin$ of something → <strong>Chain Rule</strong></p>
+      <div class="steps">
+        <div class="step"><div class="step-body">Outer: $\sin(u)$, derivative = $\cos(u)$. Inner: $x^2$, derivative = $2x$</div></div>
+        <div class="step"><div class="step-body">Multiply: $\cos(x^2) \cdot 2x$</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = 2x\cos(x^2)$$</div>
+
+      <p><strong>Part b)</strong> — Two functions multiplied → <strong>Product Rule</strong></p>
+      <div class="steps">
+        <div class="step"><div class="step-body">$u = \tan x,\; u' = \frac{1}{\cos^2 x} \quad v = \sin x,\; v' = \cos x$</div></div>
+        <div class="step"><div class="step-body">$(u\cdot v)' = \frac{\sin x}{\cos^2 x} + \tan x \cdot \cos x$</div></div>
+        <div class="step"><div class="step-body">$\tan x \cdot \cos x = \frac{\sin x}{\cos x}\cdot\cos x = \sin x$, so: $\frac{\sin x}{\cos^2 x} + \sin x = \sin x\!\left(\frac{1}{\cos^2 x} + 1\right)$</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = \frac{\sin x\,(1+\cos^2 x)}{\cos^2 x}$$</div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 6 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 6</span>
+      <span class="task-subtitle">$f(x) = \arctan\sqrt{x}$</span>
+      <span class="tag tag-blue">Chain Rule (double)</span>
+    </div>
+    <div class="task-body">
+      <p>$\arctan$ applied to $\sqrt{x}$ — two layers of chain rule.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">Outer: $\arctan(u)$, derivative = $\frac{1}{1+u^2}$. Substitute $u = \sqrt{x}$: $\frac{1}{1+(\sqrt{x})^2} = \frac{1}{1+x}$</div></div>
+        <div class="step"><div class="step-body">Inner: $\sqrt{x} = x^{1/2}$, derivative = $\frac{1}{2\sqrt{x}}$</div></div>
+        <div class="step"><div class="step-body">Multiply: $\frac{1}{1+x} \cdot \frac{1}{2\sqrt{x}}$</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = \frac{1}{2\sqrt{x}\,(1+x)}$$</div>
+      <div class="chart-wrap"><canvas id="p6" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 7 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 7</span>
+      <span class="task-subtitle">$f(x) = \arccos(e^x)$</span>
+      <span class="tag tag-blue">Chain Rule</span>
+    </div>
+    <div class="task-body">
+      <p>$\arccos$ applied to $e^x$ → Chain Rule.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">Outer: $\arccos(u)$, derivative = $\frac{-1}{\sqrt{1-u^2}}$. Substitute $u = e^x$: $\frac{-1}{\sqrt{1-e^{2x}}}$</div></div>
+        <div class="step"><div class="step-body">Inner: $e^x$, derivative = $e^x$ (unique — it's its own derivative!)</div></div>
+        <div class="step"><div class="step-body">Multiply: $\frac{-1}{\sqrt{1-e^{2x}}} \cdot e^x$</div></div>
+      </div>
+      <div class="box-result">$$f'(x) = \frac{-e^x}{\sqrt{1-e^{2x}}}$$</div>
+      <div class="box box-concept"><div class="box-label">Domain</div>Need $e^{2x} < 1$, so $e^x < 1$, meaning $x < 0$. Only defined on the left half of the number line.</div>
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 8 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 8</span>
+      <span class="task-subtitle">$f(x) = x^3 - 3x$ — full curve discussion</span>
+      <span class="tag tag-green">Full Analysis</span>
+    </div>
+    <div class="task-body">
+      <p>This requires us to use everything: zeros, extrema, monotonicity, inflection, curvature, limits.</p>
+
+      <h4>Step 1 — Compute all derivatives</h4>
+      <p>$f(x) = x^3-3x \quad f'(x) = 3x^2-3 = 3(x-1)(x+1) \quad f''(x) = 6x \quad f'''(x) = 6$</p>
+
+      <h4>Step 2 — Zeros: solve $f(x)=0$</h4>
+      <p>$x(x^2-3)=0 \Rightarrow x=0$ or $x^2=3 \Rightarrow x = \pm\sqrt{3} \approx \pm 1.73$</p>
+
+      <h4>Step 3 — Critical points: solve $f'(x)=0$</h4>
+      <p>$3(x-1)(x+1)=0 \Rightarrow x = \pm 1$. Then check $f''$:</p>
+      <table>
+        <thead><tr><th>$x$</th><th>$f''(x)$</th><th>Type</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>$-1$</td><td>$f''(-1) = -6 < 0$</td><td>🔺 Local <strong>Maximum</strong></td><td>$f(-1) = 2$</td></tr>
+          <tr><td>$+1$</td><td>$f''(+1) = +6 > 0$</td><td>🔻 Local <strong>Minimum</strong></td><td>$f(+1) = -2$</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Step 4 — Monotonicity</h4>
+      <p>Sign of $f'(x) = 3(x-1)(x+1)$:</p>
+      <table>
+        <thead><tr><th>Interval</th><th>Sign of $f'$</th><th>$f$ is...</th></tr></thead>
+        <tbody>
+          <tr><td>$x < -1$</td><td>$(-)(-) = +$</td><td>↗ increasing</td></tr>
+          <tr><td>$-1 < x < 1$</td><td>$(-)(+) = -$</td><td>↘ decreasing</td></tr>
+          <tr><td>$x > 1$</td><td>$(+)(+) = +$</td><td>↗ increasing</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Step 5 — Inflection: solve $f''(x)=0$</h4>
+      <p>$6x = 0 \Rightarrow x = 0$. Check: $f'''(0) = 6 \neq 0$ ✓ → inflection point at $(0, 0)$.</p>
+      <p>Tangent line at inflection: slope $= f'(0) = -3$, so $t(x) = -3x$.</p>
+
+      <h4>Step 6 — Curvature</h4>
+      <table>
+        <thead><tr><th>Interval</th><th>$f''$</th><th>Shape</th></tr></thead>
+        <tbody>
+          <tr><td>$x < 0$</td><td>$< 0$</td><td>⌢ concave (∩)</td></tr>
+          <tr><td>$x > 0$</td><td>$> 0$</td><td>⌣ convex (∪)</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Step 7 — Convergence / limits</h4>
+      <p>Polynomial of odd degree, positive leading coefficient: $f(x) \to +\infty$ as $x\to+\infty$ and $f(x)\to-\infty$ as $x\to-\infty$. No asymptotes.</p>
+
+      <div class="chart-wrap">
+        <div class="chart-title">Aufgabe 8 — interactive: toggle layers</div>
+        <canvas id="p8" height="300"></canvas>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+          <label style="font-size:.82rem;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc9c0;"><input type="checkbox" id="tog_f"   checked> <span style="color:#e8a838;font-weight:600;">f(x)</span></label>
+          <label style="font-size:.82rem;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc9c0;"><input type="checkbox" id="tog_df"  checked> <span style="color:#5b9cf6;font-weight:600;">f′(x)</span></label>
+          <label style="font-size:.82rem;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc9c0;"><input type="checkbox" id="tog_ddf" checked> <span style="color:#6bcf8f;font-weight:600;">f″(x)</span></label>
+          <label style="font-size:.82rem;display:flex;align-items:center;gap:6px;cursor:pointer;color:#ccc9c0;"><input type="checkbox" id="tog_tan" checked> <span style="color:#c084fc;font-weight:600;">tangent at WP</span></label>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════ CH 9: EVERYTHING VIA LIMITS ══════════════ -->
+<section id="ch9">
+  <div class="ch-label">Chapter 9 · First Principles</div>
+  <h2>Every exercise solved using only the limit definition</h2>
+
+  <p>No shortcuts. No pre-memorised rules. Each derivative below is computed purely from:</p>
+
+  <div class="box box-rule">
+    <div class="box-label">The Only Tool We Use</div>
+    $$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$
+    <p style="margin-top:8px;font-size:.9rem;">Plug in $f$, expand the numerator, cancel the $h$ in the denominator, then set $h=0$.</p>
+  </div>
+
+  <p>The same four-move pattern works every time:</p>
+  <div class="steps">
+    <div class="step"><div class="step-body"><div class="step-title">Write out $f(x+h)$</div>Replace every $x$ with $(x+h)$ inside the formula for $f$.</div></div>
+    <div class="step"><div class="step-body"><div class="step-title">Form $f(x+h) - f(x)$ and expand</div>Algebra — multiply out brackets, use identities.</div></div>
+    <div class="step"><div class="step-body"><div class="step-title">Factor out $h$ from the numerator and cancel with the $h$ in the denominator</div>This is the key step. If $h$ doesn't cancel, you've made an error.</div></div>
+    <div class="step"><div class="step-body"><div class="step-title">Take the limit $h \to 0$</div>Every surviving term with $h$ vanishes. What's left is $f'(x)$.</div></div>
+  </div>
+
+  <div class="box box-warning">
+    <div class="box-label">Why must h cancel?</div>
+    Plugging $h=0$ directly gives $\frac{0}{0}$ — undefined. The whole art of differential calculus is in the algebra that makes $h$ cancel <em>before</em> we set it to zero.
+  </div>
+
+  <!-- ── LIMIT PROBLEM 1 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 1</span>
+      <span class="task-subtitle">$f(x)=\dfrac{1-x^2}{1+x^2}$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Step 1 — Write $f(x+h)$</h4>
+      <p>Replace every $x$ with $(x+h)$:</p>
+      $$f(x+h) = \frac{1-(x+h)^2}{1+(x+h)^2}$$
+
+      <h4>Step 2 — Form and expand $f(x+h)-f(x)$</h4>
+      <p>We need a common denominator to subtract the two fractions. Let $A = 1+(x+h)^2$ and $B = 1+x^2$:</p>
+      $$f(x+h)-f(x) = \frac{[1-(x+h)^2]\,B \;-\; [1-x^2]\,A}{A \cdot B}$$
+
+      <p>Expand the numerator. First expand $(x+h)^2 = x^2+2xh+h^2$, so $1-(x+h)^2 = 1-x^2-2xh-h^2$ and $A = 1+x^2+2xh+h^2$:</p>
+
+      $$\text{Numerator} = (1-x^2-2xh-h^2)(1+x^2) - (1-x^2)(1+x^2+2xh+h^2)$$
+
+      <p>Expand each product:</p>
+      $$= \underbrace{(1-x^2)(1+x^2)}_{\text{same in both}} + (1+x^2)(-2xh-h^2) - (1-x^2)(2xh+h^2) - \underbrace{(1-x^2)(1+x^2)}_{\text{cancels}}$$
+
+      $$= (-2xh-h^2)(1+x^2) - (1-x^2)(2xh+h^2)$$
+
+      <p>Factor out $h$:</p>
+      $$= h\Big[(-2x-h)(1+x^2) - (1-x^2)(2x+h)\Big]$$
+
+      <h4>Step 3 — Cancel the $h$</h4>
+      $$\frac{f(x+h)-f(x)}{h} = \frac{(-2x-h)(1+x^2)-(1-x^2)(2x+h)}{(1+(x+h)^2)(1+x^2)}$$
+
+      <h4>Step 4 — Take $h \to 0$</h4>
+      <p>Every $h$ term vanishes:</p>
+      $$f'(x) = \frac{(-2x)(1+x^2)-(1-x^2)(2x)}{(1+x^2)^2} = \frac{-2x-2x^3-2x+2x^3}{(1+x^2)^2}$$
+
+      <div class="box-result">$$f'(x) = \frac{-4x}{(1+x^2)^2}$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 2 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 2</span>
+      <span class="task-subtitle">$f(x)=\sqrt{x^3-2x}$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Step 1 — Write $f(x+h)$</h4>
+      $$f(x+h) = \sqrt{(x+h)^3 - 2(x+h)}$$
+
+      <h4>Step 2 — Form $f(x+h)-f(x)$</h4>
+      $$\frac{\sqrt{(x+h)^3-2(x+h)} - \sqrt{x^3-2x}}{h}$$
+
+      <p>Direct expansion would leave us with a square root we can't simplify. The standard trick: multiply top and bottom by the <em>conjugate</em> — the same expression with the opposite sign between the roots:</p>
+
+      <div class="box box-concept">
+        <div class="box-label">Conjugate trick</div>
+        $$\frac{\sqrt{A}-\sqrt{B}}{h} \cdot \frac{\sqrt{A}+\sqrt{B}}{\sqrt{A}+\sqrt{B}} = \frac{A - B}{h(\sqrt{A}+\sqrt{B})}$$
+        The square roots disappear because $(\sqrt{A}-\sqrt{B})(\sqrt{A}+\sqrt{B}) = A - B$.
+      </div>
+
+      <p>Here $A = (x+h)^3-2(x+h)$ and $B = x^3-2x$, so:</p>
+      $$A - B = (x+h)^3-2(x+h) - (x^3-2x)$$
+
+      <p>Expand $(x+h)^3 = x^3+3x^2h+3xh^2+h^3$:</p>
+      $$= x^3+3x^2h+3xh^2+h^3-2x-2h - x^3+2x = 3x^2h+3xh^2+h^3-2h$$
+
+      <h4>Step 3 — Cancel $h$</h4>
+      $$= \frac{h(3x^2+3xh+h^2-2)}{h(\sqrt{A}+\sqrt{B})} = \frac{3x^2+3xh+h^2-2}{\sqrt{(x+h)^3-2(x+h)}+\sqrt{x^3-2x}}$$
+
+      <h4>Step 4 — Take $h \to 0$</h4>
+      $$f'(x) = \frac{3x^2-2}{\sqrt{x^3-2x}+\sqrt{x^3-2x}} = \frac{3x^2-2}{2\sqrt{x^3-2x}}$$
+
+      <div class="box-result">$$f'(x) = \frac{3x^2-2}{2\sqrt{x^3-2x}}$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 3 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 3</span>
+      <span class="task-subtitle">$f(x)=\dfrac{1}{\sqrt{x-1}}$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Step 1 — Write $f(x+h)$</h4>
+      $$f(x+h) = \frac{1}{\sqrt{x+h-1}}$$
+
+      <h4>Step 2 — Form $f(x+h)-f(x)$</h4>
+      $$\frac{1}{h}\left(\frac{1}{\sqrt{x+h-1}} - \frac{1}{\sqrt{x-1}}\right)$$
+
+      <p>Combine the fractions over a common denominator $\sqrt{x+h-1}\,\sqrt{x-1}$:</p>
+      $$= \frac{1}{h} \cdot \frac{\sqrt{x-1} - \sqrt{x+h-1}}{\sqrt{x+h-1}\,\sqrt{x-1}}$$
+
+      <p>The numerator is again a difference of square roots — use the conjugate trick again, multiplying by $\dfrac{\sqrt{x-1}+\sqrt{x+h-1}}{\sqrt{x-1}+\sqrt{x+h-1}}$:</p>
+
+      $$\sqrt{x-1}-\sqrt{x+h-1} \;\longrightarrow\; \frac{(x-1)-(x+h-1)}{\sqrt{x-1}+\sqrt{x+h-1}} = \frac{-h}{\sqrt{x-1}+\sqrt{x+h-1}}$$
+
+      <h4>Step 3 — Cancel $h$</h4>
+      $$\frac{f(x+h)-f(x)}{h} = \frac{-h}{h \cdot \sqrt{x+h-1}\,\sqrt{x-1}\left(\sqrt{x-1}+\sqrt{x+h-1}\right)}$$
+      $$= \frac{-1}{\sqrt{x+h-1}\,\sqrt{x-1}\left(\sqrt{x-1}+\sqrt{x+h-1}\right)}$$
+
+      <h4>Step 4 — Take $h \to 0$</h4>
+      <p>Both $\sqrt{x+h-1} \to \sqrt{x-1}$:</p>
+      $$f'(x) = \frac{-1}{\sqrt{x-1}\cdot\sqrt{x-1}\cdot 2\sqrt{x-1}} = \frac{-1}{2(x-1)^{3/2}}$$
+
+      <div class="box-result">$$f'(x) = -\frac{1}{2(x-1)^{3/2}}$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 4a ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 4a</span>
+      <span class="task-subtitle">$f(x)=\sin x\cos x$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Step 1 — Write $f(x+h)$</h4>
+      $$f(x+h) = \sin(x+h)\cos(x+h)$$
+
+      <h4>Step 2 — Use the product-to-sum identity to simplify $f$ first</h4>
+
+      <div class="box box-concept">
+        <div class="box-label">Shortcut before we even start</div>
+        The identity $\sin\theta\cos\theta = \tfrac{1}{2}\sin(2\theta)$ means $f(x) = \tfrac{1}{2}\sin(2x)$. We can differentiate this instead — it's the same function, just written more simply.
+      </div>
+
+      <p>So: $f(x) = \tfrac{1}{2}\sin(2x)$, giving $f(x+h) = \tfrac{1}{2}\sin(2x+2h)$.</p>
+
+      <h4>Step 3 — Form the difference quotient</h4>
+      $$\frac{f(x+h)-f(x)}{h} = \frac{\tfrac{1}{2}\sin(2x+2h)-\tfrac{1}{2}\sin(2x)}{h}$$
+
+      <p>Use the <strong>sum formula</strong> $\sin(A+B)=\sin A\cos B+\cos A\sin B$ with $A=2x, B=2h$:</p>
+      $$= \frac{\tfrac{1}{2}\big[\sin(2x)\cos(2h)+\cos(2x)\sin(2h)-\sin(2x)\big]}{h}$$
+      $$= \frac{\tfrac{1}{2}\sin(2x)(\cos(2h)-1)+\tfrac{1}{2}\cos(2x)\sin(2h)}{h}$$
+
+      <h4>Step 4 — Apply two fundamental trig limits</h4>
+
+      <div class="box box-rule">
+        <div class="box-label">Two Limits You Must Know</div>
+        $$\lim_{h\to 0}\frac{\sin h}{h} = 1 \qquad\qquad \lim_{h\to 0}\frac{\cos h - 1}{h} = 0$$
+        These are proven geometrically using the unit circle — they are the bedrock of all trig differentiation.
+      </div>
+
+      <p>Split into two terms and take $h\to 0$:</p>
+      $$f'(x) = \tfrac{1}{2}\sin(2x)\cdot\underbrace{\lim_{h\to0}\frac{\cos(2h)-1}{h}}_{=\,0} + \tfrac{1}{2}\cos(2x)\cdot\underbrace{\lim_{h\to0}\frac{\sin(2h)}{h}}_{=\,2}$$
+
+      <p>(For the second limit: $\lim_{h\to0}\frac{\sin(2h)}{h} = 2\lim_{h\to0}\frac{\sin(2h)}{2h} = 2\cdot 1 = 2$.)</p>
+
+      <div class="box-result">$$f'(x) = \tfrac{1}{2}\cos(2x)\cdot 2 = \cos(2x)$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 4b ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 4b</span>
+      <span class="task-subtitle">$f(x)=\sin^2 x$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Step 1 — Form the difference quotient</h4>
+      $$\frac{\sin^2(x+h)-\sin^2 x}{h}$$
+
+      <p>Factor using $A^2-B^2 = (A-B)(A+B)$:</p>
+      $$= \frac{(\sin(x+h)-\sin x)(\sin(x+h)+\sin x)}{h}$$
+
+      <h4>Step 2 — Apply sum-to-product identities</h4>
+      <p>Use: $\sin(x+h)-\sin x = 2\cos\!\left(x+\tfrac{h}{2}\right)\sin\!\left(\tfrac{h}{2}\right)$ and $\sin(x+h)+\sin x = 2\sin\!\left(x+\tfrac{h}{2}\right)\cos\!\left(\tfrac{h}{2}\right)$:</p>
+
+      $$= \frac{4\cos(x+\tfrac{h}{2})\sin(\tfrac{h}{2})\sin(x+\tfrac{h}{2})\cos(\tfrac{h}{2})}{h}$$
+
+      <h4>Step 3 — Rearrange to expose the fundamental limit</h4>
+      $$= \frac{\sin(\tfrac{h}{2})}{\tfrac{h}{2}} \cdot 2\sin\!\left(x+\tfrac{h}{2}\right)\cos\!\left(x+\tfrac{h}{2}\right)\cos\!\left(\tfrac{h}{2}\right)$$
+
+      <h4>Step 4 — Take $h\to 0$</h4>
+      <p>$\frac{\sin(h/2)}{h/2}\to 1$, $\cos(h/2)\to 1$, and $2\sin(x)\cos(x)=\sin(2x)$:</p>
+
+      <div class="box-result">$$f'(x) = 1 \cdot \sin(2x) \cdot 1 = \sin(2x)$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 5a ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 5a</span>
+      <span class="task-subtitle">$f(x)=\sin(x^2)$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Step 1 — Form the difference quotient</h4>
+      $$\frac{\sin((x+h)^2)-\sin(x^2)}{h}$$
+
+      <p>Expand $(x+h)^2 = x^2+2xh+h^2$, so the argument shifts by $2xh+h^2$:</p>
+      $$= \frac{\sin(x^2+2xh+h^2)-\sin(x^2)}{h}$$
+
+      <h4>Step 2 — Sum formula: $\sin(A+B)=\sin A\cos B+\cos A\sin B$</h4>
+      <p>With $A=x^2$ and $B=2xh+h^2$:</p>
+      $$= \frac{\sin(x^2)(\cos(2xh+h^2)-1)+\cos(x^2)\sin(2xh+h^2)}{h}$$
+
+      <h4>Step 3 — Use the fundamental trig limits (with substitution $u=2xh+h^2$)</h4>
+      <p>As $h\to0$, $u\to0$, and $u/h \to 2x+h\to 2x$:</p>
+      $$\frac{\cos(u)-1}{h} = \frac{\cos(u)-1}{u}\cdot\frac{u}{h} \;\xrightarrow{h\to0}\; 0\cdot 2x = 0$$
+      $$\frac{\sin(u)}{h} = \frac{\sin(u)}{u}\cdot\frac{u}{h} \;\xrightarrow{h\to0}\; 1\cdot 2x = 2x$$
+
+      <h4>Step 4 — Take $h\to 0$</h4>
+      $$f'(x) = \sin(x^2)\cdot 0 + \cos(x^2)\cdot 2x$$
+
+      <div class="box-result">$$f'(x) = 2x\cos(x^2)$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 5b ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 5b</span>
+      <span class="task-subtitle">$f(x)=\tan x\cdot\sin x$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Rewrite in terms of sin and cos first</h4>
+      <p>$\tan x = \frac{\sin x}{\cos x}$, so $f(x) = \frac{\sin^2 x}{\cos x}$. This is a single fraction — easier to work with.</p>
+
+      <h4>Form the difference quotient</h4>
+      $$\frac{f(x+h)-f(x)}{h} = \frac{1}{h}\left(\frac{\sin^2(x+h)}{\cos(x+h)} - \frac{\sin^2 x}{\cos x}\right)$$
+
+      <p>Common denominator $\cos(x+h)\cos x$:</p>
+      $$= \frac{\sin^2(x+h)\cos x - \sin^2 x\cos(x+h)}{h\cos(x+h)\cos x}$$
+
+      <h4>Split the numerator strategically</h4>
+      <p>Add and subtract $\sin^2 x \cos x$ inside the numerator:</p>
+      $$= \frac{(\sin^2(x+h)-\sin^2 x)\cos x + \sin^2 x(\cos x - \cos(x+h))}{h\cos(x+h)\cos x}$$
+
+      <p>We already know from Aufgabe 4b that $\dfrac{\sin^2(x+h)-\sin^2 x}{h}\to\sin(2x)$.<br>
+      For the second piece, use $\dfrac{\cos x - \cos(x+h)}{h} = -\dfrac{\cos(x+h)-\cos x}{h}\to\sin x$ (standard limit).</p>
+
+      <h4>Take $h\to 0$</h4>
+      $$f'(x) = \frac{\sin(2x)\cdot\cos x + \sin^2 x\cdot\sin x}{\cos^2 x} = \frac{2\sin x\cos^2 x + \sin^3 x}{\cos^2 x}$$
+      $$= \frac{\sin x(2\cos^2 x+\sin^2 x)}{\cos^2 x} = \frac{\sin x(\cos^2 x + 1)}{\cos^2 x}$$
+
+      <div class="box-result">$$f'(x) = \frac{\sin x\,(1+\cos^2 x)}{\cos^2 x}$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 6 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 6</span>
+      <span class="task-subtitle">$f(x)=\arctan\sqrt{x}$</span>
+    </div>
+    <div class="task-body">
+
+      <p>For inverse functions the limit approach requires a clever substitution. We use the <strong>inverse function derivative theorem</strong>, which itself comes from the limit definition:</p>
+
+      <div class="box box-rule">
+        <div class="box-label">Inverse Function Derivative (derived from first principles)</div>
+        <p>If $g = f^{-1}$, i.e. $f(g(y))=y$, differentiate both sides with respect to $y$:</p>
+        $$f'(g(y))\cdot g'(y) = 1 \implies g'(y) = \frac{1}{f'(g(y))}$$
+      </div>
+
+      <h4>Deriving $\frac{d}{dx}\arctan(x)$ from limits</h4>
+      <p>Let $g(y) = \arctan(y)$, so $f(x)=\tan(x)$ and $f(g(y))=y$. We need $f'(x) = \frac{d}{dx}\tan x$.</p>
+
+      <p>First, $\tan x = \frac{\sin x}{\cos x}$. From the limit definition (quotient rule derivation):</p>
+      $$\frac{d}{dx}\tan x = \frac{\cos x\cdot\cos x - \sin x\cdot(-\sin x)}{\cos^2 x} = \frac{\cos^2 x+\sin^2 x}{\cos^2 x} = \frac{1}{\cos^2 x}$$
+
+      <p>So $f'(g(y)) = \frac{1}{\cos^2(\arctan y)}$. Use the identity $\cos^2(\arctan y) = \frac{1}{1+y^2}$:</p>
+
+      <div class="box box-concept">
+        <div class="box-label">Why $\cos^2(\arctan y) = \frac{1}{1+y^2}$</div>
+        Draw a right triangle with opposite $y$, adjacent $1$, so hypotenuse $=\sqrt{1+y^2}$. Then $\tan\theta = y$, and $\cos\theta = \frac{1}{\sqrt{1+y^2}}$, so $\cos^2\theta = \frac{1}{1+y^2}$.
+      </div>
+
+      <p>Therefore $(\arctan y)' = \frac{1}{1/(1+y^2)} = \frac{1}{1+y^2}$.</p>
+
+      <h4>Now apply the Chain Rule (proven from limits) to $\arctan\sqrt{x}$</h4>
+      <p>With outer $=\arctan$, inner $=\sqrt{x}$:</p>
+      $$f'(x) = \frac{1}{1+(\sqrt{x})^2}\cdot\frac{1}{2\sqrt{x}} = \frac{1}{1+x}\cdot\frac{1}{2\sqrt{x}}$$
+
+      <div class="box-result">$$f'(x) = \frac{1}{2\sqrt{x}\,(1+x)}$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 7 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 7</span>
+      <span class="task-subtitle">$f(x)=\arccos(e^x)$</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Derive $\frac{d}{dx}\arccos(x)$ from first principles</h4>
+      <p>Let $g(y) = \arccos(y)$, so $f(x) = \cos(x)$ and $\cos(g(y)) = y$.</p>
+
+      <p>First we need $(\cos x)'$ from the limit definition:</p>
+      $$\frac{d}{dx}\cos x = \lim_{h\to0}\frac{\cos(x+h)-\cos x}{h}$$
+      <p>Sum formula $\cos(x+h)=\cos x\cos h - \sin x\sin h$:</p>
+      $$= \lim_{h\to0}\frac{\cos x(\cos h - 1) - \sin x\sin h}{h} = \cos x\cdot 0 - \sin x\cdot 1 = -\sin x$$
+
+      <p>Now inverse function theorem: $f'(g(y)) = -\sin(\arccos y)$. Use $\sin(\arccos y) = \sqrt{1-y^2}$:</p>
+
+      <div class="box box-concept">
+        <div class="box-label">Why $\sin(\arccos y)=\sqrt{1-y^2}$</div>
+        Triangle: hypotenuse $1$, adjacent $y$, so opposite $=\sqrt{1-y^2}$. Then $\cos\theta=y$ and $\sin\theta=\sqrt{1-y^2}$.
+      </div>
+
+      $$(\arccos y)' = \frac{1}{-\sin(\arccos y)} = \frac{-1}{\sqrt{1-y^2}}$$
+
+      <h4>Apply the Chain Rule to $\arccos(e^x)$</h4>
+      <p>Outer $=\arccos$, inner $=e^x$. The derivative of $e^x$: from the limit definition, $\lim_{h\to0}\frac{e^{x+h}-e^x}{h} = e^x\lim_{h\to0}\frac{e^h-1}{h} = e^x\cdot 1 = e^x$.</p>
+
+      $$f'(x) = \frac{-1}{\sqrt{1-(e^x)^2}}\cdot e^x$$
+
+      <div class="box-result">$$f'(x) = \frac{-e^x}{\sqrt{1-e^{2x}}}$$</div>
+    </div>
+  </div>
+
+  <!-- ── LIMIT PROBLEM 8 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 8</span>
+      <span class="task-subtitle">$f(x)=x^3-3x$ — all derivatives from limits</span>
+    </div>
+    <div class="task-body">
+
+      <h4>Computing $f'(x)$ from the limit definition</h4>
+
+      <h4>Step 1 — $f(x+h)$</h4>
+      $$(x+h)^3 - 3(x+h) = x^3+3x^2h+3xh^2+h^3 - 3x - 3h$$
+
+      <h4>Step 2 — $f(x+h)-f(x)$</h4>
+      $$= x^3+3x^2h+3xh^2+h^3-3x-3h - x^3+3x = 3x^2h+3xh^2+h^3-3h$$
+
+      <h4>Step 3 — Divide by $h$</h4>
+      $$\frac{f(x+h)-f(x)}{h} = \frac{h(3x^2+3xh+h^2-3)}{h} = 3x^2+3xh+h^2-3$$
+
+      <h4>Step 4 — Take $h\to 0$</h4>
+      $$f'(x) = 3x^2 - 3$$
+
+      <div class="box-result">$$f'(x) = 3x^2-3 = 3(x-1)(x+1)$$</div>
+
+      <h4>Computing $f''(x)$ — differentiate $f'(x)=3x^2-3$ again</h4>
+
+      $$\frac{f'(x+h)-f'(x)}{h} = \frac{3(x+h)^2-3-(3x^2-3)}{h} = \frac{3x^2+6xh+3h^2-3x^2}{h} = \frac{6xh+3h^2}{h} = 6x+3h$$
+
+      $$\lim_{h\to 0}(6x+3h) = 6x$$
+
+      <div class="box-result">$$f''(x) = 6x$$</div>
+
+      <div class="box box-intuition">
+        <div class="box-label">What we can now read off — directly from these limit results</div>
+        <p>$f'(x)=3x^2-3=0 \Rightarrow x=\pm1$. Since $f''(-1)=-6&lt;0$: maximum at $(-1,2)$. Since $f''(1)=6&gt;0$: minimum at $(1,-2)$.</p>
+        <p>$f''(x)=6x=0 \Rightarrow x=0$. Since $f'''(x)=6\neq0$: inflection point at $(0,0)$, with tangent slope $f'(0)=-3$.</p>
+      </div>
+
+      <div class="chart-wrap"><canvas id="lim8" height="280"></canvas></div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     AUFGABENBLATT 2 — NEW THEORY
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab2-intro">
+  <div class="ch-label">Aufgabenblatt 2 · New Concepts</div>
+  <h2>Three new techniques you need</h2>
+  <p>Sheet 2 introduces three ideas that don't appear on Sheet 1. Each one is explained here before the problems.</p>
+
+  <!-- ── IMPLICIT DIFFERENTIATION ── -->
+  <h3>1 — Implicit Differentiation</h3>
+  <p>So far every function has been <em>explicit</em>: $y = f(x)$, meaning $y$ is alone on the left. But some equations mix $x$ and $y$ together, like $x^2 + y^2 = r^2$. You can't easily solve for $y$ first — so instead you differentiate <em>both sides at once</em>, treating $y$ as a function of $x$ the whole time.</p>
+
+  <div class="box box-rule">
+    <div class="box-label">The Key Insight</div>
+    Whenever you differentiate a term containing $y$ with respect to $x$, the <strong>Chain Rule</strong> forces a factor of $y'$ to appear — because $y$ itself depends on $x$.
+    $$\frac{d}{dx}\bigl[y^2\bigr] = 2y\cdot y' \qquad \frac{d}{dx}\bigl[e^y\bigr] = e^y\cdot y' \qquad \frac{d}{dx}\bigl[\ln y\bigr] = \frac{1}{y}\cdot y'$$
+  </div>
+
+  <div class="box box-intuition">
+    <div class="box-label">Method — three steps every time</div>
+    <strong>Step 1:</strong> Differentiate every term on both sides with respect to $x$. Every $y$-term gets a $\cdot y'$ appended (Chain Rule).<br>
+    <strong>Step 2:</strong> Collect all $y'$ terms on one side, everything else on the other.<br>
+    <strong>Step 3:</strong> Factor out $y'$ and divide.
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Implicit curve $x^2 + y^2 = 9$ — the tangent slope at any point is $y' = -x/y$</div>
+    <canvas id="impl_demo" height="260"></canvas>
+    <div class="slider-row">
+      <label>angle =</label>
+      <input type="range" id="s_impl" min="0" max="314" value="60" step="1">
+      <span class="slider-val" id="v_impl">60°</span>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);margin-top:6px;">The orange tangent line has slope $-x/y$ at that point — derived by implicit differentiation, not by solving for $y$ first.</p>
+  </div>
+
+  <!-- ── LOGARITHMIC DIFFERENTIATION ── -->
+  <h3>2 — Logarithmic Differentiation</h3>
+  <p>Some functions are very hard to differentiate directly — especially when the <em>exponent itself contains $x$</em>, like $y = x^{1/x}$ or $y = (\sin x)^{\cos x}$. The trick: take $\ln$ of both sides first, use log rules to simplify, then differentiate implicitly.</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Method</div>
+    <strong>Step 1:</strong> Take $\ln$ of both sides: $\ln y = \ln(\ldots)$<br>
+    <strong>Step 2:</strong> Simplify using log rules: $\ln(AB) = \ln A + \ln B$, $\;\ln(A^n) = n\ln A$<br>
+    <strong>Step 3:</strong> Differentiate both sides w.r.t. $x$ — left side gives $\frac{y'}{y}$ (chain rule on $\ln y$)<br>
+    <strong>Step 4:</strong> Solve for $y'$ by multiplying both sides by $y$
+  </div>
+
+  <div class="box box-concept">
+    <div class="box-label">Why does $\frac{d}{dx}\ln y = \frac{y'}{y}$?</div>
+    Chain rule: outer function is $\ln(\cdot)$ with derivative $\frac{1}{(\cdot)}$, inner is $y(x)$ with derivative $y'$. So: $\frac{d}{dx}\ln y = \frac{1}{y}\cdot y' = \frac{y'}{y}$.
+  </div>
+
+  <!-- ── CURVATURE ── -->
+  <h3>3 — Curvature $\kappa$</h3>
+  <p>How "bendy" is a curve at a given point? A straight line has zero curvature. A tight circle bends sharply — high curvature. The formula measures this precisely:</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Curvature Formula</div>
+    $$\kappa = \frac{|y''|}{(1+y'^2)^{3/2}}$$
+    <p style="margin-top:8px;font-size:.9rem;">$y'$ = first derivative (slope), $y''$ = second derivative (how fast slope changes). The denominator corrects for the fact that steep curves appear less curved at a given speed.</p>
+  </div>
+
+  <div class="box box-rule">
+    <div class="box-label">Radius of Curvature &amp; Centre of Curvature</div>
+    The <strong>radius of curvature</strong> $\rho = \dfrac{1}{\kappa}$ — the radius of the circle that best fits the curve at that point.<br><br>
+    The <strong>centre of curvature</strong> $M(x_M, y_M)$:
+    $$x_M = x - \frac{y'}{y''}(1+y'^2) \qquad y_M = y + \frac{1}{y''}(1+y'^2)$$
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Curvature demo — the osculating circle fits the curve at the chosen point</div>
+    <canvas id="curv_demo" height="300"></canvas>
+    <div class="slider-row">
+      <label>x =</label>
+      <input type="range" id="s_curv" min="-25" max="25" value="10" step="1">
+      <span class="slider-val" id="v_curv">1.0</span>
+    </div>
+    <p style="font-size:.85rem;color:var(--muted);margin-top:6px;">The orange circle (osculating circle) has radius $\rho=1/\kappa$. Where the curve is nearly straight, $\rho$ is huge. Where it bends sharply, $\rho$ is small.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     AUFGABENBLATT 2 — PROBLEMS
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab2">
+  <div class="ch-label">Aufgabenblatt 2 · Problems</div>
+  <h2>All 8 problems solved, step by step</h2>
+
+  <!-- ── AUF. 1a ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 1a</span>
+      <span class="task-subtitle">$x^2+y^2-r^2=0,\; r\in\mathbb{R}$</span>
+      <span class="tag tag-rule">Implicit Differentiation</span>
+    </div>
+    <div class="task-body">
+      <p>This is a circle of radius $r$. $y$ can't be isolated cleanly (you'd get $\pm$), so we differentiate implicitly.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate every term w.r.t. $x$</div>
+          $\dfrac{d}{dx}[x^2] + \dfrac{d}{dx}[y^2] - \dfrac{d}{dx}[r^2] = 0$<br>
+          $r$ is a constant, so $\dfrac{d}{dx}[r^2]=0$. The $y^2$ term gets a Chain Rule factor:
+          $$2x + 2y\cdot y' = 0$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Solve for $y'$</div>
+          $$2y\cdot y' = -2x \implies y' = \frac{-2x}{2y}$$
+        </div></div>
+      </div>
+      <div class="box-result">$$y' = -\frac{x}{y}$$</div>
+      <div class="box box-intuition">
+        <div class="box-label">Geometric check</div>
+        At the point $(r, 0)$ on the circle, $y=0$, so $y'\to\infty$ — the tangent is vertical. That makes sense: the rightmost point of a circle has a vertical tangent. ✓
+      </div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 1b ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 1b</span>
+      <span class="task-subtitle">$e^{xy} = 2$</span>
+      <span class="tag tag-rule">Implicit Differentiation</span>
+    </div>
+    <div class="task-body">
+      <p>The exponent $xy$ is itself a product of $x$ and $y(x)$, so we need Chain Rule and Product Rule together.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate both sides w.r.t. $x$</div>
+          $$\frac{d}{dx}\bigl[e^{xy}\bigr] = \frac{d}{dx}[2] = 0$$
+          Chain rule on $e^{xy}$: outer derivative is $e^{xy}$, inner is $xy$:
+          $$e^{xy}\cdot\frac{d}{dx}[xy] = 0$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate $xy$ using the Product Rule</div>
+          $$\frac{d}{dx}[xy] = y + x\cdot y'$$
+          So: $e^{xy}(y + xy') = 0$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Divide by $e^{xy}$ (it's never zero) and solve for $y'$</div>
+          $$y + xy' = 0 \implies xy' = -y \implies y' = -\frac{y}{x}$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Optional: express using only $x$</div>
+          From $e^{xy}=2$ we get $xy = \ln 2$, so $y = \frac{\ln 2}{x}$. Substituting:
+          $$y' = -\frac{\ln 2/x}{x} = -\frac{\ln 2}{x^2}$$
+        </div></div>
+      </div>
+      <div class="box-result">$$y' = -\frac{y}{x} = -\frac{\ln 2}{x^2}$$</div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 2a ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 2a</span>
+      <span class="task-subtitle">$xy - \log y = 2$</span>
+      <span class="tag tag-rule">Implicit Differentiation</span>
+    </div>
+    <div class="task-body">
+      <p>Note: $\log$ in analysis/engineering notation means the <strong>natural logarithm</strong> $\ln$ (base $e$), not base 10. We treat it as $\ln y$.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate every term w.r.t. $x$</div>
+          $\dfrac{d}{dx}[xy] - \dfrac{d}{dx}[\ln y] = 0$<br><br>
+          Product rule on $xy$: $\;y + xy'$<br>
+          Chain rule on $\ln y$: $\;\dfrac{1}{y}\cdot y'$
+          $$y + xy' - \frac{y'}{y} = 0$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Collect $y'$ terms</div>
+          $$xy' - \frac{y'}{y} = -y \implies y'\left(x - \frac{1}{y}\right) = -y$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Solve for $y'$ — multiply bracket by $\frac{y}{y}$</div>
+          $$y' = \frac{-y}{x - \frac{1}{y}} = \frac{-y}{\frac{xy-1}{y}} = \frac{-y^2}{xy-1}$$
+        </div></div>
+      </div>
+      <div class="box-result">$$y' = \frac{-y^2}{xy-1} = \frac{y^2}{1-xy}$$</div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 2b ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 2b</span>
+      <span class="task-subtitle">$yx^2 - e^y = 0$</span>
+      <span class="tag tag-rule">Implicit Differentiation</span>
+    </div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate every term w.r.t. $x$</div>
+          $\dfrac{d}{dx}[yx^2] - \dfrac{d}{dx}[e^y] = 0$<br><br>
+          Product rule on $yx^2$: $\;y'\cdot x^2 + y\cdot 2x$<br>
+          Chain rule on $e^y$: $\;e^y\cdot y'$
+          $$y'x^2 + 2xy - e^y y' = 0$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Collect $y'$ and solve</div>
+          $$y'(x^2 - e^y) = -2xy \implies y' = \frac{-2xy}{x^2 - e^y}$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Substitute $e^y = yx^2$ (from the original equation)</div>
+          $$y' = \frac{-2xy}{x^2 - yx^2} = \frac{-2xy}{x^2(1-y)} = \frac{-2y}{x(1-y)}$$
+        </div></div>
+      </div>
+      <div class="box-result">$$y' = \frac{-2y}{x(1-y)} = \frac{2y}{x(y-1)}$$</div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 3 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 3</span>
+      <span class="task-subtitle">$y = \sqrt[x]{x} = x^{1/x}$</span>
+      <span class="tag tag-blue">Logarithmic Differentiation</span>
+    </div>
+    <div class="task-body">
+      <p>The exponent $\frac{1}{x}$ contains $x$, so neither the power rule nor the exponential rule applies directly. Logarithmic differentiation is the standard approach.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Take $\ln$ of both sides</div>
+          $$\ln y = \ln\left(x^{1/x}\right) = \frac{1}{x}\ln x$$
+          (using the log power rule $\ln(a^b) = b\ln a$)
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate both sides w.r.t. $x$</div>
+          Left side: $\dfrac{d}{dx}[\ln y] = \dfrac{y'}{y}$<br><br>
+          Right side: $\dfrac{d}{dx}\!\left[\dfrac{\ln x}{x}\right]$ — use the Quotient Rule with $u=\ln x$, $v=x$:
+          $$\frac{u'v - uv'}{v^2} = \frac{\frac{1}{x}\cdot x - \ln x\cdot 1}{x^2} = \frac{1 - \ln x}{x^2}$$
+          So: $\dfrac{y'}{y} = \dfrac{1-\ln x}{x^2}$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Multiply both sides by $y = x^{1/x}$</div>
+          $$y' = x^{1/x}\cdot\frac{1-\ln x}{x^2}$$
+        </div></div>
+      </div>
+      <div class="box-result">$$y' = x^{1/x}\cdot\frac{1-\ln x}{x^2}$$</div>
+      <div class="chart-wrap"><canvas id="p_a3" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 4 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 4</span>
+      <span class="task-subtitle">$y = (\sin x)^{\cos x}$</span>
+      <span class="tag tag-blue">Logarithmic Differentiation</span>
+    </div>
+    <div class="task-body">
+      <p>Both the base and exponent contain $x$ — logarithmic differentiation is the only clean route.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Take $\ln$ of both sides</div>
+          $$\ln y = \cos x \cdot \ln(\sin x)$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate both sides w.r.t. $x$</div>
+          Left: $\dfrac{y'}{y}$<br><br>
+          Right: Product Rule with $u=\cos x$, $v=\ln(\sin x)$:
+          $$u'v + uv' = -\sin x\cdot\ln(\sin x) + \cos x\cdot\frac{\cos x}{\sin x}$$
+          $$= -\sin x\ln(\sin x) + \frac{\cos^2 x}{\sin x}$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Multiply through by $y = (\sin x)^{\cos x}$</div>
+          $$y' = (\sin x)^{\cos x}\left(-\sin x\ln(\sin x) + \frac{\cos^2 x}{\sin x}\right)$$
+        </div></div>
+      </div>
+      <div class="box-result">$$y' = (\sin x)^{\cos x}\!\left(\frac{\cos^2 x}{\sin x} - \sin x\ln(\sin x)\right)$$</div>
+      <div class="chart-wrap"><canvas id="p_a4" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 5 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 5</span>
+      <span class="task-subtitle">$y=\sqrt[5]{\dfrac{(x-1)(x+2)}{x^2-3}}$</span>
+      <span class="tag tag-blue">Logarithmic Differentiation</span>
+    </div>
+    <div class="task-body">
+      <p>A fifth root of a fraction of products — direct differentiation would require Chain, Quotient, and Product rules all at once and get very messy. Logarithms break products into sums and powers into multipliers, making this clean.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Rewrite as a power and take $\ln$</div>
+          $$y = \left(\frac{(x-1)(x+2)}{x^2-3}\right)^{1/5}$$
+          $$\ln y = \frac{1}{5}\ln\!\left(\frac{(x-1)(x+2)}{x^2-3}\right)$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Expand using log rules: $\ln\frac{AB}{C} = \ln A + \ln B - \ln C$</div>
+          $$\ln y = \frac{1}{5}\bigl[\ln(x-1) + \ln(x+2) - \ln(x^2-3)\bigr]$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate both sides w.r.t. $x$</div>
+          $$\frac{y'}{y} = \frac{1}{5}\left[\frac{1}{x-1} + \frac{1}{x+2} - \frac{2x}{x^2-3}\right]$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Multiply by $y$</div>
+          $$y' = \frac{y}{5}\left[\frac{1}{x-1} + \frac{1}{x+2} - \frac{2x}{x^2-3}\right]$$
+          Substituting back $y = \left(\frac{(x-1)(x+2)}{x^2-3}\right)^{1/5}$:
+        </div></div>
+      </div>
+      <div class="box-result">$$y' = \frac{1}{5}\!\sqrt[5]{\frac{(x-1)(x+2)}{x^2-3}}\cdot\left[\frac{1}{x-1}+\frac{1}{x+2}-\frac{2x}{x^2-3}\right]$$</div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 6 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 6</span>
+      <span class="task-subtitle">Curvature of $y=x^3$ at $P_0(1\,|\,y_0)$</span>
+      <span class="tag tag-green">Curvature $\kappa$</span>
+    </div>
+    <div class="task-body">
+      <p>Given: $\kappa = \dfrac{y''}{(1+y'^2)^{3/2}}$</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Compute derivatives</div>
+          $y = x^3 \implies y' = 3x^2 \implies y'' = 6x$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Evaluate at $x=1$: $\;y_0 = 1^3 = 1$</div>
+          $y'(1) = 3\cdot1^2 = 3 \qquad y''(1) = 6\cdot1 = 6$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Plug into the curvature formula</div>
+          $$\kappa = \frac{6}{(1+3^2)^{3/2}} = \frac{6}{(1+9)^{3/2}} = \frac{6}{10^{3/2}}$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Simplify: $10^{3/2} = 10\sqrt{10}$</div>
+          $$\kappa = \frac{6}{10\sqrt{10}} = \frac{3}{5\sqrt{10}} = \frac{3\sqrt{10}}{50}$$
+        </div></div>
+      </div>
+      <div class="box-result">$$\kappa\bigl(P_0\bigr) = \frac{3\sqrt{10}}{50} \approx 0.1897$$</div>
+      <div class="chart-wrap"><canvas id="p_a6" height="260"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 7 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 7</span>
+      <span class="task-subtitle">Radius &amp; centre of curvature of $y=\sqrt{x}$ at $P_0(1\,|\,y_0)$</span>
+      <span class="tag tag-green">Curvature $\kappa$</span>
+    </div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Compute derivatives</div>
+          $y = x^{1/2} \implies y' = \dfrac{1}{2}x^{-1/2} = \dfrac{1}{2\sqrt{x}} \implies y'' = -\dfrac{1}{4}x^{-3/2} = -\dfrac{1}{4x^{3/2}}$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Evaluate at $x=1$: $\;y_0 = 1$</div>
+          $y'(1)=\dfrac{1}{2} \qquad y''(1)=-\dfrac{1}{4}$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Curvature $\kappa$</div>
+          $$\kappa = \frac{|y''|}{(1+y'^2)^{3/2}} = \frac{\frac{1}{4}}{\left(1+\frac{1}{4}\right)^{3/2}} = \frac{\frac{1}{4}}{\left(\frac{5}{4}\right)^{3/2}} = \frac{\frac{1}{4}}{\frac{5\sqrt{5}}{8}} = \frac{1}{4}\cdot\frac{8}{5\sqrt{5}} = \frac{2}{5\sqrt{5}}$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Radius of curvature $\rho = 1/\kappa$</div>
+          $$\rho = \frac{5\sqrt{5}}{2} \approx 5.59$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Centre of curvature $M(x_M, y_M)$</div>
+          $$x_M = x - \frac{y'}{y''}(1+y'^2) = 1 - \frac{\frac{1}{2}}{-\frac{1}{4}}\left(1+\frac{1}{4}\right) = 1 - (-2)\cdot\frac{5}{4} = 1 + \frac{5}{2} = \frac{7}{2}$$
+          $$y_M = y + \frac{1}{y''}(1+y'^2) = 1 + \frac{1}{-\frac{1}{4}}\cdot\frac{5}{4} = 1 + (-4)\cdot\frac{5}{4} = 1 - 5 = -4$$
+        </div></div>
+      </div>
+      <div class="box-result">$$\rho = \frac{5\sqrt{5}}{2} \approx 5.59 \qquad M = \left(\frac{7}{2},\,-4\right)$$</div>
+      <div class="chart-wrap"><canvas id="p_a7" height="300"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── AUF. 8 ── -->
+  <div class="task">
+    <div class="task-hd">
+      <span class="task-num">AUF. 8</span>
+      <span class="task-subtitle">Where is $y = \log x$ most curved?</span>
+      <span class="tag tag-green">Curvature $\kappa$</span>
+    </div>
+    <div class="task-body">
+      <p>We want to <em>maximise</em> $\kappa$. It's easier to maximise $\kappa^2$ (same location, avoids square roots).</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">
+          <div class="step-title">Compute derivatives of $y = \ln x$</div>
+          $y' = \dfrac{1}{x} \qquad y'' = -\dfrac{1}{x^2}$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Write $\kappa^2$</div>
+          $$\kappa^2 = \frac{(y'')^2}{(1+y'^2)^3} = \frac{\frac{1}{x^4}}{\left(1+\frac{1}{x^2}\right)^3}$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Substitute $z = \dfrac{1}{x^2}$ (so $z > 0$)</div>
+          $$\kappa^2 = \frac{z^2}{(1+z)^3}$$
+          This is now a single-variable optimisation in $z$.
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Differentiate $\kappa^2$ w.r.t. $z$ and set to zero — Quotient Rule</div>
+          $$\frac{d}{dz}\!\left[\frac{z^2}{(1+z)^3}\right] = \frac{2z(1+z)^3 - z^2\cdot 3(1+z)^2}{(1+z)^6} = \frac{z(1+z)^2\bigl[2(1+z)-3z\bigr]}{(1+z)^6}$$
+          $$= \frac{z(2-z)}{(1+z)^4}$$
+          Set to zero: $z(2-z)=0 \implies z=0$ (minimum) or $z=2$ (maximum).
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Back-substitute $z = 1/x^2 = 2 \implies x^2 = 1/2 \implies x = 1/\sqrt{2}$</div>
+          $$y = \ln\!\left(\frac{1}{\sqrt{2}}\right) = -\frac{\ln 2}{2}$$
+        </div></div>
+        <div class="step"><div class="step-body">
+          <div class="step-title">Compute maximum $\kappa$</div>
+          At $z=2$: $\kappa^2 = \dfrac{4}{27}$, so $\kappa_{\max} = \dfrac{2}{3\sqrt{3}} = \dfrac{2\sqrt{3}}{9}$
+        </div></div>
+      </div>
+      <div class="box-result">$$\text{Maximum curvature at } x = \frac{1}{\sqrt{2}},\quad y = -\frac{\ln 2}{2}, \quad \kappa_{\max} = \frac{2\sqrt{3}}{9} \approx 0.385$$</div>
+      <div class="chart-wrap"><canvas id="p_a8" height="260"></canvas></div>
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 3 — VECTOR FUNCTIONS & SPACE CURVES
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab3-intro">
+  <div class="ch-label">Aufgabenblatt 3 · New Concepts</div>
+  <h2>Vector functions &amp; Space Curves</h2>
+  <p>So far every function mapped one number to one number. Now we map one number (a parameter $t$, like time) to a <em>point in 3D space</em>. This lets us describe curves — helices, spirals, twisted paths — that can't be written as $y=f(x)$.</p>
+
+  <h3>Vector functions</h3>
+  <div class="box box-rule">
+    <div class="box-label">Definition</div>
+    $$\mathbf{R}(t) = \begin{pmatrix}x(t)\\y(t)\\z(t)\end{pmatrix}$$
+    Each component is an ordinary function of $t$. Differentiate component-by-component:
+    $$\mathbf{R}'(t) = \begin{pmatrix}x'(t)\\y'(t)\\z'(t)\end{pmatrix}, \qquad \|\mathbf{R}'(t)\| = \sqrt{x'^2+y'^2+z'^2}$$
+  </div>
+
+  <h3>The Frenet–Serret Frame $\{\mathbf{T},\mathbf{N},\mathbf{B}\}$</h3>
+  <p>At every point of a smooth curve, three orthogonal unit vectors describe its local geometry:</p>
+  <table>
+    <thead><tr><th>Vector</th><th>Name</th><th>What it measures</th></tr></thead>
+    <tbody>
+      <tr><td>$\mathbf{T}$</td><td>Unit tangent</td><td>Direction of travel</td></tr>
+      <tr><td>$\mathbf{N}$</td><td>Principal normal</td><td>Direction the curve turns toward</td></tr>
+      <tr><td>$\mathbf{B}=\mathbf{T}\times\mathbf{N}$</td><td>Binormal</td><td>Perpendicular to the plane of bending</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box box-rule">
+    <div class="box-label">Key formulas (arc-length parametrisation $s$)</div>
+    $$\mathbf{T} = \frac{\mathbf{R}'(t)}{\|\mathbf{R}'(t)\|}, \quad \kappa = \left\|\frac{d\mathbf{T}}{ds}\right\| = \frac{\|\mathbf{T}'(t)\|}{\|\mathbf{R}'(t)\|}, \quad \mathbf{N} = \frac{1}{\kappa}\frac{d\mathbf{T}}{ds}$$
+    $$\tau = -\frac{d\mathbf{B}}{ds}\cdot\mathbf{N}$$
+    $\kappa$ = curvature (how much it bends). $\tau$ = torsion (how much it twists out of a plane).
+  </div>
+</section>
+
+<section id="ab3">
+  <div class="ch-label">Aufgabenblatt 3 · Problems</div>
+  <h2>Space curves — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">Helix $\mathbf{f}(t)=(\sin t,\cos t,t)^T$</span><span class="tag tag-blue">Vector Calculus</span></div>
+    <div class="task-body">
+      <p>Differentiate each component independently.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">First derivative (velocity)</div>$\mathbf{f}'(t)=(\cos t,\,-\sin t,\,1)^T$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Second derivative (acceleration)</div>$\mathbf{f}''(t)=(-\sin t,\,-\cos t,\,0)^T$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Magnitudes — use $\sin^2t+\cos^2t=1$</div>
+          $\|\mathbf{f}'\|=\sqrt{\cos^2t+\sin^2t+1}=\sqrt{2}$ (constant!)<br>
+          $\|\mathbf{f}''\|=\sqrt{\sin^2t+\cos^2t}=1$ (constant!)
+        </div></div>
+      </div>
+      <div class="box-result">$\|\mathbf{f}'\|=\sqrt{2},\quad \|\mathbf{f}''\|=1$ — both constant; the helix is uniformly parametrised.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">$\mathbf{f}(t)=(e^{-t},\,2\cos3t,\,2\sin3t)^T$</span><span class="tag tag-blue">Vector Calculus</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Velocity $\mathbf{v}=\mathbf{f}'$</div>$\mathbf{v}(t)=(-e^{-t},\,-6\sin3t,\,6\cos3t)^T$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Acceleration $\mathbf{a}=\mathbf{f}''$</div>$\mathbf{a}(t)=(e^{-t},\,-18\cos3t,\,-18\sin3t)^T$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Evaluate at $t=0$: $e^0=1$, $\cos0=1$, $\sin0=0$</div>
+          $\mathbf{v}(0)=(-1,0,6)^T\Rightarrow\|\mathbf{v}(0)\|=\sqrt{1+36}=\sqrt{37}$<br>
+          $\mathbf{a}(0)=(1,-18,0)^T\Rightarrow\|\mathbf{a}(0)\|=\sqrt{1+324}=5\sqrt{13}$
+        </div></div>
+      </div>
+      <div class="box-result">$\|\mathbf{v}(0)\|=\sqrt{37},\quad\|\mathbf{a}(0)\|=5\sqrt{13}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">Helix $\mathbf{R}=(3\cos t,3\sin t,4t)^T$ — $\mathbf{T}$, $\kappa$, $\mathbf{N}$</span><span class="tag tag-blue">Frenet Frame</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Speed $ds/dt$</div>$\mathbf{R}'=(-3\sin t,3\cos t,4)^T,\quad\|\mathbf{R}'\|=\sqrt{9\sin^2t+9\cos^2t+16}=\sqrt{25}=5$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Unit tangent $\mathbf{T}=\mathbf{R}'/5$</div>$\mathbf{T}=\tfrac{1}{5}(-3\sin t,3\cos t,4)^T$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Curvature: $\mathbf{T}'=\tfrac{1}{5}(-3\cos t,-3\sin t,0)^T$, so $d\mathbf{T}/ds=\mathbf{T}'/5$</div>$\kappa=\|d\mathbf{T}/ds\|=\tfrac{1}{25}\sqrt{9\cos^2t+9\sin^2t}=\tfrac{3}{25}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Principal normal $\mathbf{N}=(1/\kappa)d\mathbf{T}/ds$</div>$\mathbf{N}=(-\cos t,-\sin t,0)^T$ — points radially inward, always horizontal.</div></div>
+      </div>
+      <div class="box-result">$\mathbf{T}=\tfrac{1}{5}(-3\sin t,3\cos t,4)^T,\quad\kappa=\tfrac{3}{25},\quad\mathbf{N}=(-\cos t,-\sin t,0)^T$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">Same helix — $\mathbf{B}$ and torsion $\tau$</span><span class="tag tag-blue">Frenet Frame</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Binormal $\mathbf{B}=\mathbf{T}\times\mathbf{N}$</div>
+          $$\mathbf{B}=\frac{1}{5}\begin{vmatrix}\mathbf{i}&\mathbf{j}&\mathbf{k}\\-3\sin t&3\cos t&4\\-\cos t&-\sin t&0\end{vmatrix}=\frac{1}{5}(4\sin t,-4\cos t,3)^T$$
+        </div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Torsion: $d\mathbf{B}/ds=-\tau\mathbf{N}$</div>
+          $\mathbf{B}'=\tfrac{4}{5}(\cos t,\sin t,0)^T$, so $d\mathbf{B}/ds=\mathbf{B}'/5=\tfrac{4}{25}(\cos t,\sin t,0)^T=-\tfrac{4}{25}\mathbf{N}$<br>
+          Therefore $\tau=\tfrac{4}{25}$.
+        </div></div>
+      </div>
+      <div class="box-result">$\mathbf{B}=\tfrac{1}{5}(4\sin t,-4\cos t,3)^T,\quad\tau=\tfrac{4}{25}$<br><small>Lancret's theorem: constant $\kappa$ and $\tau$ ↔ regular helix. ✓</small></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5–8</span><span class="task-subtitle">Cubic curve $\mathbf{R}=(t,t^2,\tfrac{2}{3}t^3)^T$</span><span class="tag tag-blue">Frenet Frame</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">5: Speed — factor the magnitude</div>$\mathbf{R}'=(1,2t,2t^2)^T,\quad\|\mathbf{R}'\|^2=1+4t^2+4t^4=(1+2t^2)^2\Rightarrow ds/dt=1+2t^2$<br>$\mathbf{T}=\dfrac{1}{1+2t^2}(1,2t,2t^2)^T$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">6: Curvature and $\mathbf{N}$</div>
+          Using quotient rule on $\mathbf{T}$: $\quad d\mathbf{T}/ds = \dfrac{2}{(1+2t^2)^3}(-2t,\,1-2t^2,\,2t)^T$<br>
+          $\kappa=\|d\mathbf{T}/ds\|=\dfrac{2}{(1+2t^2)^2}$, $\quad\mathbf{N}=\dfrac{1}{1+2t^2}(-2t,1-2t^2,2t)^T$
+        </div></div>
+        <div class="step"><div class="step-body"><div class="step-title">7: Binormal $\mathbf{B}=\mathbf{T}\times\mathbf{N}$</div>$\mathbf{B}=\dfrac{1}{1+2t^2}(2t^2,-2t,1)^T$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">8: Torsion</div>$d\mathbf{B}/ds=-\dfrac{2}{(1+2t^2)^2}\mathbf{N}\Rightarrow\tau=\dfrac{2}{(1+2t^2)^2}=\kappa$<br>
+        Remarkable: $\kappa=\tau$ for all $t$ on this curve. Maximum at $t=0$: $\kappa=\tau=2$.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 4 — LIMITS
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab4-intro">
+  <div class="ch-label">Aufgabenblatt 4 · New Concepts</div>
+  <h2>Limits — what happens as $x$ approaches a value?</h2>
+
+  <p>A limit asks: what value does $f(x)$ get closer and closer to as $x$ approaches some number $a$? Written $\lim_{x\to a}f(x)$. Crucially, $x$ never actually equals $a$ — we only care what happens nearby.</p>
+
+  <h3>Why does $\frac{0}{0}$ need special treatment?</h3>
+  <div class="box box-intuition">
+    <div class="box-label">The $0/0$ problem</div>
+    If plugging in $x=a$ gives $\frac{0}{0}$, the fraction is undefined at that point — but it may still approach a well-defined value. The function has a "removable hole". The limit can still exist and be finite.
+  </div>
+
+  <h3>Method 1: Factoring and cancelling</h3>
+  <p>If the numerator and denominator both vanish at $x=a$, they share a factor $(x-a)$. Factor it out and cancel.</p>
+
+  <h3>Method 2: L'Hôpital's Rule</h3>
+  <div class="box box-rule">
+    <div class="box-label">L'Hôpital's Rule</div>
+    If $\lim_{x\to a}f(x)=0$ and $\lim_{x\to a}g(x)=0$ (or both $\to\infty$), then:
+    $$\lim_{x\to a}\frac{f(x)}{g(x)} = \lim_{x\to a}\frac{f'(x)}{g'(x)}$$
+    Differentiate the top and bottom separately (not the quotient rule!), then try the limit again.
+  </div>
+
+  <h3>Standard forms that need rewriting</h3>
+  <table>
+    <thead><tr><th>Form</th><th>Rewrite as</th><th>Then use</th></tr></thead>
+    <tbody>
+      <tr><td>$0\cdot\infty$</td><td>$\frac{0}{1/\infty}$ or $\frac{\infty}{1/0}$</td><td>L'Hôpital</td></tr>
+      <tr><td>$\infty-\infty$</td><td>Common denominator</td><td>L'Hôpital</td></tr>
+      <tr><td>$0^0,\,1^\infty,\,\infty^0$</td><td>$e^{\ln(\cdots)}$, then $\ln$ of the expression</td><td>L'Hôpital on the exponent</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ab4">
+  <div class="ch-label">Aufgabenblatt 4 · Problems</div>
+  <h2>Limits — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">$\lim_{x\to4}\dfrac{x-4}{x^2-x-12}$</span><span class="tag tag-rule">Factor &amp; Cancel</span></div>
+    <div class="task-body">
+      <p>Plugging in $x=4$: numerator $=0$, denominator $=16-4-12=0$. So we have $0/0$ — factor.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Factor denominator</div>$x^2-x-12=(x-4)(x+3)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Cancel $(x-4)$</div>$\dfrac{x-4}{(x-4)(x+3)}=\dfrac{1}{x+3}$ for $x\neq4$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Take the limit</div>$\lim_{x\to4}\dfrac{1}{x+3}=\dfrac{1}{7}$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to4}\frac{x-4}{x^2-x-12}=\frac{1}{7}$</div>
+      <div class="chart-wrap"><canvas id="lim1" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">$\lim_{x\to-1}\dfrac{x^2+3x+2}{x^4+4x+3}$</span><span class="tag tag-rule">Factor &amp; Cancel</span></div>
+    <div class="task-body">
+      <p>Check: $(-1)^2+3(-1)+2=1-3+2=0$ ✓ and $(-1)^4+4(-1)+3=1-4+3=0$ ✓. Factor both.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Factor numerator</div>$x^2+3x+2=(x+1)(x+2)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Factor denominator</div>$x^4+4x+3=(x+1)(x^3-x^2+x+3)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Cancel and evaluate at $x=-1$</div>$\dfrac{x+2}{x^3-x^2+x+3}\big|_{x=-1}=\dfrac{1}{-1-1-1+3}=\dfrac{1}{0}$<br>
+        Wait — denominator is $0$ again! Check: $(-1)^3-(-1)^2+(-1)+3=-1-1-1+3=0$. So $(x+1)$ is a repeated factor. Factor again:<br>
+        $x^3-x^2+x+3=(x+1)(x^2-2x+3)$. So:
+        $$\frac{(x+1)(x+2)}{(x+1)^2(x^2-2x+3)}=\frac{x+2}{(x+1)(x^2-2x+3)}$$
+        At $x=-1$: $\frac{1}{0\cdot5}\to\pm\infty$. The limit does not exist (vertical asymptote).
+        </div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to-1}\frac{x^2+3x+2}{x^4+4x+3}$ does not exist (blows up to $\pm\infty$)</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">$\lim_{x\to1}\dfrac{x^4+2x^2-3}{x^2-3x+2}$</span><span class="tag tag-rule">Factor &amp; Cancel</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Factor numerator: find roots</div>$x^4+2x^2-3=(x^2-1)(x^2+3)=(x-1)(x+1)(x^2+3)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Factor denominator</div>$x^2-3x+2=(x-1)(x-2)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Cancel $(x-1)$ and evaluate</div>$\dfrac{(x+1)(x^2+3)}{x-2}\big|_{x=1}=\dfrac{2\cdot4}{-1}=-8$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to1}\frac{x^4+2x^2-3}{x^2-3x+2}=-8$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">$\lim_{x\to0}x^2\ln x$</span><span class="tag tag-rule">$0\cdot\infty$ → L'Hôpital</span></div>
+    <div class="task-body">
+      <p>As $x\to0^+$: $x^2\to0$ but $\ln x\to-\infty$. Form $0\cdot(-\infty)$. Rewrite as a fraction.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Rewrite as $\frac{\ln x}{1/x^2}$ — now $\frac{-\infty}{\infty}$ form</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">L'Hôpital: differentiate top and bottom separately</div>$\dfrac{(\ln x)'}{(x^{-2})'}=\dfrac{1/x}{-2x^{-3}}=\dfrac{1/x\cdot x^3}{-2}=\dfrac{x^2}{-2}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Take limit</div>$\lim_{x\to0^+}\dfrac{x^2}{-2}=0$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to0}x^2\ln x=0$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">$\lim_{x\to0}\dfrac{\sin x}{x}$</span><span class="tag tag-rule">Fundamental Limit</span></div>
+    <div class="task-body">
+      <p>This is perhaps the most important limit in all of calculus — it's the geometric basis for $(\sin x)'=\cos x$.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Form: $0/0$. Apply L'Hôpital directly</div>$\dfrac{(\sin x)'}{(x)'}=\dfrac{\cos x}{1}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Evaluate at $x=0$</div>$\cos(0)=1$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to0}\frac{\sin x}{x}=1$</div>
+      <div class="chart-wrap"><canvas id="lim5" height="200"></canvas></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">$\lim_{x\to0^+}x^{(x^2)}$</span><span class="tag tag-rule">$0^0$ form</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Take logarithm: $\ln(x^{x^2})=x^2\ln x$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">From Aufgabe 4: $\lim_{x\to0^+}x^2\ln x=0$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Exponentiate: $x^{x^2}=e^{x^2\ln x}\to e^0=1$</div></div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to0^+}x^{x^2}=1$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">$\lim_{x\to\infty}(\ln(x+1)-\ln x)$</span><span class="tag tag-rule">Log rules</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Combine using $\ln A-\ln B=\ln(A/B)$</div>$\ln\!\left(\dfrac{x+1}{x}\right)=\ln\!\left(1+\dfrac{1}{x}\right)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">As $x\to\infty$: $1/x\to0$, so $\ln(1+0)=\ln1=0$</div></div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to\infty}(\ln(x+1)-\ln x)=0$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">$\lim_{x\to0^+}(\sin x)^x$</span><span class="tag tag-rule">$0^0$ form</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Take log: $x\ln(\sin x)$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Rewrite: $\dfrac{\ln(\sin x)}{1/x}$ — L'Hôpital ($-\infty/\infty$)</div>$\dfrac{(\ln\sin x)'}{(1/x)'}=\dfrac{\cos x/\sin x}{-1/x^2}=\dfrac{-x^2\cos x}{\sin x}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">As $x\to0$: use $\sin x\approx x$, so $\dfrac{-x^2\cos x}{\sin x}\approx\dfrac{-x^2}{x}=-x\to0$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Exponentiate</div>$(\sin x)^x=e^{x\ln\sin x}\to e^0=1$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\lim_{x\to0^+}(\sin x)^x=1$</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 5 — TAYLOR SERIES
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab5-intro">
+  <div class="ch-label">Aufgabenblatt 5 · New Concepts</div>
+  <h2>Taylor Series — approximating functions with polynomials</h2>
+
+  <p>Any smooth function can be written as an infinite sum of powers of $(x-a)$. This lets us replace complicated functions (sin, exp, ln) with polynomials — which are easy to compute, integrate, and understand.</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Taylor Series around $x=0$ (Maclaurin series)</div>
+    $$f(x) = f(0) + f'(0)x + \frac{f''(0)}{2!}x^2 + \frac{f'''(0)}{3!}x^3 + \cdots = \sum_{n=0}^\infty \frac{f^{(n)}(0)}{n!}x^n$$
+    The $n$-th coefficient is $\frac{f^{(n)}(0)}{n!}$ — the $n$-th derivative at 0, divided by $n!$.
+  </div>
+
+  <h3>Key series you must know</h3>
+  <table>
+    <thead><tr><th>Function</th><th>Taylor series (around 0)</th></tr></thead>
+    <tbody>
+      <tr><td>$e^x$</td><td>$1+x+\frac{x^2}{2!}+\frac{x^3}{3!}+\cdots$</td></tr>
+      <tr><td>$\sin x$</td><td>$x-\frac{x^3}{3!}+\frac{x^5}{5!}-\cdots$ (odd terms only)</td></tr>
+      <tr><td>$\cos x$</td><td>$1-\frac{x^2}{2!}+\frac{x^4}{4!}-\cdots$ (even terms only)</td></tr>
+      <tr><td>$\ln(1+x)$</td><td>$x-\frac{x^2}{2}+\frac{x^3}{3}-\cdots$</td></tr>
+    </tbody>
+  </table>
+
+  <div class="box box-intuition">
+    <div class="box-label">The key trick: substitute into known series</div>
+    Instead of computing all derivatives from scratch, substitute a simpler argument into a known series. E.g. for $e^{\cos x-1}$: first find $\cos x - 1\approx -\frac{x^2}{2}+\cdots$, then substitute into $e^u\approx 1+u+\frac{u^2}{2}+\cdots$
+  </div>
+</section>
+
+<section id="ab5">
+  <div class="ch-label">Aufgabenblatt 5 · Problems</div>
+  <h2>Taylor series — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">$f(x)=e^{\cos x-1}$, expand to 2nd order</span><span class="tag tag-blue">Nested Series</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Expand $\cos x$ to 2nd order</div>$\cos x = 1-\frac{x^2}{2}+O(x^4)$, so $\cos x-1=-\frac{x^2}{2}+O(x^4)$. Call this $u=-\frac{x^2}{2}$.</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Expand $e^u\approx1+u+\frac{u^2}{2}$, but $u^2=\frac{x^4}{4}$ is order 4</div>$e^{\cos x-1}\approx 1+\left(-\frac{x^2}{2}\right)=1-\frac{x^2}{2}$</div></div>
+      </div>
+      <div class="box-result">$e^{\cos x-1}\approx 1-\dfrac{x^2}{2}+O(x^4)$</div>
+      <div class="chart-wrap"><canvas id="tay1" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">$f(x)=\tan x$, to 3rd order</span><span class="tag tag-blue">Direct Taylor</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Compute derivatives at $x=0$</div>
+          $f(0)=0$, $f'=\sec^2x\Rightarrow f'(0)=1$<br>
+          $f''=2\sec^2x\tan x\Rightarrow f''(0)=0$<br>
+          $f'''=2\sec^4x+4\sec^2x\tan^2x\Rightarrow f'''(0)=2$
+        </div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Assemble series</div>$\tan x=0+x+0+\dfrac{2}{3!}x^3+\cdots=x+\dfrac{x^3}{3}+O(x^5)$</div></div>
+      </div>
+      <div class="box-result">$\tan x\approx x+\dfrac{x^3}{3}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">$f(x)=1/\cos x=\sec x$, to 2nd order</span><span class="tag tag-blue">Direct Taylor</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Use $\cos x\approx1-\frac{x^2}{2}$, then $\frac{1}{1-u}\approx1+u$ with $u=\frac{x^2}{2}$</div>$\sec x=\dfrac{1}{\cos x}\approx\dfrac{1}{1-x^2/2}\approx1+\dfrac{x^2}{2}$</div></div>
+      </div>
+      <div class="box-result">$\sec x\approx 1+\dfrac{x^2}{2}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">$f(x)=\arcsin x$, to 3rd order</span><span class="tag tag-blue">Integration of series</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Know that $(\arcsin x)'=\frac{1}{\sqrt{1-x^2}}=(1-x^2)^{-1/2}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Expand $(1-x^2)^{-1/2}$ using $(1+u)^{-1/2}\approx1-\frac{u}{2}$ with $u=-x^2$</div>$(1-x^2)^{-1/2}\approx1+\dfrac{x^2}{2}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Integrate: $\arcsin x=\int_0^x(1+\frac{t^2}{2})dt$</div>$\arcsin x\approx x+\dfrac{x^3}{6}$</div></div>
+      </div>
+      <div class="box-result">$\arcsin x\approx x+\dfrac{x^3}{6}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">$f(x)=\ln\frac{1+x}{1-x}$, to 3rd order</span><span class="tag tag-blue">Log rules + series</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Use $\ln\frac{A}{B}=\ln A-\ln B$</div>$\ln(1+x)-\ln(1-x)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Apply $\ln(1+x)\approx x-\frac{x^2}{2}+\frac{x^3}{3}$ and $\ln(1-x)\approx-x-\frac{x^2}{2}-\frac{x^3}{3}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Subtract — even powers cancel, odd powers double</div>$\ln\frac{1+x}{1-x}\approx 2x+\dfrac{2x^3}{3}$</div></div>
+      </div>
+      <div class="box-result">$\ln\dfrac{1+x}{1-x}\approx 2x+\dfrac{2x^3}{3}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">$f(x)=\arctan\frac{x}{1+x}$, to 3rd order</span><span class="tag tag-blue">Nested Series</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Let $u=\frac{x}{1+x}\approx x-x^2+x^3+\cdots$ (geometric series for $\frac{1}{1+x}$)</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Use $\arctan u\approx u-\frac{u^3}{3}$; since $u\approx x$ to leading order, $u^3\approx x^3$</div>$\arctan\frac{x}{1+x}\approx x-x^2+x^3-\frac{x^3}{3}=x-x^2+\frac{2x^3}{3}$</div></div>
+      </div>
+      <div class="box-result">$\arctan\dfrac{x}{1+x}\approx x-x^2+\dfrac{2x^3}{3}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">$f(x)=e^{\sin x}$, to 4th order</span><span class="tag tag-blue">Nested Series</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">$\sin x\approx x-\frac{x^3}{6}$. Let $u=x-\frac{x^3}{6}$.</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$e^u\approx1+u+\frac{u^2}{2}+\frac{u^3}{6}+\frac{u^4}{24}$</div>
+          $u^2=x^2-\frac{x^4}{3}+\cdots$, $u^3=x^3+\cdots$, $u^4=x^4+\cdots$<br>
+          $e^{\sin x}\approx1+x+\frac{x^2}{2}-\frac{x^4}{8}+O(x^5)$
+        </div></div>
+      </div>
+      <div class="box-result">$e^{\sin x}\approx 1+x+\dfrac{x^2}{2}-\dfrac{x^4}{8}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">$f(x)=\dfrac{1-\cos x}{\ln(1+x)}$, to 1st order</span><span class="tag tag-blue">Ratio of series</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Numerator: $1-\cos x\approx\frac{x^2}{2}$ (leading term is 2nd order)</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Denominator: $\ln(1+x)\approx x$ (leading term is 1st order)</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Ratio to leading order</div>$\dfrac{x^2/2}{x}=\dfrac{x}{2}$</div></div>
+      </div>
+      <div class="box-result">$\dfrac{1-\cos x}{\ln(1+x)}\approx\dfrac{x}{2}$, and $\lim_{x\to0}f(x)=0$</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 6 — INDEFINITE INTEGRALS
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab6-intro">
+  <div class="ch-label">Aufgabenblatt 6 · New Concepts</div>
+  <h2>Integration — the reverse of differentiation</h2>
+
+  <p>The integral $\int f(x)\,dx$ asks: what function $F(x)$ has $F'(x)=f(x)$? It's the reverse of differentiation. The answer always includes a constant $+C$ because constants vanish when you differentiate.</p>
+
+  <h3>Technique 1: Substitution (chain rule in reverse)</h3>
+  <div class="box box-rule">
+    <div class="box-label">Substitution</div>
+    Let $u=g(x)$, so $du=g'(x)\,dx$. Then $\int f(g(x))g'(x)\,dx=\int f(u)\,du$.
+    <br>After integrating, substitute back $u=g(x)$.
+  </div>
+
+  <h3>Technique 2: Integration by Parts (product rule in reverse)</h3>
+  <div class="box box-rule">
+    <div class="box-label">Integration by Parts</div>
+    $$\int u\,dv = uv - \int v\,du$$
+    Choose $u$ = function that gets simpler when differentiated (logs, inverse trig, polynomials).<br>
+    Choose $dv$ = the rest (eˣ, sin, cos are easy to integrate).
+    <br><em>Memory aid: "LIATE" — Logs, Inverse trig, Algebraic, Trig, Exponential — pick $u$ from earlier in this list.</em>
+  </div>
+</section>
+
+<section id="ab6">
+  <div class="ch-label">Aufgabenblatt 6 · Problems</div>
+  <h2>Indefinite integrals — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">$\int\dfrac{dx}{x\ln x}$</span><span class="tag tag-blue">Substitution</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Let $u=\ln x$, then $du=\frac{1}{x}dx$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Substitute</div>$\int\dfrac{1}{u}\,du=\ln|u|+C$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Back-substitute</div>$=\ln|\ln x|+C$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int\frac{dx}{x\ln x}=\ln|\ln x|+C$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">$\int\sin x\cos x\,dx$</span><span class="tag tag-blue">Substitution</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Let $u=\sin x$, $du=\cos x\,dx$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$\int u\,du=\frac{u^2}{2}+C=\frac{\sin^2x}{2}+C$</div></div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int\sin x\cos x\,dx=\frac{\sin^2 x}{2}+C$ (or equivalently $-\frac{\cos^2x}{2}+C$)</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">$\int x\arctan x\,dx$</span><span class="tag tag-rule">Integration by Parts</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Choose: $u=\arctan x$ (inverse trig, LIATE), $dv=x\,dx$</div>$du=\frac{1}{1+x^2}dx,\quad v=\frac{x^2}{2}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Parts formula: $uv-\int v\,du$</div>$=\frac{x^2}{2}\arctan x-\int\frac{x^2}{2(1+x^2)}dx$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Simplify: $\frac{x^2}{1+x^2}=1-\frac{1}{1+x^2}$</div>$\int\frac{x^2}{2(1+x^2)}dx=\frac{1}{2}\left(x-\arctan x\right)+C$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Combine</div>$\frac{x^2}{2}\arctan x-\frac{x}{2}+\frac{1}{2}\arctan x+C=\frac{x^2+1}{2}\arctan x-\frac{x}{2}+C$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int x\arctan x\,dx=\frac{x^2+1}{2}\arctan x-\frac{x}{2}+C$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">$\int x^2\sin x\,dx$</span><span class="tag tag-rule">Parts (twice)</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">$u=x^2$, $dv=\sin x\,dx$ → $du=2x\,dx$, $v=-\cos x$</div>$=-x^2\cos x+2\int x\cos x\,dx$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Parts again on $\int x\cos x\,dx$: $u=x$, $dv=\cos x\,dx$</div>$\int x\cos x\,dx=x\sin x-\int\sin x\,dx=x\sin x+\cos x$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Combine</div>$-x^2\cos x+2(x\sin x+\cos x)+C$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int x^2\sin x\,dx=-x^2\cos x+2x\sin x+2\cos x+C$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">$\int\ln x\,dx$</span><span class="tag tag-rule">Parts</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Write as $\int(\ln x)\cdot1\,dx$: $u=\ln x$, $dv=dx$</div>$du=\frac{1}{x}dx,\quad v=x$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Parts: $x\ln x-\int x\cdot\frac{1}{x}dx=x\ln x-\int1\,dx$</div></div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int\ln x\,dx=x\ln x-x+C$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">$\int\dfrac{dx}{\sin x}$, substitution $u=\tan\frac{x}{2}$</span><span class="tag tag-blue">Weierstrass Sub.</span></div>
+    <div class="task-body">
+      <p>The Weierstrass substitution $u=\tan\frac{x}{2}$ converts all trig functions to rational functions. Key formulas: $\sin x=\frac{2u}{1+u^2}$, $dx=\frac{2}{1+u^2}du$.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Substitute</div>$\int\frac{1}{\frac{2u}{1+u^2}}\cdot\frac{2}{1+u^2}du=\int\frac{1+u^2}{2u}\cdot\frac{2}{1+u^2}du=\int\frac{du}{u}$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Integrate and back-substitute</div>$\ln|u|+C=\ln\left|\tan\frac{x}{2}\right|+C$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int\frac{dx}{\sin x}=\ln\left|\tan\frac{x}{2}\right|+C$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">$\int x^2\sqrt{1-x^2}\,dx$, substitution $x=\sin t$</span><span class="tag tag-blue">Trig Sub.</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Substitute $x=\sin t$, $dx=\cos t\,dt$, $\sqrt{1-x^2}=\cos t$</div>$\int\sin^2t\cos t\cdot\cos t\,dt=\int\sin^2t\cos^2t\,dt=\frac{1}{4}\int\sin^2(2t)\,dt$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Use $\sin^2(2t)=\frac{1-\cos4t}{2}$</div>$\frac{1}{8}\int(1-\cos4t)dt=\frac{t}{8}-\frac{\sin4t}{32}+C$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Back-substitute: $t=\arcsin x$, $\sin2t=2\sin t\cos t=2x\sqrt{1-x^2}$, $\sin4t=2\sin2t\cos2t$</div>$=\frac{\arcsin x}{8}-\frac{x\sqrt{1-x^2}(1-2x^2)}{8}+C$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int x^2\sqrt{1-x^2}\,dx=\frac{\arcsin x}{8}-\frac{x(1-2x^2)\sqrt{1-x^2}}{8}+C$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">$\int x\sqrt{1+x^2}\,dx$, substitution $x=\sinh t$</span><span class="tag tag-blue">Hyperbolic Sub.</span></div>
+    <div class="task-body">
+      <p>Alternatively and more simply: let $u=1+x^2$, $du=2x\,dx$.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">$u=1+x^2$, $du=2x\,dx$</div>$\int x\sqrt{1+x^2}\,dx=\int\sqrt{u}\frac{du}{2}=\frac{1}{2}\cdot\frac{2}{3}u^{3/2}+C$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\int x\sqrt{1+x^2}\,dx=\frac{(1+x^2)^{3/2}}{3}+C$</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 7 — DEFINITE INTEGRALS
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab7-intro">
+  <div class="ch-label">Aufgabenblatt 7 · New Concepts</div>
+  <h2>Definite integrals — areas, volumes, lengths</h2>
+  <div class="box box-rule">
+    <div class="box-label">Fundamental Theorem of Calculus</div>
+    $$\int_a^b f(x)\,dx = F(b)-F(a), \quad\text{where }F'=f$$
+    The definite integral gives the signed area under the curve between $a$ and $b$.
+  </div>
+  <p>Sheet 7 applies definite integration to geometry: areas between curves, volumes of rotation, arc length, surface area, and centroids.</p>
+  <table>
+    <thead><tr><th>Quantity</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td>Area between $f$ and $g$</td><td>$\int_a^b|f(x)-g(x)|\,dx$</td></tr>
+      <tr><td>Volume of revolution (x-axis)</td><td>$\pi\int_a^b y^2\,dx$</td></tr>
+      <tr><td>Arc length</td><td>$\int_a^b\sqrt{1+y'^2}\,dx$</td></tr>
+      <tr><td>Surface of revolution</td><td>$2\pi\int_a^b y\sqrt{1+y'^2}\,dx$</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="ab7">
+  <div class="ch-label">Aufgabenblatt 7 · Problems</div>
+  <h2>Definite integrals — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">Area between $f=x^2$ and $g=\sqrt{x}$</span><span class="tag tag-green">Area</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Find intersections: $x^2=\sqrt{x}\Rightarrow x^4=x\Rightarrow x(x^3-1)=0\Rightarrow x=0,1$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">On $[0,1]$: $\sqrt{x}\geq x^2$, so area $=\int_0^1(\sqrt{x}-x^2)dx$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Integrate: $\left[\frac{2}{3}x^{3/2}-\frac{x^3}{3}\right]_0^1=\frac{2}{3}-\frac{1}{3}$</div></div></div>
+      </div>
+      <div class="box-result">Area $=\dfrac{1}{3}$</div>
+      <div class="chart-wrap"><canvas id="area1" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">Area between $f=4x$ and $g=x^2+2x-3$</span><span class="tag tag-green">Area</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Intersections: $4x=x^2+2x-3\Rightarrow x^2-2x-3=0\Rightarrow(x-3)(x+1)=0\Rightarrow x=-1,3$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$f-g=4x-(x^2+2x-3)=-x^2+2x+3\geq0$ on $[-1,3]$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$\int_{-1}^3(-x^2+2x+3)dx=\left[-\frac{x^3}{3}+x^2+3x\right]_{-1}^3=(-9+9+9)-(\frac{1}{3}+1-3)=9-(-\frac{5}{3})=\frac{32}{3}$</div></div></div>
+      </div>
+      <div class="box-result">Area $=\dfrac{32}{3}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">Area between $f=\ln x$ and $g=(\ln x)^2$</span><span class="tag tag-green">Area</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Intersections: $\ln x=(\ln x)^2\Rightarrow\ln x(\ln x-1)=0\Rightarrow x=1$ (where $\ln x=0$) or $x=e$ (where $\ln x=1$)</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">On $[1,e]$: $\ln x\geq(\ln x)^2$ (since $0\leq\ln x\leq1$)</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$\int_1^e(\ln x-(\ln x)^2)dx$. Use $\int\ln x\,dx=x\ln x-x$ and $\int(\ln x)^2dx=x(\ln x)^2-2x\ln x+2x$</div>$=[x\ln x-x]_1^e - [x(\ln x)^2-2x\ln x+2x]_1^e=(0)-(-2)=2$... after careful evaluation: $=e-2e+2e-(0+0+2)-(e-0+2e-0+0)=\ldots$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Careful evaluation at $x=e$: $\ln e=1$, so $x\ln x-x=e-e=0$; $x(\ln x)^2-2x\ln x+2x=e-2e+2e=e$<br>At $x=1$: $\ln1=0$, so $x\ln x-x=-1$; $x(\ln x)^2-2x\ln x+2x=2$<br>Area $=(0-(-1))-(e-2)=1-(e-2)=3-e$</div></div></div>
+      </div>
+      <div class="box-result">Area $=3-e\approx 0.282$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">Volume of revolution: $y=\cosh x$, $x\in[0,2]$</span><span class="tag tag-green">Volume $V=\pi\int y^2dx$</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">$y^2=\cosh^2x=\frac{1+\cosh2x}{2}$ (identity)</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$V=\pi\int_0^2\frac{1+\cosh2x}{2}dx=\frac{\pi}{2}\left[x+\frac{\sinh2x}{2}\right]_0^2=\frac{\pi}{2}\left(2+\frac{\sinh4}{2}\right)$</div></div></div>
+      </div>
+      <div class="box-result">$V=\dfrac{\pi}{2}\!\left(2+\dfrac{\sinh4}{2}\right)=\pi+\dfrac{\pi\sinh4}{4}\approx 92.15$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">Volume of revolution: hyperbola $\frac{x^2}{a^2}-\frac{y^2}{b^2}=1$ around $y$-axis, $y\in[-c,c]$</span><span class="tag tag-green">Volume $V=\pi\int x^2dy$</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">From hyperbola equation: $x^2=a^2\left(1+\frac{y^2}{b^2}\right)$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$V=\pi\int_{-c}^c a^2\!\left(1+\frac{y^2}{b^2}\right)dy=\pi a^2\left[y+\frac{y^3}{3b^2}\right]_{-c}^c=2\pi a^2c\left(1+\frac{c^2}{3b^2}\right)$</div></div></div>
+      </div>
+      <div class="box-result">$V=2\pi a^2c\!\left(1+\dfrac{c^2}{3b^2}\right)$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">Arc length of astroid $x^{2/3}+y^{2/3}=r^{2/3}$</span><span class="tag tag-green">Arc Length</span></div>
+    <div class="task-body">
+      <p>Use parametric form: $x=r\cos^3t$, $y=r\sin^3t$, $t\in[0,2\pi]$. Arc length $s=\int_0^{2\pi}\sqrt{\dot x^2+\dot y^2}\,dt$.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">$\dot x=-3r\cos^2t\sin t$, $\dot y=3r\sin^2t\cos t$</div>$\dot x^2+\dot y^2=9r^2\cos^2t\sin^2t(\cos^2t+\sin^2t)=9r^2\cos^2t\sin^2t$<br>$\sqrt{\dot x^2+\dot y^2}=3r|\cos t\sin t|=\frac{3r}{2}|\sin2t|$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Integrate over full period (symmetry: multiply first quadrant by 4)</div>$s=4\int_0^{\pi/2}\frac{3r}{2}\sin2t\,dt=6r\left[-\frac{\cos2t}{2}\right]_0^{\pi/2}=6r\cdot1=6r$</div></div>
+      </div>
+      <div class="box-result">Perimeter of astroid $=6r$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">Surface of revolution: $y=x^3$, $x\in[0,1]$</span><span class="tag tag-green">Surface $M=2\pi\int y\sqrt{1+y'^2}\,dx$</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">$y'=3x^2$, so $1+y'^2=1+9x^4$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$M=2\pi\int_0^1 x^3\sqrt{1+9x^4}\,dx$. Sub: $u=1+9x^4$, $du=36x^3dx$</div>$=2\pi\int_1^{10}\sqrt{u}\frac{du}{36}=\frac{\pi}{18}\left[\frac{2}{3}u^{3/2}\right]_1^{10}=\frac{\pi}{27}(10^{3/2}-1)$</div></div>
+      </div>
+      <div class="box-result">$M=\dfrac{\pi(10\sqrt{10}-1)}{27}\approx 3.563$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">Centroid of semicircle $y=\sqrt{r^2-x^2}$, $y\geq0$</span><span class="tag tag-green">Centroid</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">By symmetry $x_0=0$. Need $y_0=M_x/A$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Area: $A=\int_{-r}^r\sqrt{r^2-x^2}dx=\frac{\pi r^2}{2}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$M_x=\frac{1}{2}\int_{-r}^r(r^2-x^2)dx=\frac{1}{2}\left[r^2x-\frac{x^3}{3}\right]_{-r}^r=\frac{1}{2}\cdot\frac{4r^3}{3}=\frac{2r^3}{3}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$y_0=\frac{M_x}{A}=\frac{2r^3/3}{\pi r^2/2}=\frac{4r}{3\pi}$</div></div></div>
+      </div>
+      <div class="box-result">Centroid: $\left(0,\,\dfrac{4r}{3\pi}\right)$</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 8 — PARTIAL DERIVATIVES 1
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab8-intro">
+  <div class="ch-label">Aufgabenblatt 8 · New Concepts</div>
+  <h2>Multivariable calculus — partial derivatives</h2>
+  <p>Now functions take several inputs: $f(x,y)$ or $f(x,y,z)$. The <em>partial derivative</em> $\frac{\partial f}{\partial x}$ means: differentiate with respect to $x$, treating all other variables as constants.</p>
+
+  <div class="box box-rule">
+    <div class="box-label">Key objects</div>
+    <strong>Gradient</strong> $\nabla f = \left(\frac{\partial f}{\partial x_1},\ldots,\frac{\partial f}{\partial x_n}\right)^T$ — vector pointing in direction of steepest increase.<br><br>
+    <strong>Jacobian matrix</strong> $\nabla\mathbf{f}$ — matrix of all partial derivatives for vector-valued $\mathbf{f}:\mathbb{R}^n\to\mathbb{R}^m$.<br><br>
+    <strong>Hessian matrix</strong> $H_f$ — matrix of all second partial derivatives: $(H_f)_{ij}=\frac{\partial^2 f}{\partial x_i\partial x_j}$.<br><br>
+    <strong>Directional derivative</strong> $D_\mathbf{v}f = \nabla f\cdot\hat{\mathbf{v}}$ — rate of change in direction $\mathbf{v}$ (use unit vector $\hat{\mathbf{v}}$).
+  </div>
+</section>
+
+<section id="ab8">
+  <div class="ch-label">Aufgabenblatt 8 · Problems</div>
+  <h2>Partial derivatives I — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">$f(x,y)=\dfrac{xy}{x^2+y^2}$</span><span class="tag tag-blue">Partial Derivatives</span></div>
+    <div class="task-body">
+      <p><strong>a) Domain:</strong> $D_f=\mathbb{R}^2\setminus\{(0,0)\}$ (denominator $\neq0$)</p>
+      <p><strong>b) Limit along $y=kx$:</strong> $f(x,kx)=\frac{x\cdot kx}{x^2+k^2x^2}=\frac{k}{1+k^2}$. This depends on $k$ — different paths give different values, so the limit doesn't exist.</p>
+      <p><strong>c) Level set $N_f(0)$:</strong> $xy=0$, i.e. the two coordinate axes $\{x=0\}\cup\{y=0\}$.</p>
+      <p><strong>d) Partial derivatives at $(1,2)$:</strong> Using quotient rule:</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">$\frac{\partial f}{\partial x}=\frac{y(x^2+y^2)-xy\cdot2x}{(x^2+y^2)^2}=\frac{y(y^2-x^2)}{(x^2+y^2)^2}$. At $(1,2)$: $\frac{2(4-1)}{25}=\frac{6}{25}$</div></div>
+        <div class="step"><div class="step-body">$\frac{\partial f}{\partial y}=\frac{x(x^2-y^2)}{(x^2+y^2)^2}$. At $(1,2)$: $\frac{1(1-4)}{25}=\frac{-3}{25}$</div></div>
+      </div>
+      <div class="box-result">$\nabla f(1,2)=\left(\dfrac{6}{25},\,-\dfrac{3}{25}\right)$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">a) $f=\cos(xy)$ &nbsp; b) $f=\sin x\cos y-\sin y\cos x$</span><span class="tag tag-blue">Gradient</span></div>
+    <div class="task-body">
+      <p><strong>a)</strong> $\frac{\partial f}{\partial x}=-y\sin(xy)$, $\frac{\partial f}{\partial y}=-x\sin(xy)$. Gradient: $\nabla f=(-y\sin(xy),\,-x\sin(xy))^T$</p>
+      <p><strong>b)</strong> Note: $\sin x\cos y-\sin y\cos x=\sin(x-y)$ (angle subtraction formula).<br>
+      $\frac{\partial f}{\partial x}=\cos(x-y)$, $\frac{\partial f}{\partial y}=-\cos(x-y)$. Gradient: $\nabla f=(\cos(x-y),\,-\cos(x-y))^T$</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">a) $f=e^{xyz}$ &nbsp; b) $f=x_1^{(x_2+x_3)}$</span><span class="tag tag-blue">Gradient</span></div>
+    <div class="task-body">
+      <p><strong>a)</strong> $\nabla f=e^{xyz}(yz,\,xz,\,xy)^T$</p>
+      <p><strong>b)</strong> Use logarithmic differentiation: $\ln f=(x_2+x_3)\ln x_1$<br>
+      $\frac{\partial f}{\partial x_1}=f\cdot\frac{x_2+x_3}{x_1}=x_1^{x_2+x_3-1}(x_2+x_3)$<br>
+      $\frac{\partial f}{\partial x_2}=f\cdot\ln x_1=x_1^{x_2+x_3}\ln x_1$<br>
+      $\frac{\partial f}{\partial x_3}=x_1^{x_2+x_3}\ln x_1$ (same as $x_2$)</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">Jacobian of $\mathbf{f}=({\sqrt{x_1x_2x_3}},\,\sin(x_1x_2x_3))^T$</span><span class="tag tag-blue">Jacobian</span></div>
+    <div class="task-body">
+      <p>The Jacobian is a $2\times3$ matrix. Let $p=x_1x_2x_3$.</p>
+      <div class="box-result">$$\nabla\mathbf{f}=\begin{pmatrix}\frac{x_2x_3}{2\sqrt{p}}&\frac{x_1x_3}{2\sqrt{p}}&\frac{x_1x_2}{2\sqrt{p}}\\\cos(p)\cdot x_2x_3&\cos(p)\cdot x_1x_3&\cos(p)\cdot x_1x_2\end{pmatrix}$$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">Gradient and Hessian: a) $x_1^2+x_2^2$ &nbsp; b) $\sin x_1\cos x_2+2x_1x_2$</span><span class="tag tag-blue">Hessian</span></div>
+    <div class="task-body">
+      <p><strong>a)</strong> $\nabla f=(2x_1,2x_2)^T$, $H_f=\begin{pmatrix}2&0\\0&2\end{pmatrix}$ — positive definite (bowl shape).</p>
+      <p><strong>b)</strong> $\nabla f=(\cos x_1\cos x_2+2x_2,\,-\sin x_1\sin x_2+2x_1)^T$<br>
+      $H_f=\begin{pmatrix}-\sin x_1\cos x_2&-\cos x_1\sin x_2+2\\-\cos x_1\sin x_2+2&-\sin x_1\cos x_2\end{pmatrix}$ (note it's symmetric: Schwarz's theorem)</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">Gradient and Hessian: a) $e^{x_1^2+x_2^2}$ &nbsp; b) $2x_1x_2+3x_2-x_3^2$</span><span class="tag tag-blue">Hessian</span></div>
+    <div class="task-body">
+      <p><strong>a)</strong> Let $r^2=x_1^2+x_2^2$. $\nabla f=2e^{r^2}(x_1,x_2)^T$<br>
+      $H_f=e^{r^2}\begin{pmatrix}2+4x_1^2&4x_1x_2\\4x_1x_2&2+4x_2^2\end{pmatrix}$</p>
+      <p><strong>b)</strong> $\nabla f=(2x_2,\,2x_1+3,\,-2x_3)^T$, $H_f=\begin{pmatrix}0&2&0\\2&0&0\\0&0&-2\end{pmatrix}$</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">Directional derivative of $f=x^2yz+4xz^2$ at $(1,-2,-1)$ in direction $(2,-1,-2)$</span><span class="tag tag-blue">Directional Derivative</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Gradient: $\nabla f=(2xyz+4z^2,\,x^2z,\,x^2y+8xz)$. At $(1,-2,-1)$:</div>$\nabla f=(2(1)(-2)(-1)+4,-1\cdot1,-2+8(-1))=(-4+4,-1,-2-8)=(0,-1,-10)$ — wait, recalculate:<br>$2xyz+4z^2=2(1)(-2)(-1)+4(1)=4+4=8$? Let me redo: $2\cdot1\cdot(-2)\cdot(-1)=4$, $4(-1)^2=4$, sum $=8$.<br>$x^2z=(1)^2(-1)=-1$. $x^2y+8xz=(-2)+8(1)(-1)=-2-8=-10$.<br>$\nabla f(1,-2,-1)=(8,-1,-10)$</div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Unit direction vector: $\|\mathbf{v}\|=\sqrt{4+1+4}=3$, $\hat{\mathbf{v}}=\frac{1}{3}(2,-1,-2)$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Directional derivative: $D_{\hat v}f=\nabla f\cdot\hat{\mathbf{v}}=\frac{1}{3}(16+1+20)=\frac{37}{3}$</div></div></div>
+      </div>
+      <div class="box-result">$D_{\hat v}f=\dfrac{37}{3}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">Directional derivative of $f=x^2yz^3$ along $\mathbf{r}(u)$ at $u=0$</span><span class="tag tag-blue">Directional Derivative</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body"><div class="step-title">Point at $u=0$: $\mathbf{r}(0)=(e^0,2\sin0+1,0-\cos0)=(1,1,-1)$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Tangent direction: $\mathbf{r}'(u)=(-e^{-u},2\cos u,1+\sin u)$, at $u=0$: $(-1,2,1)$, $\|\mathbf{r}'(0)\|=\sqrt{6}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Gradient $\nabla f=(2xyz^3,x^2z^3,3x^2yz^2)$ at $(1,1,-1)$: $(-2,-1,3)$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">$D_{\hat r}f=\nabla f\cdot\hat{\mathbf{r}}'=\frac{1}{\sqrt6}(2-2+3)=\frac{3}{\sqrt6}=\frac{\sqrt6}{2}$</div></div></div>
+        <div class="step"><div class="step-body"><div class="step-title">Maximum directional derivative: $\|\nabla f\|=\sqrt{4+1+9}=\sqrt{14}$</div></div></div>
+      </div>
+      <div class="box-result">$D_{\hat r}f=\dfrac{\sqrt6}{2}$, maximum directional derivative $=\sqrt{14}$</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 9 — PARTIAL DERIVATIVES 2
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab9-intro">
+  <div class="ch-label">Aufgabenblatt 9 · New Concepts</div>
+  <h2>Tangent planes, divergence, curl &amp; total differential</h2>
+  <div class="box box-rule">
+    <div class="box-label">Key formulas</div>
+    <strong>Tangent plane</strong> to $z=f(x,y)$ at $(x_0,y_0)$: $z=f(x_0,y_0)+f_x(x_0,y_0)(x-x_0)+f_y(x_0,y_0)(y-y_0)$<br><br>
+    <strong>Divergence</strong> of $\mathbf{V}=(V_1,V_2,V_3)^T$: $\text{div}\,\mathbf{V}=\frac{\partial V_1}{\partial x}+\frac{\partial V_2}{\partial y}+\frac{\partial V_3}{\partial z}$ (scalar — how much the field "spreads out")<br><br>
+    <strong>Curl</strong>: $\text{rot}\,\mathbf{V}=\nabla\times\mathbf{V}=\left(\frac{\partial V_3}{\partial y}-\frac{\partial V_2}{\partial z},\;\frac{\partial V_1}{\partial z}-\frac{\partial V_3}{\partial x},\;\frac{\partial V_2}{\partial x}-\frac{\partial V_1}{\partial y}\right)^T$ (rotation of the field)<br><br>
+    <strong>Total differential</strong>: $df=\frac{\partial f}{\partial x}dx+\frac{\partial f}{\partial y}dy$ — the best linear approximation to $f$'s change.
+  </div>
+</section>
+
+<section id="ab9">
+  <div class="ch-label">Aufgabenblatt 9 · Problems</div>
+  <h2>Partial derivatives II — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">Tangent plane to $f=x^2y^3$ at $P(1|-1)$</span><span class="tag tag-blue">Tangent Plane</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$f(1,-1)=(1)^2(-1)^3=-1$, $f_x=2xy^3$, $f_y=3x^2y^2$</div></div>
+        <div class="step"><div class="step-body">At $(1,-1)$: $f_x=-2$, $f_y=3$</div></div>
+        <div class="step"><div class="step-body">Tangent plane: $z=-1-2(x-1)+3(y+1)=-2x+3y+4$</div></div>
+      </div>
+      <div class="box-result">$z=-2x+3y+4$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">$F=x^2yz+3y^2-2xz^2+8z=0$ at $(1,2,-1)$</span><span class="tag tag-blue">Normal &amp; Tangent Plane</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$\nabla F=(2xyz-2z^2,\,x^2z+6y,\,x^2y-4xz+8)$. At $(1,2,-1)$: $(2(1)(2)(-1)-2(-1)^2,\,(1)(-1)+12,\,(2)-4(-1)+8)=(-4-2,-1+12,2+4+8)=(-6,11,14)$</div></div>
+        <div class="step"><div class="step-body"><strong>Normal</strong> through $(1,2,-1)$ in direction $(-6,11,14)$: $\frac{x-1}{-6}=\frac{y-2}{11}=\frac{z+1}{14}$</div></div>
+        <div class="step"><div class="step-body"><strong>Tangent plane</strong>: $\nabla F\cdot(\mathbf{x}-\mathbf{x}_0)=0$: $-6(x-1)+11(y-2)+14(z+1)=0\Rightarrow-6x+11y+14z=8$</div></div>
+      </div>
+      <div class="box-result">Normal direction: $(-6,11,14)^T$. Tangent plane: $-6x+11y+14z=8$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">div$\mathbf{V}$ for $\mathbf{V}=(x^2z,-2y^3z^2,xy^2z)^T$ at $(1,-1,1)$</span><span class="tag tag-blue">Divergence</span></div>
+    <div class="task-body">
+      <p>$\text{div}\,\mathbf{V}=\frac{\partial}{\partial x}(x^2z)+\frac{\partial}{\partial y}(-2y^3z^2)+\frac{\partial}{\partial z}(xy^2z)=2xz-6y^2z^2+xy^2$</p>
+      <p>At $(1,-1,1)$: $2(1)(1)-6(1)(1)+1(1)=2-6+1=-3$</p>
+      <div class="box-result">$\text{div}\,\mathbf{V}\big|_{(1,-1,1)}=-3$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">rot$\mathbf{V}$ for $\mathbf{V}=(xz^3,-2x^2yz,2yz^4)^T$ at $(1,-1,1)$</span><span class="tag tag-blue">Curl</span></div>
+    <div class="task-body">
+      <p>$\text{rot}\,\mathbf{V}=\begin{pmatrix}\partial_y(2yz^4)-\partial_z(-2x^2yz)\\\partial_z(xz^3)-\partial_x(2yz^4)\\\partial_x(-2x^2yz)-\partial_y(xz^3)\end{pmatrix}=\begin{pmatrix}2z^4+2x^2y\\3xz^2-0\\-4xyz-0\end{pmatrix}$</p>
+      <p>At $(1,-1,1)$: $(2-2,3,-4(-1))=(0,3,4)$</p>
+      <div class="box-result">$\text{rot}\,\mathbf{V}\big|_{(1,-1,1)}=(0,3,4)^T$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">Total differentials</span><span class="tag tag-blue">Total Differential</span></div>
+    <div class="task-body">
+      <p><strong>a)</strong> $f=x^2y$: $df=2xy\,dx+x^2\,dy$</p>
+      <p><strong>b)</strong> $f=e^{x/y}$: $df=e^{x/y}\cdot\frac{1}{y}dx+e^{x/y}\cdot\left(-\frac{x}{y^2}\right)dy=\frac{e^{x/y}}{y}\left(dx-\frac{x}{y}dy\right)$</p>
+      <p><strong>c)</strong> $f=\sqrt{x^2+y^2}$: $df=\frac{x}{\sqrt{x^2+y^2}}dx+\frac{y}{\sqrt{x^2+y^2}}dy$</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">Max error in $A=\frac{r^2}{2}(\alpha-\sin\alpha)$</span><span class="tag tag-blue">Error Propagation</span></div>
+    <div class="task-body">
+      <p>$r=(8.2\pm0.05)$ cm, $\alpha=(126°\pm1°)=(2.199\pm0.01745)$ rad.</p>
+      <p>$\Delta A\approx\left|\frac{\partial A}{\partial r}\right|\Delta r+\left|\frac{\partial A}{\partial\alpha}\right|\Delta\alpha$</p>
+      <p>$\frac{\partial A}{\partial r}=r(\alpha-\sin\alpha)$, $\frac{\partial A}{\partial\alpha}=\frac{r^2}{2}(1-\cos\alpha)$</p>
+      <p>At $\alpha=126°$: $\sin126°\approx0.809$, $\cos126°\approx-0.588$. $A\approx\frac{8.2^2}{2}(2.199-0.809)\approx46.8$ cm²</p>
+      <div class="box-result">$\Delta A\approx|8.2(1.390)|(0.05)+|\frac{67.24}{2}(1.588)|(0.01745)\approx5.70+0.93\approx6.6$ cm²</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">Max error in $I=U/(R_1+R_2)$ — series circuit</span><span class="tag tag-blue">Error Propagation</span></div>
+    <div class="task-body">
+      <p>$U=220\pm3$ V, $R_1=78\pm1\,\Omega$, $R_2=54\pm1\,\Omega$. $R=R_1+R_2=132\,\Omega$, $I=220/132\approx1.667$ A.</p>
+      <p>$\frac{\partial I}{\partial U}=\frac{1}{R}$, $\frac{\partial I}{\partial R_1}=\frac{\partial I}{\partial R_2}=-\frac{U}{(R_1+R_2)^2}$</p>
+      <div class="box-result">$\Delta I\approx\frac{3}{132}+\frac{220}{132^2}(1+1)\approx0.02273+0.02524\approx0.048$ A</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">Max error in $I=U/R_1+U/R_2$ — parallel circuit</span><span class="tag tag-blue">Error Propagation</span></div>
+    <div class="task-body">
+      <p>$I=U/78+U/54\approx2.821+4.074=6.895$ A (parallel gives much more current).</p>
+      <p>$\frac{\partial I}{\partial U}=\frac{1}{R_1}+\frac{1}{R_2}$, $\frac{\partial I}{\partial R_1}=-\frac{U}{R_1^2}$, $\frac{\partial I}{\partial R_2}=-\frac{U}{R_2^2}$</p>
+      <div class="box-result">$\Delta I\approx\left(\frac{1}{78}+\frac{1}{54}\right)\cdot3+\frac{220}{78^2}\cdot1+\frac{220}{54^2}\cdot1\approx0.106+0.036+0.075\approx0.217$ A</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 10 — PARTIAL DERIVATIVES 3: EXTREMA
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab10-intro">
+  <div class="ch-label">Aufgabenblatt 10 · New Concepts</div>
+  <h2>Quadratic forms, definiteness &amp; multivariable extrema</h2>
+
+  <div class="box box-rule">
+    <div class="box-label">Definiteness via Sylvester's criterion</div>
+    A symmetric matrix $A$ is:<br>
+    • <strong>positive definite</strong> if all leading principal minors $>0$ (all eigenvalues $>0$) → minimum<br>
+    • <strong>negative definite</strong> if minors alternate $-,+,-,\ldots$ → maximum<br>
+    • <strong>indefinite</strong> otherwise → saddle point<br><br>
+    For $2\times2$: check $a_{11}>0$ and $\det A>0$ for positive definite.
+  </div>
+
+  <div class="box box-rule">
+    <div class="box-label">Finding extrema of $f(x,y)$</div>
+    1. Solve $\nabla f=\mathbf{0}$ → critical points.<br>
+    2. Compute Hessian $H$ at each critical point.<br>
+    3. If $H$ positive definite → local minimum. Negative definite → local maximum. Indefinite → saddle point.
+  </div>
+</section>
+
+<section id="ab10">
+  <div class="ch-label">Aufgabenblatt 10 · Problems</div>
+  <h2>Extrema &amp; quadratic forms — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1–3</span><span class="task-subtitle">Definiteness of quadratic forms</span><span class="tag tag-blue">Sylvester</span></div>
+    <div class="task-body">
+      <p><strong>AUF. 1</strong> $A=\begin{pmatrix}1&2&1\\2&1&1\\1&1&4\end{pmatrix}$: $D_1=1>0$, $D_2=1-4=-3<0$. Indefinite — neither positive nor negative definite.</p>
+      <p><strong>AUF. 2</strong> $A=\begin{pmatrix}2&1&1\\1&2&3\\1&3&5\end{pmatrix}$: $D_1=2>0$, $D_2=4-1=3>0$, $D_3=2(10-9)-1(5-3)+1(3-2)=2-2+1=1>0$. <strong>Positive definite.</strong></p>
+      <p><strong>AUF. 3</strong> $A=\begin{pmatrix}-2&1&2\\1&-3&-2\\2&-2&-4\end{pmatrix}$: $D_1=-2<0$, $D_2=6-1=5>0$, $D_3=-2(12-4)-1(-4+4)+2(-2+6)=-16+0+8=-8<0$. Signs: $-,+,-$ → <strong>Negative definite.</strong></p>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4–5</span><span class="task-subtitle">Extrema of quadratic functions</span><span class="tag tag-blue">Hessian Test</span></div>
+    <div class="task-body">
+      <p><strong>AUF. 4</strong>: $f=\mathbf{x}^TA\mathbf{x}+\mathbf{b}^T\mathbf{x}$, $A=\begin{pmatrix}1&\frac12\\\frac12&1\end{pmatrix}$, $\mathbf{b}=(-3,-2)^T$.<br>
+      $\nabla f=2A\mathbf{x}+\mathbf{b}=0\Rightarrow\mathbf{x}^*=-\frac{1}{2}A^{-1}\mathbf{b}$.<br>
+      $A^{-1}=\frac{1}{3/4}\begin{pmatrix}1&-\frac12\\-\frac12&1\end{pmatrix}=\frac{4}{3}\begin{pmatrix}1&-\frac12\\-\frac12&1\end{pmatrix}$.<br>
+      $\mathbf{x}^*=\frac{2}{3}\begin{pmatrix}1&-\frac12\\-\frac12&1\end{pmatrix}\begin{pmatrix}3\\2\end{pmatrix}=\frac{2}{3}\begin{pmatrix}2\\-\frac12\end{pmatrix}=\begin{pmatrix}4/3\\-1/3\end{pmatrix}$.<br>
+      Since $A$ is positive definite ($D_1=1>0$, $\det A=3/4>0$), the Hessian $2A$ is positive definite → <strong>unique global minimum</strong> at $\mathbf{x}^*$.</p>
+      <p><strong>AUF. 5</strong>: $A=-\begin{pmatrix}2&1&1\\1&2&1\\1&1&2\end{pmatrix}$. All diagonal entries negative → likely negative definite. $D_1=-2<0$, $D_2=4-1=3>0$, $D_3=-3(3) = -3·(8-1\cdot2-1\cdot1) = ...$  det $= -(8-2-2+0-2-2) = -4 < 0$. Signs $-,+,-$ → negative definite → <strong>unique global maximum</strong>.</p>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">a) $f=x^2+y^2$ &nbsp; b) $f=x^2-y^2$</span><span class="tag tag-blue">Extrema &amp; Saddle</span></div>
+    <div class="task-body">
+      <p><strong>a)</strong> $\nabla f=(2x,2y)=\mathbf{0}\Rightarrow(0,0)$. $H=\begin{pmatrix}2&0\\0&2\end{pmatrix}$ positive definite → <strong>global minimum at $(0,0)$</strong>, $f=0$. (Paraboloid bowl.)</p>
+      <p><strong>b)</strong> $\nabla f=(2x,-2y)=\mathbf{0}\Rightarrow(0,0)$. $H=\begin{pmatrix}2&0\\0&-2\end{pmatrix}$ indefinite (eigenvalues $+2,-2$) → <strong>saddle point at $(0,0)$</strong>. (Hyperbolic paraboloid — like a saddle.)</p>
+      <div class="chart-wrap"><canvas id="ab10_chart" height="240"></canvas></div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">$f=y^3+2x^2y-x^2-3y^2+1$</span><span class="tag tag-blue">Extrema &amp; Saddle</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$f_x=4xy-2x=2x(2y-1)=0\Rightarrow x=0$ or $y=\frac12$</div></div>
+        <div class="step"><div class="step-body">$f_y=3y^2+2x^2-6y=0$. Case $x=0$: $3y^2-6y=0\Rightarrow y=0$ or $y=2$. Case $y=\frac12$: $\frac34+2x^2-3=0\Rightarrow x^2=\frac98\Rightarrow x=\pm\frac{3}{2\sqrt2}$</div></div>
+        <div class="step"><div class="step-body">Critical points: $(0,0)$, $(0,2)$, $(\pm\frac{3}{2\sqrt2},\frac12)$. Hessian: $H=\begin{pmatrix}4y-2&4x\\4x&6y-6\end{pmatrix}$<br>
+        At $(0,0)$: $H=\begin{pmatrix}-2&0\\0&-6\end{pmatrix}$ neg. def. → <strong>local maximum</strong>, $f=1$.<br>
+        At $(0,2)$: $H=\begin{pmatrix}6&0\\0&6\end{pmatrix}$ pos. def. → <strong>local minimum</strong>, $f=-3$.<br>
+        At $(\pm\frac{3}{2\sqrt2},\frac12)$: $\det H=(0)(−3)−(\frac{3}{\sqrt2})^2=-\frac{9}{2}<0$ → <strong>saddle points</strong>.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">$f=x^3+y^3-3x-12y+20$</span><span class="tag tag-blue">Extrema &amp; Saddle</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$f_x=3x^2-3=0\Rightarrow x=\pm1$; $f_y=3y^2-12=0\Rightarrow y=\pm2$. Four critical points: $(\pm1,\pm2)$</div></div>
+        <div class="step"><div class="step-body">$H=\begin{pmatrix}6x&0\\0&6y\end{pmatrix}$<br>
+        $(1,2)$: $H=\begin{pmatrix}6&0\\0&12\end{pmatrix}$ pos. def. → <strong>local min</strong>, $f=1+8-3-24+20=2$.<br>
+        $(-1,-2)$: $H=\begin{pmatrix}-6&0\\0&-12\end{pmatrix}$ neg. def. → <strong>local max</strong>, $f=-1-8+3+24+20=38$.<br>
+        $(1,-2)$ and $(-1,2)$: $\det H=6\cdot(-12)<0$ → <strong>saddle points</strong>.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 11 — MULTIPLE INTEGRALS 1
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab11-intro">
+  <div class="ch-label">Aufgabenblatt 11 · New Concepts</div>
+  <h2>Multiple integrals — integrating over regions</h2>
+
+  <div class="box box-rule">
+    <div class="box-label">Fubini's Theorem — iterated integration</div>
+    $$\iint_B f(x,y)\,dA = \int_a^b\!\int_{g_1(x)}^{g_2(x)} f(x,y)\,dy\,dx$$
+    Integrate the innermost variable first (treating outer variables as constants), then work outward.
+  </div>
+
+  <div class="box box-intuition">
+    <div class="box-label">How to read the integration bounds</div>
+    The bounds on each integral define the region $B$. Always integrate from the inner limits to the outer limits, substituting all inner results before integrating the next variable.
+  </div>
+</section>
+
+<section id="ab11">
+  <div class="ch-label">Aufgabenblatt 11 · Problems</div>
+  <h2>Multiple integrals I — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">Volume of $M=\{0\leq x_1\leq1,\,0\leq x_2\leq x_1,\,0\leq x_3\leq x_1x_2\}$</span><span class="tag tag-green">Triple Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$\int_0^1\int_0^{x_1}\int_0^{x_1x_2}dx_3\,dx_2\,dx_1=\int_0^1\int_0^{x_1}x_1x_2\,dx_2\,dx_1$</div></div>
+        <div class="step"><div class="step-body">$=\int_0^1 x_1\cdot\frac{x_1^2}{2}dx_1=\int_0^1\frac{x_1^3}{2}dx_1=\frac{1}{8}$</div></div>
+      </div>
+      <div class="box-result">Volume $=\dfrac{1}{8}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">Volume of $M=\{0\leq x_1,x_2\leq1,\,0\leq x_3\leq\min(x_1,x_2)\}$</span><span class="tag tag-green">Triple Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">Split the square $[0,1]^2$ into $x_1\leq x_2$ and $x_1>x_2$. By symmetry both halves contribute equally.</div></div>
+        <div class="step"><div class="step-body">$\int_0^1\int_0^1\min(x_1,x_2)dx_2\,dx_1=2\int_0^1\int_0^{x_1}x_2\,dx_2\,dx_1=2\int_0^1\frac{x_1^2}{2}dx_1=\int_0^1 x_1^2\,dx_1=\frac{1}{3}$</div></div>
+      </div>
+      <div class="box-result">Volume $=\dfrac{1}{3}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">Volume of $M=\{0\leq x_1\leq h,\,|x_2|\leq ax_1,\,|x_3|\leq ax_1\}$</span><span class="tag tag-green">Triple Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">For fixed $x_1$: $x_2\in[-ax_1,ax_1]$ (length $2ax_1$) and $x_3\in[-ax_1,ax_1]$ (length $2ax_1$). Cross-section area $=(2ax_1)^2=4a^2x_1^2$.</div></div>
+        <div class="step"><div class="step-body">$V=\int_0^h 4a^2x_1^2\,dx_1=4a^2\cdot\frac{h^3}{3}=\frac{4a^2h^3}{3}$</div></div>
+      </div>
+      <div class="box-result">$V=\dfrac{4a^2h^3}{3}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">$\iint_B(x_1+x_2)\,dA$, $B=\{0\leq x_1\leq1,\,0\leq x_2\leq x_1\}$</span><span class="tag tag-green">Double Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$\int_0^1\int_0^{x_1}(x_1+x_2)dx_2\,dx_1=\int_0^1\left[x_1x_2+\frac{x_2^2}{2}\right]_0^{x_1}dx_1=\int_0^1\frac{3x_1^2}{2}dx_1$</div></div>
+        <div class="step"><div class="step-body">$=\frac{3}{2}\cdot\frac{1}{3}=\frac{1}{2}$</div></div>
+      </div>
+      <div class="box-result">$\displaystyle\iint_B(x_1+x_2)\,dA=\dfrac{1}{2}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">$\iint_B\!\left(\frac{1}{x_1}+\frac{1}{x_2}\right)dA$, $B=[1,2]^2$</span><span class="tag tag-green">Double Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">Integral separates: $\int_1^2\!\int_1^2\!\left(\frac{1}{x_1}+\frac{1}{x_2}\right)dx_2\,dx_1=\int_1^2\!\left[\frac{x_2}{x_1}+\ln x_2\right]_1^2 dx_1$</div></div>
+        <div class="step"><div class="step-body">$=\int_1^2\!\left(\frac{1}{x_1}+\ln2\right)dx_1=[\ln x_1+x_1\ln2]_1^2=\ln2+2\ln2-\ln2=2\ln2$</div></div>
+      </div>
+      <div class="box-result">$2\ln2$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">$\iiint_B x_1x_2x_3\,dV$, $B=\{0\leq x_1\leq1,\,x_2,x_3\geq0,\,x_2+x_3\leq1\}$</span><span class="tag tag-green">Triple Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$\int_0^1 x_1\,dx_1\cdot\int_0^1\!\int_0^{1-x_2}x_2x_3\,dx_3\,dx_2$</div></div>
+        <div class="step"><div class="step-body">$\int_0^1 x_1\,dx_1=\frac12$. Inner: $\int_0^1 x_2\cdot\frac{(1-x_2)^2}{2}dx_2=\frac12\int_0^1(x_2-2x_2^2+x_2^3)dx_2=\frac12(\frac12-\frac23+\frac14)=\frac{1}{24}$</div></div>
+        <div class="step"><div class="step-body">Total: $\frac12\cdot\frac{1}{24}=\frac{1}{48}$</div></div>
+      </div>
+      <div class="box-result">$\dfrac{1}{48}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">$\iint_B e^{-x_1x_2}\,dA$, $B=\{-2\leq x_1\leq-1,\,x_1x_2\geq1\}$</span><span class="tag tag-green">Double Integral</span></div>
+    <div class="task-body">
+      <p>For $x_1\in[-2,-1]$ (negative), $x_1x_2\geq1$ means $x_2\leq\frac{1}{x_1}$ (dividing by negative flips inequality). Since $x_1<0$, $\frac{1}{x_1}\in[-1,-\frac12]$, and $x_2$ runs from $-\infty$ to $\frac{1}{x_1}$... wait: since $x_1x_2\geq1>0$ and $x_1<0$, we need $x_2\leq1/x_1<0$. So $x_2$ ranges from $-\infty$? But we need a finite bound — $x_2\leq 1/x_1\leq-1/2$. We integrate: $x_2\in(-\infty,1/x_1]$.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">$\int_{-2}^{-1}\int_{-\infty}^{1/x_1}e^{-x_1x_2}dx_2\,dx_1$. Inner: $\left[\frac{-e^{-x_1x_2}}{x_1}\right]_{-\infty}^{1/x_1}$. As $x_2\to-\infty$ with $x_1<0$: $-x_1x_2\to-\infty$, so $e^{-x_1x_2}\to0$. At $x_2=1/x_1$: $e^{-1}$.<br>Inner result: $\frac{-e^{-1}}{x_1}$</div></div>
+        <div class="step"><div class="step-body">$-e^{-1}\int_{-2}^{-1}\frac{dx_1}{x_1}=-e^{-1}[\ln|x_1|]_{-2}^{-1}=-e^{-1}(0-\ln2)=\frac{\ln2}{e}$</div></div>
+      </div>
+      <div class="box-result">$\dfrac{\ln2}{e}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">$\iiint_B e^{-x_1-x_2-x_3}\,dV$, $B=\{x_1,x_2,x_3\geq0\}$</span><span class="tag tag-green">Triple Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">Integral separates: $\left(\int_0^\infty e^{-x_1}dx_1\right)^3=1^3=1$</div></div>
+      </div>
+      <div class="box-result">$1$</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════
+     SHEET 12 — MULTIPLE INTEGRALS 2
+═══════════════════════════════════════════════════════════════ -->
+<section id="ab12-intro">
+  <div class="ch-label">Aufgabenblatt 12 · New Concepts</div>
+  <h2>Coordinate transforms &amp; volume calculations</h2>
+  <div class="box box-rule">
+    <div class="box-label">Change of variables — Jacobian factor</div>
+    $$\iint_B f(\mathbf{x})\,d\mathbf{x}=\iint_{B'}f(\mathbf{x}(\mathbf{u}))\cdot|\det J|\,d\mathbf{u}$$
+    where $J=\frac{\partial(x_1,x_2)}{\partial(u_1,u_2)}$ is the Jacobian matrix of the transformation.<br><br>
+    <strong>Polar</strong>: $x=r\cos\varphi$, $y=r\sin\varphi$, $|\det J|=r$<br>
+    <strong>Cylindrical</strong>: $x=r\cos\varphi$, $y=r\sin\varphi$, $z=z$, $|\det J|=r$<br>
+    <strong>Spherical</strong>: $x=r\sin\theta\cos\varphi$, $y=r\sin\theta\sin\varphi$, $z=r\cos\theta$, $|\det J|=r^2\sin\theta$
+  </div>
+</section>
+
+<section id="ab12">
+  <div class="ch-label">Aufgabenblatt 12 · Problems</div>
+  <h2>Multiple integrals II — all 8 problems</h2>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 1</span><span class="task-subtitle">$\iiint_B1\,dV$, $B=\{x_1+2x_2+3x_3\leq1,\,x_i>0\}$</span><span class="tag tag-green">Triple Integral</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$\int_0^{1}\int_0^{(1-x_1)/2}\int_0^{(1-x_1-2x_2)/3}dx_3\,dx_2\,dx_1$</div></div>
+        <div class="step"><div class="step-body">Inner: $\frac{1-x_1-2x_2}{3}$. Middle: $\int_0^{(1-x_1)/2}\frac{1-x_1-2x_2}{3}dx_2=\frac{(1-x_1)^2}{12}$</div></div>
+        <div class="step"><div class="step-body">Outer: $\int_0^1\frac{(1-x_1)^2}{12}dx_1=\frac{1}{12}\cdot\frac{1}{3}=\frac{1}{36}$</div></div>
+      </div>
+      <div class="box-result">$V=\dfrac{1}{36}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 2</span><span class="task-subtitle">$\iint_B|x_1x_2|\,dA$, $B=$ unit disk</span><span class="tag tag-green">Polar Coords</span></div>
+    <div class="task-body">
+      <p><strong>Cartesian:</strong> By symmetry $\iint_B|xy|\,dA=4\int_0^1\int_0^{\sqrt{1-x^2}}xy\,dy\,dx=4\int_0^1 x\cdot\frac{1-x^2}{2}dx=2\int_0^1(x-x^3)dx=2(\frac12-\frac14)=\frac12$</p>
+      <p><strong>Polar:</strong> $\int_0^{2\pi}\int_0^1|r^2\cos\varphi\sin\varphi|r\,dr\,d\varphi=\int_0^1 r^3\,dr\cdot\int_0^{2\pi}|\frac{\sin2\varphi}{2}|d\varphi=\frac14\cdot4\cdot\int_0^{\pi/2}\sin2\varphi\,d\varphi\cdot\frac12=\frac14\cdot2=\frac12$ ✓</p>
+      <div class="box-result">$\dfrac{1}{2}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 3</span><span class="task-subtitle">$\iint_B\sqrt{x^2+y^2}\,dA$, $B=\{0\leq x\leq y,\,x^2+y^2\leq1\}$</span><span class="tag tag-green">Polar Coords</span></div>
+    <div class="task-body">
+      <p>In polar: $\sqrt{x^2+y^2}=r$. The region $0\leq x\leq y$ means $45°\leq\varphi\leq90°$ (second octant with $x\geq0,y\geq x$). So $\varphi\in[\pi/4,\pi/2]$, $r\in[0,1]$.</p>
+      <div class="steps">
+        <div class="step"><div class="step-body">$\int_{\pi/4}^{\pi/2}\int_0^1 r\cdot r\,dr\,d\varphi=\int_{\pi/4}^{\pi/2}d\varphi\cdot\int_0^1 r^2\,dr=\frac{\pi}{4}\cdot\frac{1}{3}$</div></div>
+      </div>
+      <div class="box-result">$\dfrac{\pi}{12}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 4</span><span class="task-subtitle">Volume between $f=0.9(x^2+y^2)+0.1$ and $g=x^2+y^2$ over unit disk</span><span class="tag tag-green">Double Integral</span></div>
+    <div class="task-body">
+      <p>$f-g=0.1$ everywhere — the surfaces are parallel, distance 0.1 apart.</p>
+      <p>Volume $=\iint_B(f-g)\,dA=0.1\cdot\text{Area}(B)=0.1\cdot\pi\cdot1^2=0.1\pi$</p>
+      <div class="box-result">$V=0.1\pi\approx0.314$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 5</span><span class="task-subtitle">$\iint_B\cos\frac{x-y}{x+y}\,dA$, $B$ bounded by $x+y=1,x=0,y=0$</span><span class="tag tag-green">Change of Variables</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">Let $u=x-y$, $v=x+y$. Then $x=\frac{u+v}{2}$, $y=\frac{v-u}{2}$. Jacobian: $|\det J|=\frac{1}{2}$.</div></div>
+        <div class="step"><div class="step-body">New region $B'$: original triangle has $x\geq0,y\geq0,x+y\leq1$. In $(u,v)$: $v=x+y\in[0,1]$, and $u=x-y\in[-v,v]$.</div></div>
+        <div class="step"><div class="step-body">$\int_0^1\int_{-v}^v\cos\!\left(\frac{u}{v}\right)\frac{1}{2}du\,dv=\frac12\int_0^1\left[v\sin\!\left(\frac{u}{v}\right)\right]_{-v}^v dv=\frac12\int_0^1 2v\sin1\,dv=\sin1\cdot\frac{1}{2}$</div></div>
+      </div>
+      <div class="box-result">$\dfrac{\sin1}{2}\approx0.420$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 6</span><span class="task-subtitle">Volume above $xy$-plane, inside paraboloid $z=r^2$ and cylinder $r=a$ (cylindrical coords)</span><span class="tag tag-green">Cylindrical Coords</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$V=\int_0^{2\pi}\int_0^a\int_0^{r^2}r\,dz\,dr\,d\varphi=2\pi\int_0^a r\cdot r^2\,dr=2\pi\cdot\frac{a^4}{4}$</div></div>
+      </div>
+      <div class="box-result">$V=\dfrac{\pi a^4}{2}$</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 7</span><span class="task-subtitle">Volume of spherical cap: sphere $r=a$, cone $\theta=\alpha$ (spherical coords)</span><span class="tag tag-green">Spherical Coords</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$V=\int_0^{2\pi}\int_0^\alpha\int_0^a r^2\sin\theta\,dr\,d\theta\,d\varphi$</div></div>
+        <div class="step"><div class="step-body">$=2\pi\cdot\frac{a^3}{3}\int_0^\alpha\sin\theta\,d\theta=\frac{2\pi a^3}{3}[-\cos\theta]_0^\alpha=\frac{2\pi a^3}{3}(1-\cos\alpha)$</div></div>
+        <div class="step"><div class="step-body">Full sphere: $\alpha=\pi\Rightarrow V=\frac{2\pi a^3}{3}(1-(-1))=\frac{4\pi a^3}{3}$ ✓</div></div>
+      </div>
+      <div class="box-result">$V=\dfrac{2\pi a^3}{3}(1-\cos\alpha)$. For full sphere $(\alpha=\pi)$: $V=\dfrac{4\pi a^3}{3}$ ✓</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="task-hd"><span class="task-num">AUF. 8</span><span class="task-subtitle">Centroid $z_0$ of spherical cap region from AUF. 7</span><span class="tag tag-green">Centroid</span></div>
+    <div class="task-body">
+      <div class="steps">
+        <div class="step"><div class="step-body">$M_{xy}=\int_0^{2\pi}\int_0^\alpha\int_0^a r\cos\theta\cdot r^2\sin\theta\,dr\,d\theta\,d\varphi=2\pi\cdot\frac{a^4}{4}\int_0^\alpha\sin\theta\cos\theta\,d\theta=\frac{\pi a^4}{2}\cdot\frac{\sin^2\alpha}{2}=\frac{\pi a^4\sin^2\alpha}{4}$</div></div>
+        <div class="step"><div class="step-body">$z_0=\frac{M_{xy}}{V}=\frac{\pi a^4\sin^2\alpha/4}{2\pi a^3(1-\cos\alpha)/3}=\frac{3a\sin^2\alpha}{8(1-\cos\alpha)}=\frac{3a(1+\cos\alpha)}{8}$<br>(using $\sin^2\alpha=(1-\cos\alpha)(1+\cos\alpha)$)</div></div>
+        <div class="step"><div class="step-body">Hemisphere $\alpha=\pi/2$: $z_0=\frac{3a(1+0)}{8}=\frac{3a}{8}$ ✓ (classic result)</div></div>
+      </div>
+      <div class="box-result">$z_0=\dfrac{3a(1+\cos\alpha)}{8}$. Hemisphere: $z_0=\dfrac{3a}{8}$</div>
+    </div>
+  </div>
+</section>
+
+<footer style="text-align:center;padding:40px 20px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border);">
+  Calculus From Scratch · Aufgabenblatt 1–12 · Built with Chart.js + MathJax
+</footer>
+
+<!-- ═══════════════ SCRIPTS ════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ─── UTILITIES ──────────────────────────────────────────────── */
+function range(a,b,n){const r=[];for(let i=0;i<n;i++)r.push(a+(b-a)*i/(n-1));return r;}
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+
+const DARK = {
+  f:   '#e8a838',
+  fp:  '#5b9cf6',
+  fpp: '#6bcf8f',
+  r:   '#f06b6b',
+  p:   '#c084fc',
+  g:   '#7a7468',
+};
+
+Chart.defaults.color = '#7a7468';
+Chart.defaults.borderColor = '#2e2c28';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+// Plugin: fill every chart canvas with the dark background colour
+const darkBgPlugin = {
+  id: 'darkBg',
+  beforeDraw(chart) {
+    const ctx = chart.canvas.getContext('2d');
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = '#1a1916';
+    ctx.fillRect(0, 0, chart.width, chart.height);
+    ctx.restore();
+  }
+};
+Chart.register(darkBgPlugin);
+
+function mkChart(id, data, yMin, yMax){
+  return new Chart(document.getElementById(id),{
+    type:'line',
+    data,
+    options:{
+      animation:false,
+      responsive:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{font:{size:11},color:'#7a7468',boxWidth:20,padding:12}}},
+      scales:{
+        x:{grid:{color:'#242220'},ticks:{maxTicksLimit:9,font:{size:10}}},
+        y:{grid:{color:'#242220'},ticks:{maxTicksLimit:7,font:{size:10}},
+           min:yMin,max:yMax},
+      },
+      elements:{point:{radius:0},line:{tension:0.3,borderWidth:2.2}},
+    }
+  });
+}
+
+/* ─── CH0: Steepness demo ─────────────────────────────────────── */
+{
+  const xs = range(-3,3,300);
+  let pt = 0.5;
+  const f  = x => x*x*x - x;
+  const fp = x => 3*x*x - 1;
+
+  function tangentLine(px, xs){
+    const slope = fp(px);
+    const b = f(px) - slope*px;
+    return xs.map(x=>{const y=slope*x+b; return (Math.abs(y)<6)?y:null;});
+  }
+
+  const chart0 = new Chart(document.getElementById('c0'),{
+    type:'line',
+    data:{
+      labels: xs.map(x=>x.toFixed(2)),
+      datasets:[
+        {label:'f(x) = x³ − x', data:xs.map(f), borderColor:DARK.f, borderWidth:2.5, fill:false, pointRadius:0, tension:.3},
+        {label:'tangent at point', data:tangentLine(pt,xs), borderColor:DARK.r, borderWidth:2, borderDash:[5,4], fill:false, pointRadius:0, tension:0},
+        {label:'point', data:xs.map(x=>Math.abs(x-pt)<0.02?f(pt):null), borderColor:DARK.f, pointRadius:8, pointBackgroundColor:DARK.f, showLine:false},
+      ]
+    },
+    options:{
+      animation:false,responsive:true,
+      plugins:{legend:{labels:{color:'#7a7468',font:{size:11}}}},
+      scales:{
+        x:{grid:{color:'#242220'},ticks:{maxTicksLimit:7,font:{size:10}}},
+        y:{grid:{color:'#242220'},min:-4,max:4,ticks:{font:{size:10}}},
+      },
+      elements:{point:{radius:0},line:{tension:.3}},
+    }
+  });
+
+  const s0=document.getElementById('s0'), v0=document.getElementById('v0');
+  s0.addEventListener('input',()=>{
+    pt = s0.value/10;
+    v0.textContent = pt.toFixed(1);
+    const tl = tangentLine(pt,xs);
+    chart0.data.datasets[1].data = tl;
+    chart0.data.datasets[2].data = xs.map(x=>Math.abs(x-pt)<0.015?f(pt):null);
+    chart0.update('none');
+  });
+}
+
+/* ─── CH1: Function shapes ────────────────────────────────────── */
+{
+  const xs = range(-3,3,300);
+  mkChart('c1',{
+    labels:xs.map(x=>x.toFixed(1)),
+    datasets:[
+      {label:'x²',      data:xs.map(x=>x*x),      borderColor:DARK.f,  fill:false,pointRadius:0,tension:.3},
+      {label:'x³',      data:xs.map(x=>x*x*x),    borderColor:DARK.fp, fill:false,pointRadius:0,tension:.3},
+      {label:'sin(x)',  data:xs.map(x=>Math.sin(x)),borderColor:DARK.fpp,fill:false,pointRadius:0,tension:.3},
+      {label:'1/x',     data:xs.map(x=>Math.abs(x)>0.1?1/x:null),borderColor:DARK.r,fill:false,pointRadius:0,spanGaps:false,tension:.3},
+    ]
+  },-4,4);
+}
+
+/* ─── CH2: Secant → tangent ───────────────────────────────────── */
+{
+  const xs = range(-2,4,300);
+  const px = 1;
+  const f  = x => x*x;
+  const fp = x => 2*x;
+  let h = 3;
+
+  function secant(x0,h,xs){
+    const slope = (f(x0+h)-f(x0))/h;
+    const b = f(x0)-slope*x0;
+    return xs.map(x=>{const y=slope*x+b; return Math.abs(y)<12?y:null;});
+  }
+
+  const chart2 = new Chart(document.getElementById('c2'),{
+    type:'line',
+    data:{
+      labels:xs.map(x=>x.toFixed(2)),
+      datasets:[
+        {label:'f(x) = x²', data:xs.map(f), borderColor:DARK.f, borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+        {label:'secant line', data:secant(px,h,xs), borderColor:DARK.r, borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:0},
+        {label:'true tangent (h→0)', data:xs.map(x=>fp(px)*(x-px)+f(px)), borderColor:DARK.fp, borderWidth:1.5,borderDash:[2,2],fill:false,pointRadius:0,tension:0},
+      ]
+    },
+    options:{
+      animation:false,responsive:true,
+      plugins:{legend:{labels:{color:'#7a7468',font:{size:11}}}},
+      scales:{x:{grid:{color:'#242220'},ticks:{maxTicksLimit:7,font:{size:10}}},y:{grid:{color:'#242220'},min:-1,max:12,ticks:{font:{size:10}}}},
+      elements:{point:{radius:0},line:{tension:.3}},
+    }
+  });
+
+  const s2=document.getElementById('s2'), v2=document.getElementById('v2'), sd=document.getElementById('slopeDisplay');
+  s2.addEventListener('input',()=>{
+    h = s2.value/10;
+    v2.textContent = h.toFixed(1);
+    const slope = (f(px+h)-f(px))/h;
+    sd.textContent = `Secant slope = (f(${px}+${h.toFixed(1)}) − f(${px})) / ${h.toFixed(1)} = ${slope.toFixed(4)}  →  true slope = ${fp(px).toFixed(4)}`;
+    chart2.data.datasets[1].data = secant(px,h,xs);
+    chart2.update('none');
+  });
+  // trigger once
+  s2.dispatchEvent(new Event('input'));
+}
+
+/* ─── CH3: Power rule ─────────────────────────────────────────── */
+{
+  const xs = range(-2.5,2.5,300);
+  let n = 2;
+  const chart3 = new Chart(document.getElementById('c3'),{
+    type:'line',
+    data:{
+      labels:xs.map(x=>x.toFixed(2)),
+      datasets:[
+        {label:'f(x) = xⁿ', data:xs.map(x=>Math.pow(x,n)), borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+        {label:"f'(x) = n·xⁿ⁻¹", data:xs.map(x=>n*Math.pow(x,n-1)), borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+      ]
+    },
+    options:{animation:false,responsive:true,plugins:{legend:{labels:{color:'#7a7468',font:{size:11}}}},
+      scales:{x:{grid:{color:'#242220'},ticks:{maxTicksLimit:7,font:{size:10}}},y:{grid:{color:'#242220'},min:-6,max:6,ticks:{font:{size:10}}}},
+      elements:{point:{radius:0},line:{tension:.3}},
+    }
+  });
+  const s3=document.getElementById('s3'),v3=document.getElementById('v3'),pd=document.getElementById('powerDisplay');
+  s3.addEventListener('input',()=>{
+    n=+s3.value; v3.textContent=n;
+    pd.textContent=`d/dx [x^${n}] = ${n}·x^${n-1}`;
+    chart3.data.datasets[0].data=xs.map(x=>Math.pow(x,n));
+    chart3.data.datasets[1].data=xs.map(x=>n*Math.pow(x,n-1));
+    chart3.update('none');
+  });
+  s3.dispatchEvent(new Event('input'));
+}
+
+/* ─── CH4: Chain rule demo ────────────────────────────────────── */
+{
+  const xs = range(-Math.PI,Math.PI,400);
+  let a=1;
+  const chart4 = new Chart(document.getElementById('c4'),{
+    type:'line',
+    data:{
+      labels:xs.map(x=>x.toFixed(2)),
+      datasets:[
+        {label:'f(x) = sin(ax)', data:xs.map(x=>Math.sin(a*x)),borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+        {label:"f'(x) = a·cos(ax)", data:xs.map(x=>a*Math.cos(a*x)),borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+      ]
+    },
+    options:{animation:false,responsive:true,plugins:{legend:{labels:{color:'#7a7468',font:{size:11}}}},
+      scales:{x:{grid:{color:'#242220'},ticks:{maxTicksLimit:7,font:{size:10}}},y:{grid:{color:'#242220'},min:-5,max:5,ticks:{font:{size:10}}}},
+      elements:{point:{radius:0},line:{tension:.3}},
+    }
+  });
+  const s4=document.getElementById('s4'),v4=document.getElementById('v4');
+  s4.addEventListener('input',()=>{
+    a=s4.value/10; v4.textContent=a.toFixed(1);
+    chart4.data.datasets[0].data=xs.map(x=>Math.sin(a*x));
+    chart4.data.datasets[1].data=xs.map(x=>a*Math.cos(a*x));
+    chart4.update('none');
+  });
+}
+
+/* ─── CH5: Product rule demo ──────────────────────────────────── */
+{
+  const xs = range(-Math.PI,Math.PI,400);
+  let n=1;
+  const chart5 = new Chart(document.getElementById('c5'),{
+    type:'line',
+    data:{
+      labels:xs.map(x=>x.toFixed(2)),
+      datasets:[
+        {label:'f = xⁿ·sin(x)', data:xs.map(x=>Math.pow(x,n)*Math.sin(x)),borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+        {label:"f'", data:xs.map(x=>n*Math.pow(x,n-1)*Math.sin(x)+Math.pow(x,n)*Math.cos(x)),borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+      ]
+    },
+    options:{animation:false,responsive:true,plugins:{legend:{labels:{color:'#7a7468',font:{size:11}}}},
+      scales:{x:{grid:{color:'#242220'},ticks:{maxTicksLimit:7,font:{size:10}}},y:{grid:{color:'#242220'},min:-12,max:12,ticks:{font:{size:10}}}},
+      elements:{point:{radius:0},line:{tension:.3}},
+    }
+  });
+  const s5=document.getElementById('s5'),v5=document.getElementById('v5');
+  s5.addEventListener('input',()=>{
+    n=+s5.value; v5.textContent=n;
+    chart5.data.datasets[0].data=xs.map(x=>Math.pow(x,n)*Math.sin(x));
+    chart5.data.datasets[1].data=xs.map(x=>n*Math.pow(x,n-1)*Math.sin(x)+Math.pow(x,n)*Math.cos(x));
+    chart5.update('none');
+  });
+}
+
+/* ─── CH6a: sin & cos ────────────────────────────────────────── */
+{
+  const xs=range(-2*Math.PI,2*Math.PI,400);
+  mkChart('c6a',{
+    labels:xs.map(x=>x.toFixed(2)),
+    datasets:[
+      {label:'sin(x)',  data:xs.map(Math.sin),borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"cos(x) = (sin)'", data:xs.map(Math.cos),borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+    ]
+  },-1.5,1.5);
+}
+
+/* ─── CH6b: arctan ───────────────────────────────────────────── */
+{
+  const xs=range(-6,6,400);
+  mkChart('c6b',{
+    labels:xs.map(x=>x.toFixed(2)),
+    datasets:[
+      {label:'arctan(x)', data:xs.map(Math.atan),borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"1/(1+x²) = (arctan)'", data:xs.map(x=>1/(1+x*x)),borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+    ]
+  },-2.2,2.2);
+}
+
+/* ─── CH7: full curve demo ───────────────────────────────────── */
+{
+  const xs=range(-2.8,2.8,400);
+  mkChart('c7',{
+    labels:xs.map(x=>x.toFixed(2)),
+    datasets:[
+      {label:"f(x) = x³−3x", data:xs.map(x=>x**3-3*x), borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"f'(x) = 3x²−3",data:xs.map(x=>3*x**2-3), borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+      {label:"f''(x) = 6x",  data:xs.map(x=>6*x),       borderColor:DARK.fpp,borderWidth:1.8,borderDash:[2,3],fill:false,pointRadius:0,tension:.3},
+    ]
+  },-6,6);
+}
+
+/* ─── PROBLEM CHARTS ──────────────────────────────────────────── */
+// P1
+{
+  const xs=range(-4,4,400);
+  mkChart('p1',{
+    labels:xs.map(x=>x.toFixed(2)),
+    datasets:[
+      {label:'f = (1−x²)/(1+x²)', data:xs.map(x=>(1-x**2)/(1+x**2)),borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"f' = −4x/(1+x²)²",  data:xs.map(x=>-4*x/(1+x**2)**2), borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+    ]
+  },-1.6,1.6);
+}
+
+// P4
+{
+  const xs=range(-2*Math.PI,2*Math.PI,500);
+  mkChart('p4',{
+    labels:xs.map(x=>x.toFixed(2)),
+    datasets:[
+      {label:'4a: f = sin·cos', data:xs.map(x=>Math.sin(x)*Math.cos(x)),borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"4a: f' = cos(2x)",data:xs.map(x=>Math.cos(2*x)),          borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+      {label:'4b: f = sin²x',   data:xs.map(x=>Math.sin(x)**2),         borderColor:DARK.fpp,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"4b: f' = sin(2x)",data:xs.map(x=>Math.sin(2*x)),          borderColor:DARK.r,borderWidth:2,borderDash:[3,4],fill:false,pointRadius:0,tension:.3},
+    ]
+  },-1.3,1.3);
+}
+
+// P6
+{
+  const xs=range(0.01,8,400);
+  mkChart('p6',{
+    labels:xs.map(x=>x.toFixed(2)),
+    datasets:[
+      {label:'f = arctan(√x)',         data:xs.map(x=>Math.atan(Math.sqrt(x))),borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"f' = 1/(2√x·(1+x))",    data:xs.map(x=>1/(2*Math.sqrt(x)*(1+x))),borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+      {label:'π/2 asymptote',          data:xs.map(()=>Math.PI/2),borderColor:DARK.g,borderWidth:1.2,borderDash:[2,4],fill:false,pointRadius:0,tension:0},
+    ]
+  },-0.1,2.2);
+}
+
+// P8 — toggleable
+{
+  const xs=range(-2.8,2.8,500);
+  const datasets = [
+    {label:"f(x) = x³−3x", data:xs.map(x=>x**3-3*x), borderColor:DARK.f,borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+    {label:"f'(x) = 3x²−3", data:xs.map(x=>3*x**2-3), borderColor:DARK.fp,borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+    {label:"f''(x) = 6x",   data:xs.map(x=>6*x),      borderColor:DARK.fpp,borderWidth:1.8,borderDash:[2,3],fill:false,pointRadius:0,tension:.3},
+    {label:"tangent at (0,0): y=−3x", data:xs.map(x=>-3*x), borderColor:DARK.p,borderWidth:1.6,borderDash:[4,4],fill:false,pointRadius:0,tension:0},
+  ];
+  const chart8 = mkChart('p8',{labels:xs.map(x=>x.toFixed(2)),datasets},-6,6);
+  ['tog_f','tog_df','tog_ddf','tog_tan'].forEach((id,i)=>{
+    document.getElementById(id).addEventListener('change',e=>{
+      chart8.data.datasets[i].hidden = !e.target.checked;
+      chart8.update();
+    });
+  });
+}
+
+// lim8 — annotated curve discussion chart
+{
+  const xs=range(-2.8,2.8,500);
+  const f   = x => x**3-3*x;
+  const fp  = x => 3*x**2-3;
+  const fpp = x => 6*x;
+  mkChart('lim8',{
+    labels:xs.map(x=>x.toFixed(2)),
+    datasets:[
+      {label:"f(x) = x³−3x",   data:xs.map(f),   borderColor:DARK.f,  borderWidth:2.5,fill:false,pointRadius:0,tension:.3},
+      {label:"f'(x) = 3x²−3",  data:xs.map(fp),  borderColor:DARK.fp, borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+      {label:"f''(x) = 6x",    data:xs.map(fpp), borderColor:DARK.fpp,borderWidth:1.8,borderDash:[2,3],fill:false,pointRadius:0,tension:.3},
+      {label:"tangent at WP: y=−3x", data:xs.map(x=>-3*x), borderColor:DARK.p,borderWidth:1.5,borderDash:[4,4],fill:false,pointRadius:0,tension:0},
+    ]
+  },-6,6);
+}
+
+/* ─── Re-typeset MathJax after all dynamic content is in DOM ────── */
+window.addEventListener('load', () => {
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+  }
+});
+
+
+/* ═══════════════════ AUFGABENBLATT 2 CHARTS ════════════════════ */
+
+// Implicit differentiation demo — circle x²+y²=9
+{
+  const R = 3;
+  const N = 300;
+  // parametric circle
+  const angles = range(0, 2*Math.PI, N);
+  const cx = angles.map(a => R*Math.cos(a));
+  const cy = angles.map(a => R*Math.sin(a));
+
+  let deg = 60;
+  function getTangent(deg) {
+    const a = deg * Math.PI / 180;
+    const px = R * Math.cos(a), py = R * Math.sin(a);
+    const slope = -px / py;
+    const ts = range(-4, 4, 100);
+    return { px, py, slope,
+      tx: ts, ty: ts.map(t => py + slope*(t - px)) };
+  }
+
+  const chart_impl = new Chart(document.getElementById('impl_demo'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'x²+y²=9', data: cx.map((x,i)=>({x,y:cy[i]})),
+          borderColor: DARK.f, backgroundColor:'transparent',
+          showLine:true, pointRadius:0, tension:0.3, borderWidth:2.5 },
+        { label: 'tangent', data: [],
+          borderColor: DARK.r, showLine:true, pointRadius:0, tension:0, borderWidth:2, borderDash:[5,4] },
+        { label: 'point', data: [],
+          borderColor: DARK.f, backgroundColor: DARK.f, pointRadius: 7, showLine: false },
+      ]
+    },
+    options: {
+      animation: false, responsive: true,
+      plugins: { legend: { labels: { color:'#7a7468', font:{size:11} } } },
+      scales: {
+        x: { min:-5, max:5, grid:{color:'#242220'}, ticks:{font:{size:10}} },
+        y: { min:-5, max:5, grid:{color:'#242220'}, ticks:{font:{size:10}} },
+      },
+      aspectRatio: 1.6,
+    }
+  });
+
+  function updateImpl(d) {
+    const {px, py, slope, tx, ty} = getTangent(d);
+    chart_impl.data.datasets[1].data = tx.map((x,i)=>({x, y:ty[i]}));
+    chart_impl.data.datasets[2].data = [{x:px, y:py}];
+    document.getElementById('v_impl').textContent = d + '°';
+    chart_impl.update('none');
+  }
+  document.getElementById('s_impl').addEventListener('input', e => updateImpl(+e.target.value));
+  updateImpl(60);
+}
+
+// Curvature demo — y = x³ with osculating circle
+{
+  const xs = range(-2, 2, 400);
+  const fy = x => x**3;
+  const fyp = x => 3*x**2;
+  const fypp = x => 6*x;
+
+  let xpt = 1.0;
+  function getOscCircle(xp) {
+    const yp = fy(xp), ypp = fyp(xp), yppp = fypp(xp);
+    const denom = (1 + ypp**2);
+    const kappa = Math.abs(yppp) / denom**1.5;
+    if (kappa < 1e-9) return null;
+    const rho = 1 / kappa;
+    const xm = xp - ypp/yppp * denom;
+    const ym = yp + 1/yppp * denom;
+    const angles = range(0, 2*Math.PI, 200);
+    return { rho, xm, ym,
+      cx: angles.map(a => xm + rho*Math.cos(a)),
+      cy: angles.map(a => ym + rho*Math.sin(a)) };
+  }
+
+  const chart_curv = new Chart(document.getElementById('curv_demo'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'y = x³', data: xs.map(x=>({x,y:fy(x)})),
+          borderColor: DARK.f, showLine:true, pointRadius:0, tension:0.3, borderWidth:2.5, backgroundColor:'transparent' },
+        { label: 'osculating circle', data: [],
+          borderColor: DARK.r, showLine:true, pointRadius:0, tension:0, borderWidth:2, borderDash:[4,3], backgroundColor:'transparent' },
+        { label: 'point', data: [],
+          borderColor: DARK.f, backgroundColor:DARK.f, pointRadius:7, showLine:false },
+        { label: 'centre M', data: [],
+          borderColor: DARK.p, backgroundColor:DARK.p, pointRadius:5, showLine:false },
+      ]
+    },
+    options: {
+      animation: false, responsive: true,
+      plugins: { legend: { labels: { color:'#7a7468', font:{size:11} } } },
+      scales: {
+        x: { min:-3, max:3, grid:{color:'#242220'}, ticks:{font:{size:10}} },
+        y: { min:-8, max:8, grid:{color:'#242220'}, ticks:{font:{size:10}} },
+      },
+    }
+  });
+
+  function updateCurv(v) {
+    xpt = v / 10;
+    document.getElementById('v_curv').textContent = xpt.toFixed(1);
+    const circ = getOscCircle(xpt);
+    if (circ) {
+      chart_curv.data.datasets[1].data = circ.cx.map((x,i)=>({x,y:circ.cy[i]}));
+      chart_curv.data.datasets[3].data = [{x:circ.xm, y:circ.ym}];
+    }
+    chart_curv.data.datasets[2].data = [{x:xpt, y:fy(xpt)}];
+    chart_curv.update('none');
+  }
+  document.getElementById('s_curv').addEventListener('input', e => updateCurv(+e.target.value));
+  updateCurv(10);
+}
+
+// AUF. 3 — y = x^(1/x)
+{
+  const xs = range(0.1, 6, 400);
+  const fy  = x => Math.pow(x, 1/x);
+  const fyd = x => Math.pow(x, 1/x) * (1 - Math.log(x)) / (x*x);
+  mkChart('p_a3', {
+    labels: xs.map(x=>x.toFixed(2)),
+    datasets: [
+      { label: 'y = x^(1/x)', data: xs.map(fy), borderColor:DARK.f, fill:false, pointRadius:0, tension:.3, borderWidth:2.5 },
+      { label: "y'", data: xs.map(fyd), borderColor:DARK.fp, fill:false, pointRadius:0, tension:.3, borderWidth:2, borderDash:[5,4] },
+    ]
+  }, -1, 3);
+}
+
+// AUF. 4 — y = (sin x)^(cos x)
+{
+  const xs = range(0.05, Math.PI - 0.05, 400);
+  const fy  = x => Math.pow(Math.sin(x), Math.cos(x));
+  const fyd = x => {
+    const s = Math.sin(x), c = Math.cos(x);
+    if (s <= 0) return null;
+    return Math.pow(s, c) * (c*c/s - s*Math.log(s));
+  };
+  mkChart('p_a4', {
+    labels: xs.map(x=>x.toFixed(3)),
+    datasets: [
+      { label: 'y = (sin x)^(cos x)', data: xs.map(fy), borderColor:DARK.f, fill:false, pointRadius:0, tension:.3, borderWidth:2.5 },
+      { label: "y'", data: xs.map(fyd), borderColor:DARK.fp, fill:false, pointRadius:0, tension:.3, borderWidth:2, borderDash:[5,4] },
+    ]
+  }, -3, 3);
+}
+
+// AUF. 6 — curvature of y = x³ with osculating circle at P0(1,1)
+{
+  const xs = range(-1.5, 2.5, 400);
+  // osculating circle at x=1: κ = 6/10^(3/2), ρ = 10^(3/2)/6
+  const rho = Math.pow(10, 1.5) / 6;
+  // centre: xM = 1 - (y'/y'')*(1+y'^2) = 1 - (3/6)*(10) = 1 - 5 = -4
+  // yM = y + (1/y'')*(1+y'^2) = 1 + (1/6)*10 = 1 + 5/3 = 8/3
+  const xM = 1 - (3/6)*10, yM = 1 + (1/6)*10;
+  const circA = range(0, 2*Math.PI, 300);
+  const cxs = circA.map(a => xM + rho*Math.cos(a));
+  const cys = circA.map(a => yM + rho*Math.sin(a));
+
+  const chart6 = new Chart(document.getElementById('p_a6'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'y = x³', data: xs.map(x=>({x, y:x**3})),
+          borderColor:DARK.f, showLine:true, pointRadius:0, tension:.3, borderWidth:2.5, backgroundColor:'transparent' },
+        { label: `osculating circle at (1,1), ρ≈${rho.toFixed(2)}`,
+          data: cxs.map((x,i)=>({x, y:cys[i]})),
+          borderColor:DARK.r, showLine:true, pointRadius:0, tension:0, borderWidth:2, borderDash:[4,3], backgroundColor:'transparent' },
+        { label: 'P₀(1,1)', data:[{x:1,y:1}],
+          borderColor:DARK.f, backgroundColor:DARK.f, pointRadius:7, showLine:false },
+        { label: `centre M(${xM.toFixed(2)},${yM.toFixed(2)})`, data:[{x:xM,y:yM}],
+          borderColor:DARK.p, backgroundColor:DARK.p, pointRadius:6, showLine:false },
+      ]
+    },
+    options: {
+      animation:false, responsive:true,
+      plugins:{ legend:{labels:{color:'#7a7468',font:{size:11}}} },
+      scales: {
+        x:{min:-8,max:4, grid:{color:'#242220'},ticks:{font:{size:10}}},
+        y:{min:-8,max:8, grid:{color:'#242220'},ticks:{font:{size:10}}},
+      }
+    }
+  });
+}
+
+// AUF. 7 — y = √x, osculating circle at (1,1)
+{
+  const xs = range(0.01, 6, 400);
+  const rho7 = 5*Math.sqrt(5)/2;
+  const xM7 = 7/2, yM7 = -4;
+  const circA = range(0, 2*Math.PI, 300);
+
+  const chart7 = new Chart(document.getElementById('p_a7'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        { label: 'y = √x', data: xs.map(x=>({x, y:Math.sqrt(x)})),
+          borderColor:DARK.f, showLine:true, pointRadius:0, tension:.3, borderWidth:2.5, backgroundColor:'transparent' },
+        { label: `osculating circle, ρ≈${rho7.toFixed(2)}`,
+          data: circA.map(a=>({x: xM7+rho7*Math.cos(a), y: yM7+rho7*Math.sin(a)})),
+          borderColor:DARK.r, showLine:true, pointRadius:0, tension:0, borderWidth:2, borderDash:[4,3], backgroundColor:'transparent' },
+        { label: 'P₀(1,1)', data:[{x:1,y:1}],
+          borderColor:DARK.f, backgroundColor:DARK.f, pointRadius:7, showLine:false },
+        { label: 'M(3.5,−4)', data:[{x:xM7,y:yM7}],
+          borderColor:DARK.p, backgroundColor:DARK.p, pointRadius:6, showLine:false },
+      ]
+    },
+    options: {
+      animation:false, responsive:true,
+      plugins:{ legend:{labels:{color:'#7a7468',font:{size:11}}} },
+      scales: {
+        x:{min:-4,max:10, grid:{color:'#242220'},ticks:{font:{size:10}}},
+        y:{min:-10,max:8, grid:{color:'#242220'},ticks:{font:{size:10}}},
+      }
+    }
+  });
+}
+
+// AUF. 8 — curvature of y = ln(x)
+{
+  const xs = range(0.05, 4, 400);
+  const fy   = x => Math.log(x);
+  const kap  = x => Math.abs(-1/x**2) / (1 + 1/x**2)**1.5;
+  const xmax = 1/Math.sqrt(2);
+
+  mkChart('p_a8', {
+    labels: xs.map(x=>x.toFixed(3)),
+    datasets: [
+      { label: 'y = ln(x)', data: xs.map(fy), borderColor:DARK.f, fill:false, pointRadius:0, tension:.3, borderWidth:2.5 },
+      { label: 'κ(x) — curvature', data: xs.map(kap), borderColor:DARK.fp, fill:false, pointRadius:0, tension:.3, borderWidth:2, borderDash:[5,4] },
+      { label: `max κ at x=1/√2≈${xmax.toFixed(3)}`,
+        data: xs.map(x => Math.abs(x - xmax) < 0.012 ? kap(xmax) : null),
+        borderColor:DARK.r, backgroundColor:DARK.r, pointRadius:6, showLine:false },
+    ]
+  }, -3, 2);
+}
+
+
+/* ═══════════════════ SHEETS 4–12 CHARTS ════════════════════ */
+
+// Limit 1 — (x-4)/(x²-x-12)
+{
+  const xs1 = range(2, 3.9, 200);
+  const xs2 = range(4.1, 6, 200);
+  const f = x => (x-4)/((x-4)*(x+3));
+  mkChart('lim1', {
+    labels: [...xs1,...xs2].map(x=>x.toFixed(3)),
+    datasets: [
+      {label:'f(x)=(x-4)/(x²-x-12)', data:[...xs1.map(f),null,...xs2.map(f)], borderColor:DARK.f, fill:false, pointRadius:0, tension:.3, spanGaps:false},
+      {label:'limit = 1/7', data:[...xs1.map(()=>1/7),...xs2.map(()=>1/7)], borderColor:DARK.g, borderWidth:1.2, borderDash:[3,4], fill:false, pointRadius:0},
+    ]
+  }, -0.5, 1);
+}
+
+// Limit 5 — sin(x)/x
+{
+  const xs = range(-3*Math.PI, 3*Math.PI, 600).filter(x=>Math.abs(x)>0.01);
+  mkChart('lim5', {
+    labels: xs.map(x=>x.toFixed(3)),
+    datasets: [
+      {label:'sin(x)/x', data:xs.map(x=>Math.sin(x)/x), borderColor:DARK.f, fill:false, pointRadius:0, tension:.3},
+      {label:'limit = 1', data:xs.map(()=>1), borderColor:DARK.g, borderWidth:1.2, borderDash:[3,4], fill:false, pointRadius:0},
+    ]
+  }, -0.5, 1.2);
+}
+
+// Taylor 1 — e^(cos x - 1) vs approximation
+{
+  const xs = range(-3, 3, 300);
+  mkChart('tay1', {
+    labels: xs.map(x=>x.toFixed(2)),
+    datasets: [
+      {label:'e^(cos x - 1)', data:xs.map(x=>Math.exp(Math.cos(x)-1)), borderColor:DARK.f, fill:false, pointRadius:0, tension:.3, borderWidth:2.5},
+      {label:'1 - x²/2 (Taylor)', data:xs.map(x=>1-x*x/2), borderColor:DARK.fp, fill:false, pointRadius:0, tension:.3, borderWidth:2, borderDash:[5,4]},
+      {label:'1 - x²/2 + x⁴/6 (higher)', data:xs.map(x=>1-x*x/2+x**4/6), borderColor:DARK.fpp, fill:false, pointRadius:0, tension:.3, borderWidth:1.8, borderDash:[3,3]},
+    ]
+  }, -0.5, 1.5);
+}
+
+// Area between x² and √x (Sheet 7 Auf 1)
+{
+  const xs = range(0, 1, 300);
+  mkChart('area1', {
+    labels: xs.map(x=>x.toFixed(3)),
+    datasets: [
+      {label:'g(x) = √x', data:xs.map(x=>Math.sqrt(x)), borderColor:DARK.f, fill:'+1', backgroundColor:'rgba(232,168,56,0.15)', pointRadius:0, tension:.3, borderWidth:2.5},
+      {label:'f(x) = x²', data:xs.map(x=>x*x), borderColor:DARK.fp, fill:false, pointRadius:0, tension:.3, borderWidth:2, borderDash:[5,4]},
+    ]
+  }, -0.05, 1.1);
+}
+
+// Sheet 10 — level curves of x²+y² vs x²-y²
+{
+  const xs = range(-2, 2, 100);
+  mkChart('ab10_chart', {
+    labels: xs.map(x=>x.toFixed(2)),
+    datasets: [
+      {label:'f=x²+y² along y=0 (bowl)', data:xs.map(x=>x*x), borderColor:DARK.f, fill:false, pointRadius:0, tension:.3, borderWidth:2.5},
+      {label:'f=x²-y² along y=0 (saddle, +x dir)', data:xs.map(x=>x*x), borderColor:DARK.fp, fill:false, pointRadius:0, tension:.3, borderWidth:2, borderDash:[5,4]},
+      {label:'f=x²-y² along x=0 (saddle, -y dir)', data:xs.map(x=>-x*x), borderColor:DARK.r, fill:false, pointRadius:0, tension:.3, borderWidth:2, borderDash:[3,3]},
+    ]
+  }, -4, 4);
+}
+
+const navLinks = document.querySelectorAll('nav a');
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  sections.forEach(s=>{ if(window.scrollY >= s.offsetTop-120) cur=s.id; });
+  navLinks.forEach(a=>{ a.classList.toggle('active', a.getAttribute('href')==='#'+cur); });
+},{passive:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ADS1 — Homework 1 Solutions</title>
+
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$','$'],['\\(','\\)']],
+    displayMath: [['$$','$$'],['\\[','\\]']],
+    packages: {'[+]': ['ams']},
+    tags: 'none'
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] },
+  chtml: {
+    scale: 1.088
+  }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-chtml.min.js"></script>
+<style>
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx3cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxTcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxPcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx_cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwgknk-4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx3cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxTcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxPcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx_cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwgknk-4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx3cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxTcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxPcwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx_cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwgknk-6nFg.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwgknk-4.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFRD-vYSZviVYUb_rj3ij__anPXDTnCjmHKM4nYO7KN_qiTXtXA-X-uE0qEE5Do.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgEM86xQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgEM86xQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTjYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTPYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTLYgEM86xRbPQ.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/playfairdisplay/v40/nuFiD-vYSZviVYUb_rj3ij__anPXDTzYgEM86xQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r3aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r-aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r5aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r1aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r0aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r6aX2SzxEj.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r3aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r-aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r5aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r1aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r0aX2SzxEjst4.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFH2_tTDB4M7-auWDN0ahZJW1ge6NmXpVAHV83Bfb_US0r6aX2SzxEj.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kAHr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kCXr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kDnr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kAnr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kA3r4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kDXr4Y3qwzQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kAHr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kCXr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kDnr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kAnr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kA3r4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kDXr4Y3qwzQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kAHr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kCXr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* greek */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kDnr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kAnr4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kA3r4Y3qwzSEi.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/sourceserif4/v14/vEFF2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6kDXr4Y3qwzQ.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+
+<style>
+:root {
+  --ink:        #18140d;
+  --ink-soft:   #38300e;
+  --ink-mid:    #4a3f20;
+  --ink-faint:  #6e5f3a;
+  --paper:      #faf6ef;
+  --paper-2:    #f3ead9;
+  --paper-3:    #e9ddc6;
+  --paper-4:    #dfd1b5;
+  --accent:     #a03515;
+  --accent-2:   #1a52a8;
+  --accent-3:   #1a7a50;
+  --accent-4:   #6b3fa0;
+  --rule:       #cfc0a0;
+  --highlight:  #fef5d4;
+  --code-bg:    #191510;
+  --code-text:  #e5d9c0;
+  --code-kw:    #e8a84a;
+  --code-fn:    #72cba8;
+  --code-cm:    #8a7a5e;
+  --code-ty:    #b87dd4;
+  --code-num:   #e07840;
+  --shadow:     rgba(24,20,13,0.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--paper);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-weight:300;font-size:18px;line-height:1.85;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E");opacity:0.7;}
+.page{max-width:880px;margin:0 auto;padding:0 2rem 6rem;position:relative;z-index:1;}
+#prog{position:fixed;top:0;left:0;height:3px;background:var(--accent);width:0;z-index:999;transition:width .06s linear;}
+
+/* HEADER */
+.hdr{padding:4.5rem 0 2rem;border-bottom:2.5px solid var(--ink);margin-bottom:3.5rem;}
+.hdr-label{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:.8rem;}
+.hdr h1{font-family:'Playfair Display',serif;font-size:clamp(2.4rem,5.5vw,3.8rem);font-weight:900;line-height:1.08;letter-spacing:-.025em;}
+.hdr h1 em{font-style:italic;color:var(--accent);}
+.hdr-meta{margin-top:1.2rem;font-size:.875rem;color:var(--ink-faint);font-style:italic;display:flex;gap:2rem;flex-wrap:wrap;}
+.hdr-meta span::before{content:'— ';}
+
+/* LECTURE BANNER */
+.lec-banner{background:linear-gradient(135deg,#eee8d4 0%,#e2d8c2 100%);border:1px solid var(--rule);border-left:4px solid var(--accent-2);border-radius:0 5px 5px 0;padding:1rem 1.5rem;margin-bottom:3rem;font-size:.86rem;color:var(--ink-mid);}
+.lec-banner strong{color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:.06em;}
+
+/* TOC */
+.toc{background:var(--paper-2);border:1px solid var(--rule);border-left:4px solid var(--accent);padding:1.5rem 2rem;margin-bottom:4rem;border-radius:0 5px 5px 0;}
+.toc-hd{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:1rem;}
+.toc ol{list-style:none;counter-reset:toc;columns:2;column-gap:2rem;}
+@media(max-width:560px){.toc ol{columns:1;}}
+.toc li{counter-increment:toc;padding:.22rem 0;font-size:.875rem;break-inside:avoid;}
+.toc li::before{content:counter(toc,decimal-leading-zero)'.';font-family:'JetBrains Mono',monospace;color:var(--accent);margin-right:.6rem;font-size:.73rem;}
+.toc a{color:var(--ink-soft);text-decoration:none;border-bottom:1px solid transparent;transition:color .15s,border-color .15s;}
+.toc a:hover{color:var(--accent);border-color:var(--accent);}
+
+/* PROBLEM */
+.prob{margin-bottom:5.5rem;animation:fadeUp .45s ease both;animation-play-state:paused;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.prob-hdr{display:flex;align-items:flex-start;gap:1.2rem;margin-bottom:1.8rem;padding-bottom:.9rem;border-bottom:1px solid var(--rule);}
+.prob-num{font-family:'Playfair Display',serif;font-size:3.8rem;font-weight:900;line-height:1;color:var(--paper-3);-webkit-text-stroke:2px var(--accent);flex-shrink:0;width:3rem;text-align:right;margin-top:-.15rem;}
+.prob-titles h2{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:700;color:var(--ink);line-height:1.2;}
+.prob-titles .sub{font-size:.8rem;font-family:'JetBrains Mono',monospace;color:var(--ink-faint);margin-top:.3rem;letter-spacing:.04em;}
+
+/* SLIDE REF TAG */
+.sr{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.09em;text-transform:uppercase;background:var(--paper-3);color:var(--accent-2);border:1px solid var(--rule);border-left:3px solid var(--accent-2);padding:.15rem .55rem;border-radius:0 3px 3px 0;margin:0 .2rem;vertical-align:middle;white-space:nowrap;}
+.sr::before{content:'▸ ';}
+
+/* SECTION PARTS */
+.part{margin-bottom:2.6rem;}
+.part-lbl{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-2);margin-bottom:.6rem;display:flex;align-items:center;gap:.6rem;}
+.part-lbl::after{content:'';flex:1;height:1px;background:var(--rule);}
+.part h3{font-family:'Playfair Display',serif;font-size:1.12rem;font-weight:700;color:var(--ink);margin-bottom:.8rem;}
+
+/* BACKGROUND BOX */
+.bg-box{background:linear-gradient(135deg,#fffcf4 0%,#f6ecda 100%);border:1px solid var(--rule);border-radius:6px;padding:1.4rem 1.8rem;margin-bottom:2rem;position:relative;overflow:hidden;}
+.bg-box::before{content:'✦ Background & Lecture Context';display:block;font-family:'JetBrains Mono',monospace;font-size:.63rem;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:.9rem;font-weight:600;}
+.bg-box::after{content:'';position:absolute;right:-25px;top:-25px;width:90px;height:90px;background:var(--accent);opacity:.04;border-radius:50%;}
+.bg-box p{margin-bottom:.75rem;font-size:.93rem;color:var(--ink-mid);}
+.bg-box p:last-child,.bg-box .sc:last-child{margin-bottom:0;}
+.bg-box ul{padding-left:1.4rem;margin:.3rem 0 .75rem;}
+.bg-box li{margin-bottom:.35rem;font-size:.91rem;color:var(--ink-mid);}
+.sc{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--ink-faint);border-top:1px dashed var(--rule);margin-top:.8rem;padding-top:.6rem;display:block;}
+
+/* MATH */
+.math-block{background:var(--paper-2);border-left:3px solid var(--accent-2);padding:.75rem 1.4rem;margin:1.1rem 0;overflow-x:auto;border-radius:0 4px 4px 0;}
+
+/* DEFN */
+.defn{background:#f5f0fc;border:1px solid #d4c0ed;border-top:3px solid var(--accent-4);padding:1.1rem 1.5rem;margin:1.1rem 0;border-radius:0 0 5px 5px;}
+.defn .dl{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent-4);margin-bottom:.5rem;}
+.defn p{font-size:.92rem;margin-bottom:.4rem;}
+
+/* PROOF */
+.proof{border:1px solid var(--rule);border-radius:6px;padding:1.4rem 1.7rem;margin:1.2rem 0;background:#fdfaf3;box-shadow:0 2px 8px var(--shadow);}
+.pl{font-family:'JetBrains Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.18em;color:var(--ink-faint);margin-bottom:1rem;}
+.qed{text-align:right;font-size:1.3rem;color:var(--accent);margin-top:.6rem;line-height:1;}
+
+/* INDUCTION STEPS */
+.ind{padding-left:1.2rem;margin-bottom:1.3rem;}
+.ind.base{border-left:3px solid var(--accent-3);}
+.ind.hyp{border-left:3px solid var(--accent-2);}
+.ind.step{border-left:3px solid var(--accent);}
+.il{font-family:'JetBrains Mono',monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.3rem;font-weight:600;}
+.ind.base .il{color:var(--accent-3);}
+.ind.hyp .il{color:var(--accent-2);}
+.ind.step .il{color:var(--accent);}
+.ind p{margin-bottom:.45rem;font-size:.94rem;}
+
+/* CALLOUTS */
+.call{display:flex;gap:1rem;border-radius:5px;padding:.9rem 1.3rem;margin:1.1rem 0;font-size:.9rem;}
+.ci{flex-shrink:0;font-weight:700;line-height:1.85;font-family:'JetBrains Mono',monospace;font-size:.9rem;}
+.call p{margin:0;}
+.call.ok{background:#f0faf4;border:1px solid #86efac;} .call.ok .ci::before{content:'✓';color:var(--accent-3);}
+.call.wn{background:#fff8ed;border:1px solid #f9c86a;} .call.wn .ci::before{content:'!';color:#b06000;}
+.call.nf{background:#eff6ff;border:1px solid #93c5fd;} .call.nf .ci::before{content:'→';color:var(--accent-2);}
+.call.lc{background:#fdf3e8;border:1px solid #f0c090;} .call.lc .ci::before{content:'⊕';color:var(--accent);}
+
+/* BADGES */
+.bg{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:.78rem;padding:.2rem .75rem;border-radius:3px;margin:.2rem;}
+.bg.b{background:var(--accent-3);color:#fff;}
+.bg.w{background:var(--accent);color:#fff;}
+.bg.t{background:var(--accent-2);color:#fff;}
+.bg.n{background:var(--ink);color:var(--paper);}
+
+/* NUMBERED STEPS */
+.steps{list-style:none;counter-reset:st;margin:1rem 0;}
+.steps li{counter-increment:st;display:flex;gap:1rem;margin-bottom:1rem;align-items:flex-start;}
+.steps li::before{content:counter(st);background:var(--accent);color:#fff;font-family:'JetBrains Mono',monospace;font-size:.68rem;min-width:1.45rem;height:1.45rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:.3rem;}
+.steps li p{margin:0;font-size:.93rem;}
+
+/* CODE */
+pre{background:var(--code-bg);color:var(--code-text);font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.75;padding:1.3rem 1.7rem;border-radius:6px;overflow-x:auto;margin:1.1rem 0;border:1px solid #2c2518;}
+.kw{color:var(--code-kw);} .fn{color:var(--code-fn);} .cm{color:var(--code-cm);font-style:italic;} .ty{color:var(--code-ty);} .nm{color:var(--code-num);}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:var(--paper-3);padding:.1em .38em;border-radius:3px;color:var(--accent);}
+
+/* ANNOTATED TABLE */
+.ct{width:100%;border-collapse:collapse;margin:1.1rem 0;font-size:.8rem;}
+.ct th{background:var(--ink);color:var(--paper);padding:.45rem .8rem;font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;text-align:left;}
+.ct td{padding:.35rem .8rem;border-bottom:1px solid var(--paper-3);vertical-align:middle;}
+.ct tr:nth-child(even) td{background:var(--paper-2);}
+.ct td:first-child{font-family:'JetBrains Mono',monospace;font-size:.78rem;background:var(--code-bg);color:var(--code-text);}
+.ct td.cc{font-family:'JetBrains Mono',monospace;color:var(--accent-2);text-align:center;}
+.ct td.ck{font-family:'JetBrains Mono',monospace;color:var(--accent);text-align:center;}
+
+/* DATA TABLE */
+.tw{overflow-x:auto;margin:1.1rem 0;}
+table.dt{width:100%;border-collapse:collapse;font-size:.83rem;}
+table.dt th{background:var(--ink);color:var(--paper);padding:.55rem .9rem;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;text-align:left;}
+table.dt td{padding:.5rem .9rem;border-bottom:1px solid var(--rule);vertical-align:middle;font-family:'JetBrains Mono',monospace;}
+table.dt tr:nth-child(even) td{background:var(--paper-2);}
+table.dt tr:hover td{background:#ede4d0;}
+table.dt td:first-child{font-weight:600;color:var(--accent);font-style:italic;font-family:'Source Serif 4',serif;}
+
+/* TREE */
+.tree-box{background:var(--code-bg);border-radius:6px;padding:1.5rem 2rem;overflow-x:auto;margin:1.1rem 0;}
+.tree{font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.95;color:var(--code-text);white-space:pre;}
+.tn{color:var(--code-kw);} .tl{color:var(--code-fn);} .te{color:var(--code-cm);}
+
+/* DIVIDERS */
+hr.d{border:none;border-top:1px solid var(--rule);margin:3.5rem 0;}
+hr.d2{border:none;border-top:2.5px solid var(--ink);margin:1.5rem 0 3.5rem;}
+p{margin-bottom:1rem;} p:last-child{margin-bottom:0;}
+
+/* FOOTER */
+footer{text-align:center;padding:3rem 0;font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.12em;color:var(--ink-faint);border-top:1px solid var(--rule);margin-top:2rem;}
+@media(max-width:600px){body{font-size:16px;}.page{padding:0 1rem 4rem;}pre{font-size:.7rem;}}
+</style>
+</head>
+<body>
+<div id="prog"></div>
+<div class="page">
+
+<header class="hdr">
+  <div class="hdr-label">ADS1 — SS2026-051024-1 — Complete Solutions</div>
+  <h1>Homework <em>1</em></h1>
+  <div class="hdr-meta">
+    <span>Algorithms &amp; Data Structures 1 — Sagar Kale</span>
+    <span>Deadline 22 March 2026, 23:59</span>
+    <span>8 Problems</span>
+  </div>
+</header>
+
+<div class="lec-banner">
+  <strong>Methods &amp; Notation:</strong> All solutions follow the conventions of <em>Chapter 1: Analysis of Algorithms</em> (ADS1 SS2026 lecture slides, Sagar Kale / Niklas Hahn). Running-time analysis uses per-statement cost constants exactly as in the <code>insertion_sort</code> analysis (slides pp. 39–41). Best/worst-case uses the precise definitions from slides pp. 44–47. Asymptotic notation follows the formal definitions from slides pp. 50–52. Induction proofs follow the template from slides pp. 26–36. References to specific slide pages appear throughout as <span class="sr">p. XX</span> tags.
+</div>
+
+<nav class="toc">
+  <div class="toc-hd">Contents</div>
+  <ol>
+    <li><a href="#p1">Growth of Functions Table</a></li>
+    <li><a href="#p2">Fibonacci Recursion &amp; Induction</a></li>
+    <li><a href="#p3">Analysis of <code>is_sorted()</code></a></li>
+    <li><a href="#p4">Analysis of <code>func()</code></a></li>
+    <li><a href="#p5">Selection Sort</a></li>
+    <li><a href="#p6">Selection Sort with Early Checking</a></li>
+    <li><a href="#p7">Bubble Sort</a></li>
+    <li><a href="#p8">Asymptotic Proof: $f = \Theta(g)$</a></li>
+  </ol>
+</nav>
+
+<!-- ══ P1 ══════════════════════════════════════ -->
+<section class="prob" id="p1">
+  <div class="prob-hdr">
+    <div class="prob-num">1</div>
+    <div class="prob-titles">
+      <h2>Growth of Functions Table</h2>
+      <div class="sub">Exercise 1-1 (partial) — CLRS Ch. 1 &nbsp;·&nbsp; Lecture slides pp. 54–55</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>What this asks.</strong> The lecture (slide p. 54) presents a "Function Growth Cheat Sheet" ordering growth rates from slowest to fastest:
+    $1 \prec \lg n \prec \sqrt{n} \prec n \prec n\lg n \prec n^2 \prec \cdots \prec 2^n \prec n!$,
+    where $\prec$ means "grows strictly slower than," i.e., is little-$o$ of the right side (slide p. 52).</p>
+    <p>This table makes that ordering vivid and practical: assuming each elementary operation takes 1 microsecond — consistent with the lecture's computational model (slides pp. 2–6) where each statement takes a constant time — what is the largest $n$ solvable within time $T$? We solve $f(n) = T$ for $n$.</p>
+    <p><strong>Why this matters.</strong> Slide p. 55 ("Tips and Examples") states: <em>"Focus on the fastest growing term of a function ignoring the constant coefficient."</em> The table shows why: the difference between $n^2$ and $2^n$ is not a constant factor — it is the difference between solving 1,000 vs. 19 inputs per second.</p>
+    <span class="sc">Lecture refs: Function Growth Cheat Sheet (p. 54); tips and examples (p. 55); computational model (pp. 2–6); Big-$O/\Omega/\Theta$ definitions used to classify rows (pp. 50–52).</span>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Derivation</div>
+    <p>Let $T$ = time budget in microseconds. The largest solvable $n$ satisfies $f(n) \leq T$:</p>
+    <div class="math-block">
+    $$\lg n \leq T \;\Rightarrow\; n = 2^T \qquad\qquad n \leq T \;\Rightarrow\; n = T$$
+    $$n\lg n \leq T \;\Rightarrow\; n \text{ found by binary search} \qquad\qquad n^2 \leq T \;\Rightarrow\; n = \lfloor\sqrt{T}\rfloor \qquad\qquad 2^n \leq T \;\Rightarrow\; n = \lfloor\log_2 T\rfloor$$
+    </div>
+    <p>Time limits: $10^6\,\mu s$ (1 s), $6{\times}10^7$ (1 min), $3.6{\times}10^9$ (1 hr), $8.64{\times}10^{10}$ (1 day), ${\approx}\,3.16{\times}10^{15}$ (1 century).</p>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Table</div>
+    <div class="tw"><table class="dt">
+      <thead><tr><th>$f(n)$</th><th>1 second</th><th>1 minute</th><th>1 hour</th><th>1 day</th><th>1 century</th></tr></thead>
+      <tbody>
+        <tr><td>$\lg n$</td><td>$2^{10^6}$</td><td>$2^{6\times10^7}$</td><td>$2^{3.6\times10^9}$</td><td>$2^{8.64\times10^{10}}$</td><td>$2^{3.16\times10^{15}}$</td></tr>
+        <tr><td>$n$</td><td>1,000,000</td><td>60,000,000</td><td>3,600,000,000</td><td>86,400,000,000</td><td>$3.16\times10^{15}$</td></tr>
+        <tr><td>$n \lg n$</td><td>62,746</td><td>2,801,417</td><td>133,378,058</td><td>2,755,147,513</td><td>$6.87\times10^{13}$</td></tr>
+        <tr><td>$n^2$</td><td>1,000</td><td>7,745</td><td>60,000</td><td>293,938</td><td>56,176,151</td></tr>
+        <tr><td>$2^n$</td><td>19</td><td>25</td><td>31</td><td>36</td><td>51</td></tr>
+      </tbody>
+    </table></div>
+    <div class="call ok"><div class="ci"></div><p>The table confirms the cheat sheet ordering: $\lg n \prec n \prec n\lg n \prec n^2 \prec 2^n$. The exponential row ($2^n$) can barely process 51 inputs per century — making it essentially useless for large inputs, no matter how fast the hardware.</p></div>
+  </div>
+</section>
+
+<hr class="d"/>
+
+<!-- ══ P2 ══════════════════════════════════════ -->
+<section class="prob" id="p2">
+  <div class="prob-hdr">
+    <div class="prob-num">2</div>
+    <div class="prob-titles">
+      <h2>Fibonacci Recursion &amp; Induction</h2>
+      <div class="sub">Strong induction · Call tree · Runtime lower bound &nbsp;·&nbsp; Lecture slides pp. 26–36</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>Induction in algorithms.</strong> Slide p. 34 motivates induction directly: <em>"Many algorithms are step-by-step — loops, recursion, array prefixes, growing structures. Typical claim: after step $i$, some property holds — which is exactly the structure of induction."</em> For recursive algorithms, slide p. 17 states correctness is proved by induction over input size: $\forall n \in \mathbb{N},\, \forall$ valid inputs $x$ of size $n$: output of <code>procedure(x)</code> is correct.</p>
+    <p><strong>Strong induction template</strong> (slide p. 31): Let $P$ be a predicate. Prove $P(0)$. Then suppose $n$ is arbitrary but fixed, assume $P(0), P(1), \ldots, P(n-1)$ are all true (strong induction hypothesis), and prove $P(n)$. The lecture notes the proof must not depend on the actual value of $n$ because $n$ is arbitrary.</p>
+    <p><strong>Why strong induction here?</strong> The Fibonacci recurrence $F_n = F_{n-1} + F_{n-2}$ references the two preceding values, so we need both $P(n-1)$ and $P(n-2)$ in the inductive step. Ordinary induction only gives $P(n-1)$. Strong induction (slide p. 31) gives us all predecessors simultaneously.</p>
+    <p><strong>Key hint.</strong> $\varphi = (1+\sqrt{5})/2$ satisfies $\varphi^2 = \varphi + 1$. Verify: $\varphi^2 = (6+2\sqrt5)/4 = (3+\sqrt5)/2 = 1 + (1+\sqrt5)/2 = 1 + \varphi$. ✓</p>
+    <span class="sc">Lecture refs: induction motivation (p. 34); correctness format (p. 17); ordinary induction template (p. 26); strong induction template (p. 31); finite domain variant (p. 32); induction example (pp. 28–30); bogus Fibonacci proof as homework warning (p. 33).</span>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Part 1 — Proof by induction that <code>fib(n)</code> $= F_n$</div>
+    <pre><span class="ty">int</span> <span class="fn">fib</span>(<span class="ty">int</span> n) {
+    <span class="kw">if</span> (n &lt;= <span class="nm">1</span>) <span class="kw">return</span> n;
+    <span class="kw">return</span> <span class="fn">fib</span>(n<span class="nm">-1</span>) + <span class="fn">fib</span>(n<span class="nm">-2</span>);
+}</pre>
+    <p><strong>Claim:</strong> For all $n \geq 0$, <code>fib(n)</code> returns $F_n$. <span class="sr">p. 17 — correctness format</span></p>
+
+    <div class="proof">
+      <div class="pl">Proof — strong induction on $n$ <span class="sr">p. 31 — strong induction template</span></div>
+
+      <div class="ind base">
+        <div class="il">Base Cases — $n = 0$ and $n = 1$</div>
+        <p>$n = 0$: Condition <code>n &lt;= 1</code> is true; returns $0 = F_0$. ✓</p>
+        <p>$n = 1$: Condition <code>n &lt;= 1</code> is true; returns $1 = F_1$. ✓</p>
+        <p>(Two base cases are needed because the inductive step uses both $P(n-1)$ and $P(n-2)$.)</p>
+      </div>
+
+      <div class="ind hyp">
+        <div class="il">Inductive Hypothesis</div>
+        <p>Suppose $n \geq 2$ is arbitrary but fixed. Assume that for every $k$ with $0 \leq k &lt; n$, <code>fib(k)</code> returns $F_k$. (Note: the proof does not depend on the specific value of $n$, since $n$ is arbitrary — as required by slide p. 26.)</p>
+      </div>
+
+      <div class="ind step">
+        <div class="il">Inductive Step — prove for $n \geq 2$</div>
+        <p>Since $n \geq 2$, condition <code>n &lt;= 1</code> is false. The function executes <code>return fib(n-1) + fib(n-2)</code>.</p>
+        <p>Since $n-1 &lt; n$ and $n-2 &lt; n$, the inductive hypothesis gives: <code>fib(n-1)</code> $= F_{n-1}$ and <code>fib(n-2)</code> $= F_{n-2}$.</p>
+        <div class="math-block">$$\texttt{fib}(n) = F_{n-1} + F_{n-2} = F_n \qquad \text{(by definition of Fibonacci)} \quad \checkmark$$</div>
+      </div>
+      <div class="qed">□</div>
+    </div>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Part 2 — Call tree for <code>fib(5)</code></div>
+    <p>Each node labelled $k$ is a call to <code>fib(k)</code>. Leaf nodes ($k \leq 1$) are base cases. Total: <strong>15 nodes</strong>.</p>
+    <div class="tree-box"><div class="tree"><span class="tn">fib(5)</span>
+<span class="te">├──</span> <span class="tn">fib(4)</span>
+<span class="te">│   ├──</span> <span class="tn">fib(3)</span>
+<span class="te">│   │   ├──</span> <span class="tn">fib(2)</span>
+<span class="te">│   │   │   ├──</span> <span class="tl">fib(1) → 1</span>
+<span class="te">│   │   │   └──</span> <span class="tl">fib(0) → 0</span>
+<span class="te">│   │   └──</span> <span class="tl">fib(1) → 1</span>
+<span class="te">│   └──</span> <span class="tn">fib(2)</span>
+<span class="te">│       ├──</span> <span class="tl">fib(1) → 1</span>
+<span class="te">│       └──</span> <span class="tl">fib(0) → 0</span>
+<span class="te">└──</span> <span class="tn">fib(3)</span>
+<span class="te">    ├──</span> <span class="tn">fib(2)</span>
+<span class="te">    │   ├──</span> <span class="tl">fib(1) → 1</span>
+<span class="te">    │   └──</span> <span class="tl">fib(0) → 0</span>
+<span class="te">    └──</span> <span class="tl">fib(1) → 1</span></div></div>
+    <div class="call lc"><div class="ci"></div><p><code>fib(3)</code> appears twice, <code>fib(2)</code> three times. The same sub-problems are solved repeatedly — a hallmark of exponential inefficiency. This redundancy is what the lower bound below captures.</p></div>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Part 3 — Proof that node count $T(n) \geq \varphi^{n-1}$</div>
+    <p>Let $T(n)$ = total nodes in the call tree of <code>fib(n)</code>.</p>
+    <p><strong>Claim:</strong> $\forall\, n \geq 1:\; T(n) \geq \varphi^{n-1}$.  <span class="sr">p. 31 — strong induction template</span></p>
+
+    <div class="proof">
+      <div class="pl">Proof — strong induction on $n$</div>
+
+      <div class="ind base">
+        <div class="il">Base Cases — $n = 1$ and $n = 2$</div>
+        <p>$n = 1$: <code>fib(1)</code> is a base case, no sub-calls. $T(1) = 1 \geq \varphi^0 = 1$. ✓</p>
+        <p>$n = 2$: <code>fib(2)</code> calls <code>fib(1)</code> and <code>fib(0)</code>. $T(2) = 3 \geq \varphi^1 \approx 1.618$. ✓</p>
+      </div>
+
+      <div class="ind hyp">
+        <div class="il">Inductive Hypothesis</div>
+        <p>Suppose $n \geq 3$ is arbitrary but fixed. Assume $T(k) \geq \varphi^{k-1}$ for all $1 \leq k &lt; n$.</p>
+      </div>
+
+      <div class="ind step">
+        <div class="il">Inductive Step</div>
+        <p>The call tree for <code>fib(n)</code> has one root, plus the full sub-trees of <code>fib(n-1)</code> and <code>fib(n-2)</code>:</p>
+        <div class="math-block">$$T(n) = 1 + T(n-1) + T(n-2)$$</div>
+        <p>Since $1 \geq 0$, drop the constant $1$ to get a lower bound, then apply the inductive hypothesis to both sub-calls ($n-1 &lt; n$ and $n-2 &lt; n$):</p>
+        <div class="math-block">$$T(n) \;\geq\; T(n-1)+T(n-2) \;\geq\; \varphi^{n-2}+\varphi^{n-3} \;=\; \varphi^{n-3}(\varphi+1)$$</div>
+        <p>Apply the given identity $\varphi^2 = \varphi + 1$ (the hint):</p>
+        <div class="math-block">$$T(n) \;\geq\; \varphi^{n-3}\cdot\varphi^2 \;=\; \varphi^{n-1} \qquad \checkmark$$</div>
+      </div>
+      <div class="qed">□</div>
+    </div>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Part 4 — Implication for running time</div>
+    <p>From the lecture (slide p. 38): each C++ statement takes a <em>constant</em> amount of time, independent of hardware or compiler. Every node performs $O(1)$ work (one comparison, one addition). So the running time $\propto T(n) \geq \varphi^{n-1}$.</p>
+    <div class="math-block">$$\text{Running time of } \texttt{fib}(n) \;=\; \Omega(\varphi^n)$$</div>
+    <p>This is <strong>exponential</strong> in $n$. The lecture's table (Problem 1) shows $2^n$ reaches only $n = 19$ per second; $\varphi^n \approx 1.618^n$ is similarly catastrophic. An iterative Fibonacci runs in $\Theta(n)$, processing $10^6$ values per second.</p>
+    <div class="call wn"><div class="ci"></div><p>Per slide p. 6: the input entirely determines the running time. Here the input is just the integer $n$, so there is no best/worst case distinction (slide pp. 44–47) — the running time is exactly a function of $n$ alone.</p></div>
+  </div>
+</section>
+
+<hr class="d"/>
+
+<!-- ══ P3 ══════════════════════════════════════ -->
+<section class="prob" id="p3">
+  <div class="prob-hdr">
+    <div class="prob-num">3</div>
+    <div class="prob-titles">
+      <h2>Analysis of <code>is_sorted()</code></h2>
+      <div class="sub">Statement counting · Exact running time · Best/worst case &nbsp;·&nbsp; Lecture slides pp. 37–47, 56–62</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>The lecture's method.</strong> Slides pp. 39–41 analyse <code>insertion_sort()</code> by assigning a cost constant $c_i$ to each statement and counting how many times it executes. The total running time is $\sum c_i \cdot (\text{count}_i)$. This technique is used here verbatim.</p>
+    <p><strong>Best/worst case — precise definitions</strong> (slide p. 46): "Best case: minimum running time over all inputs where the parameter value is $n$. Worst case: maximum running time over all inputs where the parameter value is $n$." The parameter here is the array length $n$.</p>
+    <p><strong>Finding the dominant term.</strong> Slide p. 61 advises: "Focus on code hotspots — if code-units $A$ and $B$ take constant time, and $A$ always runs more times than $B$, then ignore $B$." And slide p. 56: "Focus on the fastest growing term of a function ignoring the constant coefficient." These are the justifications for dropping lower-order terms in the final $\Theta$ expression.</p>
+    <p><strong>Warning on imprecision.</strong> Slide p. 57: <em>"Saying 'an algorithm has a running time of $O(n^2)$' is not a mathematically precise statement."</em> We therefore always say: the <strong>best-case</strong> (or worst-case) running time of <code>is_sorted()</code> is $\Theta(\cdot)$.</p>
+    <span class="sc">Lecture refs: insertion_sort analysis method (pp. 39–41); best/worst-case definitions (pp. 44–47); dominant term / hotspot tips (pp. 61–62); $\Theta$ definition (p. 50); imprecision warning (p. 57).</span>
+  </div>
+
+  <pre><span class="ty">bool</span> <span class="fn">is_sorted</span>(<span class="ty">int</span> arr[], <span class="ty">int</span> n) {
+    <span class="kw">for</span>(<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; n - <span class="nm">1</span>; ++i) {
+        <span class="kw">if</span>(arr[i] &gt; arr[i + <span class="nm">1</span>]) {
+            <span class="kw">return</span> <span class="kw">false</span>;
+        }
+    }
+    <span class="kw">return</span> <span class="kw">true</span>;
+}</pre>
+
+  <div class="part">
+    <div class="part-lbl">Loop count in terms of $a$</div>
+    <p>Let $a$ be the value of <code>i</code> when the function returns.</p>
+    <ul style="padding-left:1.4rem;margin-bottom:.8rem;">
+      <li style="margin-bottom:.5rem"><strong>Returns <code>false</code> on iteration $i = a$:</strong> Loop ran for $i = 0, 1, \ldots, a$, so <strong>$a + 1$ times</strong>.</li>
+      <li><strong>Returns <code>true</code>:</strong> Loop ran for all $i = 0, \ldots, n-2$, so <strong>$n-1$ times</strong>. (Here $a = n-1$ is the first value where the loop condition $i &lt; n-1$ fails.)</li>
+    </ul>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Exact running time — following the lecture's per-statement method <span class="sr">pp. 39–41</span></div>
+    <div class="tw"><table class="ct">
+      <thead><tr><th>Statement</th><th>Count</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td>int i = 0</td><td class="cc">$1$</td><td class="ck">$c_1$</td></tr>
+        <tr><td>i &lt; n - 1 &nbsp;(condition)</td><td class="cc">$(a+1)$ or $n$</td><td class="ck">$c_2$</td></tr>
+        <tr><td>++i</td><td class="cc">$a$ or $(n-1)$</td><td class="ck">$c_3$</td></tr>
+        <tr><td>arr[i] &gt; arr[i+1] &nbsp;(if)</td><td class="cc">$(a+1)$ or $(n-1)$</td><td class="ck">$c_4$</td></tr>
+        <tr><td>return false</td><td class="cc">$1$ or $0$</td><td class="ck">$c_5$</td></tr>
+        <tr><td>return true</td><td class="cc">$0$ or $1$</td><td class="ck">$c_6$</td></tr>
+      </tbody>
+    </table></div>
+    <p style="font-size:.84rem;color:var(--ink-faint);">The condition is checked once more than the increment (the last check fails the loop, so no increment follows) — the same pattern as the outer for-loop of <code>insertion_sort</code> in the lecture (slide p. 39: <code>i &lt; n</code> is checked $n$ times, <code>++i</code> fires $n-1$ times).</p>
+
+    <div class="defn">
+      <div class="dl">Best Case — array already sorted (or $n = 1$)</div>
+      <p>No element is out of order; the loop completes all iterations without returning false. The condition $c_2$ fires $n$ times (last check fails), increment $c_3$ fires $n-1$ times, comparison $c_4$ fires $n-1$ times.</p>
+      <div class="math-block">$$T_\text{best}(n) = c_1 + n\,c_2 + (n-1)c_3 + (n-1)c_4 + c_6 = (c_2+c_3+c_4)\,n + \text{const}$$</div>
+      <p>Dominant term is linear in $n$. <span class="bg b">Best case $\Theta(n)$</span></p>
+    </div>
+
+    <div class="defn">
+      <div class="dl">Worst Case — first pair out of order ($a = 0$, i.e., <code>arr[0] > arr[1]</code>)</div>
+      <p>The condition fires once ($c_2$), the comparison fires once and is true ($c_4$), the function returns false ($c_5$). No increment fires.</p>
+      <div class="math-block">$$T_\text{worst}(n) = c_1 + c_2 + c_4 + c_5 = \text{const (independent of } n)$$</div>
+      <p><span class="bg w">Worst case $\Theta(1)$</span></p>
+    </div>
+
+    <div class="call lc"><div class="ci"></div><p>Slide p. 57 warns against imprecision: $\Theta$ alone says nothing about best or worst case. Here the <em>best</em> case is $\Theta(n)$ and the <em>worst</em> case is $\Theta(1)$ — the opposite of what one might naively guess. An unsorted array (worst input for the sorting task) actually gives the <em>fastest</em> exit from this check.</p></div>
+  </div>
+</section>
+
+<hr class="d"/>
+
+<!-- ══ P4 ══════════════════════════════════════ -->
+<section class="prob" id="p4">
+  <div class="prob-hdr">
+    <div class="prob-num">4</div>
+    <div class="prob-titles">
+      <h2>Analysis of <code>func()</code></h2>
+      <div class="sub">Input-dependent branching · Best/worst inputs · Upper bounds &nbsp;·&nbsp; Lecture slides pp. 8–9, 44–47, 50–52, 60–62</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>Input-dependent cost.</strong> Slide p. 8 introduces <code>compute_sum()</code> where the inner loop runs <code>arr[i]</code> times — the cost depends on array <em>values</em>, not just length. The lecture asks (slide p. 9): "How much slower is <code>compute_sum()</code> than <code>compute_sum_2()</code>?" — its best case is $\Theta(n)$ but worst case is unbounded (slide p. 63). Similarly here, which branch fires depends on values, but at least the total number of iterations is fixed.</p>
+    <p><strong>Precise best/worst case.</strong> Slide p. 62: "Determine the worst (or best) case input — you need to be clear about the parameter for which you are determining the worst (or best) case!" Here the parameter is $n$ (array length). We ask: over all arrays of length $n$, which minimises / maximises the running time?</p>
+    <p><strong>Tip from slide p. 62:</strong> To find the worst-case input, determine which code path (hotspot) executes the maximum number of times. Then ask: what input causes that path to fire every iteration?</p>
+    <p><strong>Checking upper bounds.</strong> The Big-$O$ definition (slide p. 50): $f(n) = O(g(n))$ iff $\exists\, c > 0, n_0 \geq 0$ such that $f(n) \leq c\,g(n)$ for all $n \geq n_0$. We check this definition directly with the specific proposed bound $c_1 n / 10$.</p>
+    <span class="sc">Lecture refs: compute_sum input-dependent analysis (pp. 8–9, 63); best/worst-case definitions (pp. 44–47); Big-O definition (p. 50); hotspot / dominant term tips (pp. 61–62).</span>
+  </div>
+
+  <pre><span class="kw">void</span> <span class="fn">func</span>(<span class="ty">int</span> arr[], <span class="ty">int</span> n) {
+    <span class="kw">for</span>(<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; n - <span class="nm">2</span>; ++i) {
+        <span class="kw">if</span>(arr[i] &gt; arr[i+<span class="nm">1</span>] &amp;&amp; arr[i+<span class="nm">1</span>] &lt; arr[i+<span class="nm">2</span>]) {
+            <span class="fn">do_whats_needed_in_first_if</span>();     <span class="cm">// cost c₁ (very expensive)</span>
+        } <span class="kw">else if</span> (arr[i] &gt; arr[i+<span class="nm">1</span>]) {
+            <span class="fn">do_whats_needed_in_second_if</span>();    <span class="cm">// cost c₂ (moderately expensive)</span>
+        } <span class="kw">else</span> {
+            <span class="fn">do_whats_needed_in_else</span>();         <span class="cm">// cost c₃ (very cheap)</span>
+        }
+    }
+}</pre>
+
+  <p>Let $a_1, a_2, a_3$ = number of times first-if, second-if, else fire. Since every iteration runs exactly one branch: $a_1 + a_2 + a_3 = n-2$. Given: $100c_3 &lt; c_2 &lt; c_1/100$, so $c_3 &lt; c_1/10{,}000$.</p>
+
+  <div class="part">
+    <div class="part-lbl">Simple upper and lower bounds</div>
+    <div class="math-block">$$(n-2)\,c_3 \;\leq\; T(n) \;\leq\; (n-2)\,c_1$$</div>
+    <p>Both are $\Theta(n)$ — but the ratio of upper to lower bound exceeds $c_1/c_3 > 10{,}000$.</p>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Best and worst case inputs and running times</div>
+
+    <div class="defn">
+      <div class="dl">Best Case input — non-decreasing array</div>
+      <p>The cheapest branch is <code>else</code> ($c_3$). It fires when <code>arr[i] &lt;= arr[i+1]</code>, which holds for all $i$ in a non-decreasing array. Then $a_1 = a_2 = 0$, $a_3 = n-2$.</p>
+      <div class="math-block">$$T_\text{best}(n) = (n-2)\,c_3 \quad\Rightarrow\quad \text{best-case running time } \Theta(n)$$</div>
+    </div>
+
+    <div class="defn">
+      <div class="dl">Worst Case input — alternating array</div>
+      <p>The most expensive branch is first-if ($c_1$). Its condition requires <code>arr[i] > arr[i+1]</code> AND <code>arr[i+1] &lt; arr[i+2]</code> — a "valley" at position $i+1$. An alternating array $[L, S, L, S, \ldots]$ (with $L \gg S$, e.g. $[100, 1, 100, 1, \ldots]$) satisfies this at every $i$. Then $a_1 = n-2$.</p>
+      <div class="math-block">$$T_\text{worst}(n) = (n-2)\,c_1 \quad\Rightarrow\quad \text{worst-case running time } \Theta(n)$$</div>
+    </div>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Is $c_1 n/10$ an upper bound? — applying the Big-$O$ definition <span class="sr">p. 50</span></div>
+    <p><strong>For the best case:</strong> $T_\text{best}(n) = (n-2)c_3 &lt; n\,c_3$. Since $c_3 &lt; c_1/10{,}000 &lt; c_1/10$, we have $T_\text{best}(n) &lt; n\cdot c_1/10$. So yes, $c_1 n/10$ is an upper bound for the best-case running time. <span class="bg b">Yes — upper bound for best case</span></p>
+    <p><strong>For the worst case:</strong> $T_\text{worst}(n) = (n-2)c_1$. For $n \geq 3$: $(n-2)c_1 \geq c_1 n/2 > c_1 n/10$. So $c_1 n/10$ is <em>not</em> an upper bound for the worst-case running time. <span class="bg w">No — not an upper bound for worst case</span></p>
+  </div>
+</section>
+
+<hr class="d"/>
+
+<!-- ══ P5 ══════════════════════════════════════ -->
+<section class="prob" id="p5">
+  <div class="prob-hdr">
+    <div class="prob-num">5</div>
+    <div class="prob-titles">
+      <h2>Selection Sort</h2>
+      <div class="sub">Nested loops · $\Theta(n^2)$ in all cases · Correctness by induction &nbsp;·&nbsp; Lecture slides pp. 29–36, 39–47, 56–62</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>Nested loop analysis.</strong> The lecture's "One Loop Guide" (slide p. 60): if a loop runs $n$ times with constant-time body, total cost is $\Theta(n)$. For nested loops, we sum the inner count over all outer iterations — exactly how the lecture derives the $\sum_{i=1}^{n-1} t_i$ term for insertion sort (slides pp. 39–41). Here we get $\sum_{i=0}^{n-2}(n-1-i) = n(n-1)/2$.</p>
+    <p><strong>$O(n^2)$:</strong> From slide p. 50, $f = O(g)$ means $f$ is at most a constant multiple of $g$ for large $n$. If no statement runs more than $n^2$ times, the algorithm is $O(n^2)$.</p>
+    <p><strong>$\Omega(n^2)$:</strong> From slide p. 50, $f = \Omega(g)$ means $f$ is at least a constant multiple of $g$. Finding one specific statement that provably runs $\geq cn^2$ times — regardless of input — proves $\Omega(n^2)$.</p>
+    <p><strong>$\Theta(n^2)$ in all cases.</strong> Selection sort's inner comparison always runs exactly $n(n-1)/2$ times, regardless of the input's values or order. This is unlike insertion sort, where the inner loop count depends on the number of inversions $t_i$ (slide p. 39).</p>
+    <p><strong>Correctness model.</strong> The lecture proves insertion sort correct via a predicate about the sorted prefix (slides pp. 29–36, 59). We use the same pattern: state $P(i)$, prove base case and inductive step. The lecture frames this as finite-domain induction (slide p. 32): $i$ ranges over $\{0, \ldots, n-1\}$.</p>
+    <span class="sc">Lecture refs: one-loop guide / nested loops (pp. 60–62); $O/\Omega/\Theta$ definitions (pp. 50–52); dominant term theorem (p. 56); insertion_sort correctness as model (pp. 29–36, 59); finite-domain induction (p. 32).</span>
+  </div>
+
+  <pre><span class="kw">void</span> <span class="fn">selection_sort</span>(<span class="ty">int</span> arr[], <span class="ty">int</span> n) {
+    <span class="kw">for</span>(<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; n - <span class="nm">1</span>; ++i) {          <span class="cm">// outer: runs n-1 times</span>
+        <span class="ty">int</span> candidate = i;
+        <span class="kw">for</span>(<span class="ty">int</span> j = i + <span class="nm">1</span>; j &lt; n; ++j) {         <span class="cm">// inner: runs n-1-i times</span>
+            <span class="kw">if</span>(arr[j] &lt; arr[candidate]) candidate = j;
+        }
+        std::<span class="fn">swap</span>(arr[i], arr[candidate]);
+    }
+}</pre>
+
+  <div class="part">
+    <div class="part-lbl">Loop counts</div>
+    <p><strong>Outer loop:</strong> $i = 0, 1, \ldots, n-2$ — exactly <strong>$n-1$ times</strong>.</p>
+    <p><strong>Can we ignore <code>int candidate = i</code>?</strong> Yes. Slide p. 61: "If code-units $A$ and $B$ take constant time, and $A$ always runs more times than $B$, then ignore $B$." The statement <code>int candidate = i</code> runs $n-1$ times (cost $O(n)$), dominated by the inner comparison which runs $\frac{n(n-1)}{2}$ times (cost $\Theta(n^2)$). So <code>int candidate = i</code> is not the hotspot.</p>
+    <p><strong>Inner loop:</strong> For outer iteration $i$, inner loop runs $n-1-i$ times. Total comparisons:</p>
+    <div class="math-block">$$\sum_{i=0}^{n-2}(n-1-i) = (n-1)+(n-2)+\cdots+1 = \frac{n(n-1)}{2}$$</div>
+    <p>This is the same arithmetic sum as in the insertion sort analysis on slide p. 41 (where the lecture sums $t_i$ over $i$).</p>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Is it $O(n^2)$?</div>
+    <p>Each statement in the outer loop body executes at most $n-1 \leq n$ times per outer iteration, and there are $n-1 \leq n$ outer iterations. No statement executes more than $n^2$ times. <span class="bg n">$O(n^2)$ — slide p. 50</span></p>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Is it $\Omega(n^2)$?</div>
+    <p>The comparison <code>arr[j] &lt; arr[candidate]</code> runs exactly $\frac{n(n-1)}{2}$ times for <strong>every</strong> input of size $n$ — no early exit is possible. For $n \geq 2$: $\frac{n(n-1)}{2} \geq \frac{n^2}{4}$. The running time is at least $\frac{c_\text{cmp}}{4}\,n^2$. <span class="bg n">$\Omega(n^2)$ — slide p. 50</span></p>
+    <p>Combining: <span class="bg t">Best case $\Theta(n^2)$</span> <span class="bg t">Worst case $\Theta(n^2)$</span> — selection sort is $\Theta(n^2)$ on every input.</p>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Correctness — mirroring the lecture's insertion sort proof <span class="sr">pp. 29–36, 59</span></div>
+
+    <div class="defn">
+      <div class="dl">Predicate $P(i)$ — loop invariant</div>
+      <p>After $i$ iterations of the outer for-loop: <code>arr[0..i-1]</code> contains the $i$ smallest elements of the original array in sorted (non-decreasing) order, each in its final position.</p>
+    </div>
+
+    <p><strong>Claim:</strong> $P(i)$ holds for all $i = 0, \ldots, n-1$ (finite domain, slide p. 32). At $i = n-1$ this gives a fully sorted array.</p>
+
+    <div class="proof">
+      <div class="pl">Proof — induction on $i$ over $\{0,\ldots,n-1\}$ <span class="sr">p. 32 — finite domain template</span></div>
+
+      <div class="ind base">
+        <div class="il">Base Case — $P(0)$, before any iterations</div>
+        <p><code>arr[0..-1]</code> is empty. $P(0)$ holds vacuously. ✓</p>
+      </div>
+
+      <div class="ind hyp">
+        <div class="il">Inductive Hypothesis — assume $P(i)$</div>
+        <p>Suppose $i$ is arbitrary but fixed, $0 \leq i \leq n-2$. Assume $P(i)$: <code>arr[0..i-1]</code> holds the $i$ smallest elements in sorted order, finalised.</p>
+      </div>
+
+      <div class="ind step">
+        <div class="il">Inductive Step — prove $P(i+1)$ after the body of iteration $i$</div>
+        <p>The inner loop scans <code>arr[i..n-1]</code>. Initially <code>candidate = i</code>; whenever a smaller element is found at position $j$, <code>candidate</code> is updated. After the inner loop, <code>arr[candidate]</code> $\leq$ <code>arr[j]</code> for all $j \in \{i, \ldots, n-1\}$ — i.e., <code>arr[candidate]</code> is the minimum of <code>arr[i..n-1]</code>.</p>
+        <p>The swap places this minimum at position $i$. Combined with $P(i)$, <code>arr[0..i]</code> now contains the $i+1$ smallest elements in sorted order, each finalised. $P(i+1)$ holds. ✓</p>
+      </div>
+
+      <div class="ind base">
+        <div class="il">Termination — $P(n-1)$ after $n-1$ outer iterations</div>
+        <p><code>arr[0..n-2]</code> contains the $n-1$ smallest in sorted order. The remaining <code>arr[n-1]</code> is the largest and is already correctly placed. The array is fully sorted. ✓</p>
+      </div>
+      <div class="qed">□</div>
+    </div>
+  </div>
+</section>
+
+<hr class="d"/>
+
+<!-- ══ P6 ══════════════════════════════════════ -->
+<section class="prob" id="p6">
+  <div class="prob-hdr">
+    <div class="prob-num">6</div>
+    <div class="prob-titles">
+      <h2>Selection Sort with Early Checking</h2>
+      <div class="sub">Sub-routine cost in a loop · Best/worst case &nbsp;·&nbsp; Lecture slides pp. 44–47, 60–62</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>Sub-routine cost inside a loop.</strong> The lecture's "One Loop Guide" (slide p. 60): if the loop body takes constant time $c$ per iteration and runs $n$ times, total is $\Theta(cn) = \Theta(n)$. When the body calls a sub-routine that takes $\Theta(n)$ itself, the loop now does $\Theta(n)$ per iteration — total $\Theta(n^2)$. We must account for <em>which case</em> of <code>is_sorted</code> applies, since it can be $\Theta(1)$ or $\Theta(n)$.</p>
+    <p><strong>Key question:</strong> when <code>is_sorted</code> is called inside the loop, how quickly does it return? This depends on the state of the array at the time of the call — which changes as sorting progresses. We reason about this state for each scenario.</p>
+    <span class="sc">Lecture refs: one-loop guide (p. 60); sub-routine analysis (pp. 61–62); best/worst-case definitions (pp. 44–47); dominant term (p. 56).</span>
+  </div>
+
+  <pre><span class="kw">void</span> <span class="fn">selection_sort</span>(<span class="ty">int</span> arr[], <span class="ty">int</span> n) {
+    <span class="kw">for</span>(<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; n - <span class="nm">1</span>; ++i) {
+        <span class="kw">if</span>(<span class="fn">is_sorted</span>(arr, n)) <span class="kw">return</span>;   <span class="cm">// Θ(n) or Θ(1) depending on array state</span>
+        <span class="ty">int</span> candidate = i;
+        <span class="kw">for</span>(<span class="ty">int</span> j = i + <span class="nm">1</span>; j &lt; n; ++j) {
+            <span class="kw">if</span>(arr[j] &lt; arr[candidate]) candidate = j;
+        }
+        std::<span class="fn">swap</span>(arr[i], arr[candidate]);
+    }
+}</pre>
+
+  <div class="part">
+    <div class="part-lbl">Best Case</div>
+    <p><strong>Input:</strong> already sorted array. On $i = 0$, <code>is_sorted(arr, n)</code> scans all $n-1$ adjacent pairs (all are in order) and returns <code>true</code> — this is the <em>best case of <code>is_sorted</code></em> from Problem 3, which costs $\Theta(n)$. The outer function returns immediately.</p>
+    <div class="math-block">$$T_\text{best}(n) = \Theta(n)$$</div>
+    <p>This is a dramatic improvement over the original selection sort's best case of $\Theta(n^2)$.</p>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Worst Case</div>
+    <p><strong>Input:</strong> reverse-sorted array $[n, n-1, \ldots, 2, 1]$. <code>is_sorted</code> is called at the start of each outer iteration. At outer iteration $i$, the loop invariant from Problem 5 tells us <code>arr[0..i-1]</code> is sorted, but <code>arr[i..n-1]</code> is still in some order derived from the reverse-sorted original. In particular, after $i$ swaps on a reverse-sorted array, <code>arr[i] > arr[i+1]</code> is still true (the remaining suffix is still partially reversed). So <code>is_sorted</code> detects the first out-of-order pair immediately — this is the <em>worst case of <code>is_sorted</code></em>, costing $\Theta(1)$.</p>
+    <ul style="padding-left:1.4rem;margin:.5rem 0 .8rem;">
+      <li style="margin-bottom:.4rem">$n-1$ calls to <code>is_sorted</code>, each $\Theta(1)$: total $\Theta(n)$.</li>
+      <li>Inner loop still runs $\frac{n(n-1)}{2}$ times: total $\Theta(n^2)$.</li>
+    </ul>
+    <div class="math-block">$$T_\text{worst}(n) = \Theta(n^2) + \Theta(n) = \Theta(n^2)$$</div>
+    <p>The $\Theta(n^2)$ inner loop dominates — per slide p. 56 (focus on the dominant term). <span class="bg t">Best case $\Theta(n)$</span> <span class="bg w">Worst case $\Theta(n^2)$</span></p>
+  </div>
+</section>
+
+<hr class="d"/>
+
+<!-- ══ P7 ══════════════════════════════════════ -->
+<section class="prob" id="p7">
+  <div class="prob-hdr">
+    <div class="prob-num">7</div>
+    <div class="prob-titles">
+      <h2>Bubble Sort</h2>
+      <div class="sub">Shrinking inner loop · $\Theta(n^2)$ always · Correctness by induction &nbsp;·&nbsp; Lecture slides pp. 29–36, 39–47, 56–62</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>Same analysis pattern as selection sort.</strong> We sum inner iterations over outer, identify a statement running $\Theta(n^2)$ times unconditionally, and use the formal $\Theta$ definition (slide p. 50). The correctness proof follows the same finite-domain induction structure as the lecture's insertion sort proof (slides pp. 29–36, 32).</p>
+    <p><strong>Why the loop shrinks — a loop invariant.</strong> Slide p. 34: "Typical claim: after step $i$, some property holds." Here the property is: "After outer pass $i$, the $i+1$ largest elements are in their final positions at the end." This invariant is what justifies the shrinking bound $n-i-1$ — there is no need to re-examine elements already in their final positions.</p>
+    <p><strong>No best-case improvement here.</strong> Unlike insertion sort (whose inner loop stops early when no shifts are needed) or the version from Problem 6 (which checks <code>is_sorted</code>), this bubble sort has no early-exit mechanism. The inner loop always runs to completion.</p>
+    <span class="sc">Lecture refs: nested loop analysis (pp. 60–62); correctness by induction model (pp. 29–36, 59); finite domain induction (p. 32); $O/\Omega/\Theta$ definitions (pp. 50–52).</span>
+  </div>
+
+  <pre><span class="kw">void</span> <span class="fn">bubble_sort</span>(<span class="ty">int</span> arr[], <span class="ty">int</span> n) {
+    <span class="kw">for</span> (<span class="ty">int</span> i = <span class="nm">0</span>; i &lt; n - <span class="nm">1</span>; ++i) {
+        <span class="kw">for</span> (<span class="ty">int</span> j = <span class="nm">0</span>; j &lt; n - i - <span class="nm">1</span>; ++j) {  <span class="cm">// bound shrinks: n-1, n-2, …, 1</span>
+            <span class="kw">if</span> (arr[j] &gt; arr[j + <span class="nm">1</span>]) {
+                std::<span class="fn">swap</span>(arr[j], arr[j + <span class="nm">1</span>]);
+            }
+        }
+    }
+}</pre>
+
+  <div class="part">
+    <div class="part-lbl">Why does the inner loop run $n - i - 1$ times?</div>
+    <p>The loop invariant (proved below) guarantees: after outer pass $i$, the $i+1$ largest elements occupy positions $n-i-1, \ldots, n-1$ in sorted order, finalised. Comparing against finalised positions is unnecessary — they cannot change further. So pass $i+1$ only needs to examine $j = 0, \ldots, n-i-2$, giving exactly $n-i-1$ comparisons. The bound $j &lt; n-i-1$ enforces this.</p>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Running time</div>
+    <p>The comparison inside the inner loop fires once per inner iteration, regardless of whether a swap occurs. Total comparisons (same sum as selection sort):</p>
+    <div class="math-block">$$\sum_{i=0}^{n-2}(n-1-i) = (n-1)+(n-2)+\cdots+1 = \frac{n(n-1)}{2} = \Theta(n^2)$$</div>
+    <p>This count is fixed for every input of size $n$. By the same $O(n^2)$ and $\Omega(n^2)$ argument as Problem 5:</p>
+    <div class="math-block">$$T_\text{best}(n) = T_\text{worst}(n) = \Theta(n^2)$$</div>
+    <div class="call wn"><div class="ci"></div><p>An optimised version adds a boolean "swapped" flag: if no swaps occur during a pass, the array is already sorted, and the algorithm exits in $\Theta(n)$ best case. This version as written lacks that optimisation.</p></div>
+  </div>
+
+  <div class="part">
+    <div class="part-lbl">Correctness — following the lecture's induction model <span class="sr">pp. 29–36, 59</span></div>
+
+    <div class="defn">
+      <div class="dl">Predicate $P(i)$ — loop invariant</div>
+      <p>After $i$ iterations of the outer for-loop: <code>arr[n-i..n-1]</code> contains the $i$ largest elements of the original array in sorted (non-decreasing) order, each in its final position.</p>
+    </div>
+
+    <div class="proof">
+      <div class="pl">Proof — induction on $i$ over $\{0,\ldots,n-1\}$ <span class="sr">p. 32 — finite domain induction</span></div>
+
+      <div class="ind base">
+        <div class="il">Base Case — $P(0)$, before any iterations</div>
+        <p><code>arr[n..n-1]</code> is empty. $P(0)$ holds vacuously. ✓</p>
+      </div>
+
+      <div class="ind hyp">
+        <div class="il">Inductive Hypothesis — assume $P(i)$</div>
+        <p>Suppose $i$ is arbitrary but fixed, $0 \leq i \leq n-2$. Assume $P(i)$: <code>arr[n-i..n-1]</code> holds the $i$ largest elements, finalised.</p>
+      </div>
+
+      <div class="ind step">
+        <div class="il">Inductive Step — prove $P(i+1)$ after outer iteration $i$</div>
+        <p>The inner loop scans $j = 0, \ldots, n-i-2$, comparing and potentially swapping adjacent pairs in <code>arr[0..n-i-1]</code>.</p>
+        <p><strong>Claim:</strong> after the inner loop, the maximum of <code>arr[0..n-i-1]</code> is at position $n-i-1$.</p>
+        <p><strong>Sub-argument:</strong> Let $M$ be the maximum value in <code>arr[0..n-i-1]</code>. At any step $j$ where $M$ sits at position $j$: since $M \geq$ all elements, <code>arr[j] > arr[j+1]</code>, so a swap occurs and $M$ moves to $j+1$. This continues until $j = n-i-2$, after which $M$ lands at $n-i-1$. (Other swaps may occur, but $M$ always wins each comparison it participates in.)</p>
+        <p>Therefore <code>arr[n-i-1]</code> holds the maximum of <code>arr[0..n-i-1]</code>. Combined with $P(i)$, <code>arr[n-i-1..n-1]</code> now holds the $i+1$ largest in non-decreasing order. $P(i+1)$ holds. ✓</p>
+      </div>
+
+      <div class="ind base">
+        <div class="il">Termination — $P(n-1)$ after $n-1$ outer iterations</div>
+        <p><code>arr[1..n-1]</code> holds the $n-1$ largest in sorted order. <code>arr[0]</code> is the minimum and is correctly placed. The array is fully sorted. ✓</p>
+      </div>
+      <div class="qed">□</div>
+    </div>
+  </div>
+</section>
+
+<hr class="d"/>
+
+<!-- ══ P8 ══════════════════════════════════════ -->
+<section class="prob" id="p8">
+  <div class="prob-hdr">
+    <div class="prob-num">8</div>
+    <div class="prob-titles">
+      <h2>Proving $f(n) = \Theta(g(n))$</h2>
+      <div class="sub">Formal $\Theta$ definition · Little-$o$ limit form · Lecture slides pp. 50–52, 56</div>
+    </div>
+  </div>
+
+  <div class="bg-box">
+    <p><strong>Formal $\Theta$ definition</strong> (slide p. 50): $f(n) = \Theta(g(n))$ iff $\exists\, c_1 > 0,\, c_2 > 0,\, n_0 \geq 0$ such that $c_1\,g(n) \leq f(n) \leq c_2\,g(n)$ for all $n \geq n_0$. See also slide p. 51 (the three-region diagram illustrating this sandwich).</p>
+    <p><strong>Little-$o$ and the limit</strong> (slide p. 52): $h(n) = o(g(n))$ iff $\lim_{n\to\infty} h(n)/g(n) = 0$. This is precisely the condition given in the problem: $h$ grows strictly slower than $g$ and becomes negligible relative to $g$.</p>
+    <p><strong>The recipe from the lecture</strong> (slide p. 56, dominant-term theorem proof): to show $an^k + \text{lower terms} = \Theta(n^k)$, the lecture constructs explicit constants $c_1, c_2, n_0$ and verifies both the upper and lower inequalities. The homework hint says: "Just follow the recipe in the proof from Lecture 2." That recipe is: use the limit condition to bound $h$ in terms of $g$ by a fraction $\varepsilon$ of $g$, then substitute into $f = cg + h$ to obtain both inequalities.</p>
+    <p><strong>Connection to slide p. 56.</strong> In the dominant-term theorem, $f(n) = a_k n^k + \cdots + a_0$. Setting $c = a_k$, $g(n) = n^k$, and $h(n) = a_{k-1}n^{k-1}+\cdots+a_0$, we have $h(n)/g(n) \to 0$ as $n\to\infty$. Our result is the general version of that specific fact.</p>
+    <span class="sc">Lecture refs: Big-$O$, $\Omega$, $\Theta$ definitions (p. 50); $\Theta$ diagram (p. 51); little-$o$ limit form (p. 52); dominant-term proof recipe (p. 56); intuitive notation table (p. 53).</span>
+  </div>
+
+  <div class="defn">
+    <div class="dl">Given and To Prove</div>
+    <p><strong>Given:</strong> $f(n) = c\,g(n) + h(n)$ where $c > 0$, $g(n) \geq 0$, and $\displaystyle\lim_{n\to\infty}\frac{h(n)}{g(n)} = 0$.</p>
+    <p><strong>To prove:</strong> $f(n) = \Theta(g(n))$ — i.e., find $c_1, c_2 > 0$ and $n_0$ such that $c_1\,g(n) \leq f(n) \leq c_2\,g(n)$ for all $n \geq n_0$. <span class="sr">p. 50 — $\Theta$ definition</span></p>
+  </div>
+
+  <div class="proof">
+    <div class="pl">Proof — following the recipe from slide p. 56</div>
+
+    <ol class="steps">
+      <li>
+        <div>
+          <p><strong>Translate the limit condition into a concrete bound.</strong> The condition $\lim_{n\to\infty} h(n)/g(n) = 0$ means $h = o(g)$ (slide p. 52 — little-$o$ via limit). By the definition of the limit: for any $\varepsilon > 0$, $\exists\, N$ such that $\forall\, n \geq N$: $\left|\frac{h(n)}{g(n)}\right| < \varepsilon$. Since $g(n) \geq 0$, multiplying gives:</p>
+          <div class="math-block">$$-\varepsilon\,g(n) \;<\; h(n) \;<\; \varepsilon\,g(n) \qquad \text{for all } n \geq N$$</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p><strong>Choose $\varepsilon = c/2$.</strong> This is the key step of the recipe — choosing $\varepsilon$ so that the additive perturbation $h$ is bounded by half the leading coefficient. There exists $N$ (set $n_0 = N$) such that for all $n \geq n_0$:</p>
+          <div class="math-block">$$-\frac{c}{2}\,g(n) \;<\; h(n) \;<\; \frac{c}{2}\,g(n)$$</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p><strong>Prove the upper bound</strong> $f(n) \leq c_2\,g(n)$. Using the right inequality $h(n) &lt; \frac{c}{2}g(n)$:</p>
+          <div class="math-block">$$f(n) = c\,g(n)+h(n) \;<\; c\,g(n)+\frac{c}{2}g(n) = \frac{3c}{2}\,g(n)$$</div>
+          <p>Set $c_2 = 3c/2 > 0$. Then $f(n) \leq c_2\,g(n)$ for all $n \geq n_0$. ✓</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p><strong>Prove the lower bound</strong> $f(n) \geq c_1\,g(n)$. Using the left inequality $h(n) > -\frac{c}{2}g(n)$:</p>
+          <div class="math-block">$$f(n) = c\,g(n)+h(n) \;>\; c\,g(n)-\frac{c}{2}g(n) = \frac{c}{2}\,g(n)$$</div>
+          <p>Set $c_1 = c/2 > 0$. Then $f(n) \geq c_1\,g(n)$ for all $n \geq n_0$. ✓</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <p><strong>Conclude by the $\Theta$ definition</strong> (slide p. 50). We have exhibited $c_1 = c/2 > 0$, $c_2 = 3c/2 > 0$, and $n_0 = N$ such that:</p>
+          <div class="math-block">$$\frac{c}{2}\,g(n) \;\leq\; f(n) \;\leq\; \frac{3c}{2}\,g(n) \qquad \forall\, n \geq n_0$$</div>
+          <p>Therefore $f(n) = \Theta(g(n))$. $\qquad$ □</p>
+        </div>
+      </li>
+    </ol>
+    <div class="qed">□</div>
+  </div>
+
+  <div class="call nf"><div class="ci"></div><p><strong>Why $\varepsilon = c/2$ specifically?</strong> Any $\varepsilon &lt; c$ would work. The choice $c/2$ is symmetric: it makes the lower bound coefficient $c - c/2 = c/2$ and the upper bound $c + c/2 = 3c/2$, both positive, and gives a clean ratio $c_2/c_1 = 3$. Choosing $\varepsilon = c/10$ would give $c_1 = 9c/10$, $c_2 = 11c/10$ — tighter but equivalent.</p></div>
+
+  <div class="call lc"><div class="ci"></div><p><strong>Intuitive meaning</strong> (slide p. 53): $\Theta$ means both functions "grow at the same rate." Here $h = o(g)$ means $h$ grows strictly slower — it is eventually negligible. Adding a negligible term $h$ to $c\,g$ cannot change the growth rate of the result: it only perturbs the leading constant, which $\Theta$ absorbs.</p></div>
+</section>
+
+<hr class="d2"/>
+<footer>
+  ADS1 SS2026-051024-1 &nbsp;·&nbsp; Solutions aligned with Chapter 1 lecture slides (Sagar Kale / Niklas Hahn) &nbsp;·&nbsp; MathJax 3 · JetBrains Mono
+</footer>
+</div>
+
+<script>
+const prog = document.getElementById('prog');
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  prog.style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%';
+}, { passive: true });
+
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.animationPlayState = 'running';
+      io.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.06 });
+document.querySelectorAll('.prob').forEach(el => {
+  el.style.animationDelay = '0.04s';
+  el.style.animationPlayState = 'paused';
+  io.observe(el);
+});
+</script>
+</body>
+</html>

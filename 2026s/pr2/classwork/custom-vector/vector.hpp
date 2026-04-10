@@ -3,17 +3,18 @@
 //§ Requisites
   //§ Includes
     #include <concepts>
-#include <iostream>
+    #include <initializer_list>
+    #include <iostream>
     #include <cstddef>
-  #include <optional>
     #include <stdexcept>
     #include <string>
     #include <type_traits>
     // #include "colors.hpp"
   //.
   //§ Helper Concept / Alias(es)
-  template <typename T> concept isPrintable = requires(std::ostream &o, const T &t) { o << t; };
-  using st = std::size_t;
+    template <typename T> concept isPrintable = requires(std::ostream &o, const T &t) { o << t; };
+    template <typename  T> T sc(std::convertible_to<T> auto objToConvert) noexcept { return (static_cast<T>(objToConvert)); }
+    using st = std::size_t;
 //.
   //§ Output Operator
     template <typename T> class Vector; 
@@ -48,8 +49,8 @@ class Vector {
     }
     st testValidity(std::ptrdiff_t diff, const st strictlySmallerThan) const {
       st number = 0;
-      if (diff < 0 || ((number = static_cast<st>(diff)) && number >= strictlySmallerThan)) 
-        throw std::out_of_range("Iterator Is Out Of Bounds");
+      if (diff < 0 || ((number = sc<st>(diff)) && number >= strictlySmallerThan)) 
+        throw std::runtime_error("Iterator Is Out Of Bounds");
       return number;
     }
   //.
@@ -85,6 +86,15 @@ class Vector {
       }
     //.
     //§ Iterators
+      template <typename Target, typename Derived>
+      class IteratorBase { // TODO implement
+          //
+        protected:
+          //
+        public:
+          //
+      };
+
       class ConstIterator;
       friend class Vector;
       class Iterator {
@@ -94,8 +104,8 @@ class Vector {
             T         *element        { nullptr }; // ,
             //          *dataSnapshot   { nullptr };
             Vector<T> *container      { nullptr };
-            bool      insideRange     {  false  },
-                      dereferencable  {  false  };
+            // bool      insideRange     {  false  },
+            //           dereferencable  {  false  };
             // static st lastID; const st instanceID;
           //.
         //§ Helper Function(s)
@@ -108,10 +118,10 @@ class Vector {
           bool isDereferencable(const std::optional<T*> toTest = std::nullopt) const {
             return (isInitialized() and isInRange(((toTest) ? *toTest : element)) and (((toTest) ? *toTest : element) != (container->data + container->savedElements)));
           }
-          void validateIterator() {
-            insideRange = isInRange();
-            dereferencable = isDereferencable();
-          }
+          // void validateIterator() {
+          //   insideRange = isInRange();
+          //   dereferencable = isDereferencable();
+          // }
           //.
         public:
         //§ Aliases
@@ -119,23 +129,22 @@ class Vector {
             using reference = typename Vector::reference;
             using pointer = typename Vector::pointer;
             using difference_type = typename Vector::difference_type;
-            using iterator_category = std::forward_iterator_tag;
+            using iterator_category = std::random_access_iterator_tag;
         //.
         //§ Constructor(s)
             Iterator() {
-              std::cerr << "Created Uninitialized Iterator" << std::endl;
+              // std::cerr << "Created Uninitialized Iterator" << std::endl;
             }
-            Iterator (T *ptr, Vector<T> *objPtr = nullptr) 
-              : element{ptr}, container{objPtr}, // dataSnapshot{((objPtr) ? objPtr->data : nullptr)}, 
-                insideRange{isInRange()}, dereferencable{isDereferencable()} { // , instanceID{++lastID} {
+            Iterator (T *ptr, Vector<T> *objPtr = nullptr)  : element{ptr}, container{objPtr} {
+                //, // dataSnapshot{((objPtr) ? objPtr->data : nullptr)}, 
+                // insideRange{isInRange()}, dereferencable{isDereferencable()} { // , instanceID{++lastID} {
                 // TODO do something ?
-                if (isPrintable<T> && dereferencable) 
-                  std::clog << "Element Pointed To By Iterator: " << *element << std::endl;
-                else std::clog << "Element Pointed To By Iterator: nullptr" << std::endl;
+                // if (isPrintable<T> && dereferencable)  std::clog << "Element Pointed To By Iterator: " << *element << std::endl;
+                // else                                   std::clog << "Element Pointed To By Iterator: nullptr" << std::endl;
             }
-            template <typename U> Iterator(const U *ptr, const Vector<U> *objPtr = nullptr) requires(std::convertible_to<T, U>)
-              : Iterator(reinterpret_cast<T*>(const_cast<std::remove_const_t<U>*>(ptr)), 
-                         reinterpret_cast<Vector<T>*>(const_cast<std::remove_const_t<Vector<U>>*>(objPtr))) {
+            template <typename OtherType> Iterator(const OtherType *ptr, const Vector<OtherType> *objPtr = nullptr) requires(std::convertible_to<T, OtherType>)
+              : Iterator(reinterpret_cast<T*>(const_cast<std::remove_const_t<OtherType>*>(ptr)), 
+                         reinterpret_cast<Vector<T>*>(const_cast<std::remove_const_t<Vector<OtherType>>*>(objPtr))) {
                 // TODO do something ?
             }
             Iterator(const Iterator &it) : Iterator(it.element, it.container) {
@@ -154,14 +163,14 @@ class Vector {
             return *this;
           }
           Iterator operator++(int) {
-            return (((isInRange((element + 1))) ? Iterator((++element - static_cast<st>(1)), container) : *this));
+            return (((isInRange((element + 1))) ? Iterator((++element - sc<st>(1)), container) : *this));
           }
           Iterator& operator--() {
             if (isInRange((element - 1))) --element;
             return *this;
           }
           Iterator operator--(int) {
-            return (((isInRange((element - 1))) ? Iterator((--element + static_cast<st>(1)), container) : *this));
+            return (((isInRange((element - 1))) ? Iterator((--element + sc<st>(1)), container) : *this));
           }
           bool operator==(const Iterator &it) const {
             return (this->element == it.element && this->container == it.container);
@@ -181,11 +190,23 @@ class Vector {
           bool operator<=(const Iterator &it) const {
             return (element <= it.element);
           }
-          Iterator operator+(const st offset) const {
+          Iterator operator+(const difference_type offset) const {
             return Iterator((this->element + offset), container);
           }
-          Iterator operator-(const st offset) const {
+          Iterator operator+(const int offset) const {
+            return Iterator((this->element + offset), container);
+          }
+          Iterator operator-(const difference_type offset) const {
             return Iterator((this->element - offset), container);
+          }
+          Iterator operator-(const int offset) const {
+            return Iterator((this->element - offset), container);
+          }
+          Iterator& operator+=(const int offset) {
+            return (this->element += offset), *this;
+          }
+          Iterator& operator-=(const int offset) {
+            return (this->element -= offset), *this;
           }
           std::ptrdiff_t operator-(const Iterator &it) const {
             return (this->element - it.element);
@@ -203,11 +224,11 @@ class Vector {
             using reference = typename Vector::const_reference;
             using pointer = typename Vector::const_pointer;
             using difference_type = typename Vector::difference_type;
-            using iterator_category = std::forward_iterator_tag;
+            using iterator_category = std::random_access_iterator_tag;
           //.
           //§ Constructor(s)
             using Iterator::Iterator;
-            template <typename U> ConstIterator(const U *ptr, const Vector<U> *objPtr = nullptr) : Iterator(ptr, objPtr) {}
+            template <typename OtherType> ConstIterator(const OtherType *ptr, const Vector<OtherType> *objPtr = nullptr) : Iterator(ptr, objPtr) {}
             template <typename EdgCase> ConstIterator(EdgCase it) requires(std::convertible_to<typename EdgCase::value_type, T>)
                  : ConstIterator(it.element, it.container) {} 
               // : ConstIterator(reinterpret_cast<T*>(const_cast<void*>(reinterpret_cast<const void*>(it.operator->()))), nullptr {}
@@ -219,6 +240,9 @@ class Vector {
             return ((this->isDereferencable()) ? this->element : throw std::logic_error("Iterator Is Unitialized"));
           }
       };
+      friend Vector::difference_type operator-(const Vector::ConstIterator& lop, const Vector::ConstIterator& rop) {
+        return lop.element - rop.element;
+      }
     //.
     //§ Methods
       bool empty()  const noexcept {
@@ -231,7 +255,7 @@ class Vector {
         return currentCapacity;
       }
       Vector& clear()     noexcept {
-        if (data) delete[] data, data = nullptr;
+        if (data) delete[] data, data = nullptr; // , data = new T[currentCapacity];
         return (savedElements = 0, *this); // = currentCapacity = 0, *this);
       }
       Vector& reserve(const st newSize) {
@@ -240,12 +264,13 @@ class Vector {
       Vector& shrink_to_fit() {
         return (this->resize(savedElements), *this);
       }
-      Vector& push_back(const T &obj) {
-        if ((savedElements + 1) >= currentCapacity) this->resize((savedElements + 1) * 2);
+      Vector& push_back(const T &obj) { 
+        if ((savedElements + 1) >= currentCapacity) this->resize((currentCapacity + 1) * 2);
+        else if (!data) this->resize((currentCapacity + 1) * 2);
         return (data[savedElements++] = obj, *this);
       } 
       Vector& pop_back() {
-      return (((savedElements == 0) ? throw std::out_of_range("Cannot Pop Back, Vector Is Empty") : --savedElements), *this);
+      return (((savedElements == 0) ? throw std::runtime_error("Cannot Pop Back, Vector Is Empty") : --savedElements), *this);
     }
       ConstIterator begin() const noexcept {
         return ((this->empty()) ? ConstIterator(this->end()) : ConstIterator((this->data), this));
@@ -262,7 +287,7 @@ class Vector {
       Iterator insert(const Iterator position, const T &value) { // TODO Update Iterators
         auto diff { position - this->begin() }; const st index = testValidity(diff, (savedElements + 1));
         
-        if (savedElements >= currentCapacity) this->resize((savedElements + 1) * 2);
+        if (savedElements >= currentCapacity) this->resize((currentCapacity + 1) * 2);
         for (st i = savedElements; i > index; --i)
           data[i] = data[i - 1]; data[index] = value;
         return ++savedElements, Iterator((data + index), this);
@@ -279,19 +304,22 @@ class Vector {
     //§ Operators
       Vector& operator=(const Vector &other) { 
         if (this == &other) goto end;
-        this->clear().reserve(other.capacity()); savedElements = other.savedElements;
+        this->clear().resize(other.capacity()); savedElements = other.savedElements;
         for (st i = 0; i < savedElements; ++i) data[i] = other.data[i];
         end: return *this;
       }
+      Vector& operator=(std::initializer_list<T> list) {
+        return Vector<T>::operator=((Vector(list)));
+      }
       T& operator[](const st index) {
-        if (index >= savedElements) throw std::out_of_range("Attempted To Access Index " 
+        if (index >= savedElements) throw std::runtime_error("Attempted To Access Index " 
                                                               + std::to_string(index) 
                                                               + ", But Vector Size Is - "
                                                               + std::to_string(savedElements));
         else return data[index];
       }
       const T& operator[](const st index) const {
-      if (index >= savedElements) throw std::out_of_range("Attempted To Access Index " 
+      if (index >= savedElements) throw std::runtime_error("Attempted To Access Index " 
                                                             + std::to_string(index) 
                                                             + ", But Vector Size Is - "
                                                             + std::to_string(savedElements));
@@ -300,6 +328,7 @@ class Vector {
     //.
     ~Vector() {
       // if (isPrintable<T>) std::clog << red << "Destroying" << r << " Vector, Current Contents: " << *this << std::endl;
+      // if (data) delete[] data, data = nullptr;
       this->clear();
     }
     //§ Aliases

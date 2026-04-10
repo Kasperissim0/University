@@ -26,7 +26,6 @@ int main() { // output: 50612810810978278721920754124758999322141692244213462696
   ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-1/input.txt")); 
   st amountOfArrays; dataSource >> amountOfArrays; // if this is meant to be tested, then the path for the input file (obviously) needs to be changed 
                                                    // i couldn't get it to work with relative paths for some reason
-
   for (st currentArrayIndex = 0; currentArrayIndex < amountOfArrays; ++currentArrayIndex) {
     st size, condition; dataSource >> size >> condition; 
     st *currentArray = new st[size];
