@@ -11,7 +11,7 @@ BOLD='\033[1m'
 DIM='\033[2m'
 NC='\033[0m'
 
-VERSION="3.3.8"
+VERSION="3.5.1"
 START_TIME=$(date +%s)
 
 # --- TERMINAL WIDTH ---
@@ -105,6 +105,7 @@ usage() {
     echo -e "  -o          Optimal: Smart rebuild (only if changed) + Parallel"
     echo -e "  -t          Test (dry run): show what would be done without executing"
     echo -e "  -q          Quiet: suppress all output except results or errors"
+    echo -e "  -b          Brief summary: hide file lists (Compiled/Failed) in the final summary"
     echo -e "  -H          Hide: hides the summary at the end"
     echo -e "  -d          Delete: deletes the ${EXEC_DIR} directory after execution"
     echo -e "  -r          Recursive search: finds tests in subdirectories"
@@ -116,13 +117,14 @@ usage() {
     if $VERBOSE; then
         echo ""
         echo -e "${BOLD}${RED}EXAMPLES:${NC}"
-        echo -e "  utu -o -f 0            # Rebuild only changed files, run in parallel, show only failures"
-        echo -e "  utu -n 1,3,5 -v        # Run tests 1, 3, and 5 with full output including print statements"
-        echo -e "  utu -o -q -j           # Optimal build, run quietly, output final results in JSON format"
-        echo -e "  utu -E -i 2,4 -H       # Run only existing binaries, skip tests 2 and 4, hide the final summary"
-        echo -e "  utu -c -p -l build.log # Force recompile all missing files in parallel, log the output to a file"
-        echo -e "  utu -t -o -n 10        # Dry run: show what would happen when optimally running test 10"
-        echo -e "  utu -o -d -S           # Build and run optimally, then delete the tests folder, showing only a progress bar"
+        echo -e "  utu -of 0              # Rebuild only changed files, run in parallel, show only failures"
+        echo -e "  utu -vn 1,3,5          # Run tests 1, 3, and 5 with full output including print statements"
+        echo -e "  utu -oqj               # Optimal build, run quietly, output final results in JSON format"
+        echo -e "  utu -EHi 2,4           # Run only existing binaries, skip tests 2 and 4, hide the final summary"
+        echo -e "  utu -cpl build.log     # Force recompile all missing files in parallel, log the output to a file"
+        echo -e "  utu -ton 10            # Dry run: show what would happen when optimally running test 10"
+        echo -e "  utu -odS               # Build and run optimally, then delete the tests folder, showing only a progress bar"
+        echo -e "  utu -oSqbrf 0          # Optimal recursive build, run quietly, show only failed execution output, brief summary (no file lists)"
     fi
     exit 0
 }
@@ -147,13 +149,14 @@ DRY_RUN=false
 QUIET_MODE=false
 JOBS=1
 OPTIMAL=false
+BRIEF_SUMMARY=false
 SHOW_HELP=false
 
 
 EXEC_DIR='executables/'
 
 
-while getopts "n:i:f:rdvl:sVShuHeEctopjq" opt; do
+while getopts "n:i:f:rdvl:sVShuHeEctopjqb" opt; do
     case $opt in
         n)
             NUMBERS="$OPTARG"
@@ -191,6 +194,7 @@ while getopts "n:i:f:rdvl:sVShuHeEctopjq" opt; do
         q) QUIET_MODE=true ;;
         o) OPTIMAL=true; JOBS=$(get_cores) ;;
         p) JOBS=$(get_cores) ;;
+        b) BRIEF_SUMMARY=true ;;
         j) JSON_OUTPUT=true ;;
         V) echo -e "😎 Latest Version: ${RED}$VERSION${NC}"; exit 0 ;;
         u)
@@ -725,10 +729,6 @@ done
         printf "\r%-${TERM_WIDTH}s\r" ""
     fi
 fi
-
-# ============================================================
-#  SUMMARY
-# ============================================================
 if ! $HIDE_SUMMARY; then
     banner "SUMMARY" "$GREEN"
 
@@ -754,30 +754,34 @@ if ! $HIDE_SUMMARY; then
 
     # 1. Compilation
     if ! $QUIET_MODE || [[ ${#COMPILE_FAIL_LIST[@]} -gt 0 ]]; then
-        err_log "  ${BOLD}🔨 Compilation:${NC}"
-        if [[ ${#COMPILE_OK_LIST[@]} -gt 0 ]] && ! $QUIET_MODE; then
-            format_file_list "${GREEN}✅ OK:${NC}" "${GREEN}" "log" "${COMPILE_OK_LIST[@]}"
+        if ! $BRIEF_SUMMARY; then
+            err_log "  ${BOLD}🔨 Compilation:${NC}"
+            if [[ ${#COMPILE_OK_LIST[@]} -gt 0 ]] && ! $QUIET_MODE && ! $FAILED_ONLY; then
+                format_file_list "${GREEN}✅ OK:${NC}" "${GREEN}" "log" "${COMPILE_OK_LIST[@]}"
+            fi
+            if [[ ${#COMPILE_FAIL_LIST[@]} -gt 0 ]] && ! $PASSED_ONLY; then
+                format_file_list "${RED}❌ Failed:${NC}" "${RED}" "err_log" "${COMPILE_FAIL_LIST[@]}"
+            fi
+            if [[ ${#COMPILE_OK_LIST[@]} -eq 0 && ${#COMPILE_FAIL_LIST[@]} -eq 0 ]] && ! $QUIET_MODE; then
+                log "    ${DIM}(skipped — using existing binaries)${NC}"
+            fi
+            log ""
         fi
-        if [[ ${#COMPILE_FAIL_LIST[@]} -gt 0 ]]; then
-            format_file_list "${RED}❌ Failed:${NC}" "${RED}" "err_log" "${COMPILE_FAIL_LIST[@]}"
-        fi
-        if [[ ${#COMPILE_OK_LIST[@]} -eq 0 && ${#COMPILE_FAIL_LIST[@]} -eq 0 ]] && ! $QUIET_MODE; then
-            log "    ${DIM}(skipped — using existing binaries)${NC}"
-        fi
-        log ""
     fi
 
     # 2. Test Execution
     if ! $COMPILE_ONLY; then
         if ! $QUIET_MODE || [[ ${#FAILED_LIST[@]} -gt 0 ]]; then
-            err_log "  ${BOLD}🚀 Test Execution:${NC}"
-            if [[ ${#PASS_LIST[@]} -gt 0 ]] && ! $QUIET_MODE; then
-                format_file_list "${GREEN}✅ Passed:${NC}" "${GREEN}" "log" "${PASS_LIST[@]}"
+            if ! $BRIEF_SUMMARY; then
+                err_log "  ${BOLD}🚀 Test Execution:${NC}"
+                if [[ ${#PASS_LIST[@]} -gt 0 ]] && ! $QUIET_MODE && ! $FAILED_ONLY; then
+                    format_file_list "${GREEN}✅ Passed:${NC}" "${GREEN}" "log" "${PASS_LIST[@]}"
+                fi
+                if [[ ${#FAILED_LIST[@]} -gt 0 ]] && ! $PASSED_ONLY; then
+                    format_file_list "${RED}❌ Failed:${NC}" "${RED}" "err_log" "${FAILED_LIST[@]}"
+                fi
+                log ""
             fi
-            if [[ ${#FAILED_LIST[@]} -gt 0 ]]; then
-                format_file_list "${RED}❌ Failed:${NC}" "${RED}" "err_log" "${FAILED_LIST[@]}"
-            fi
-            log ""
         fi
 
         # 3. Global Stats (Centered as a unified block)
@@ -807,7 +811,7 @@ if ! $HIDE_SUMMARY; then
         # Build the block to display
         STATS_BLOCK="${BOLD}📊 Global Stats${NC}
 ────────────────────────────────
-Compilation Success Rate: ${BOLD}${CYAN}${COMPILE_SUCCESS_RATE}%${NC} ${DIM}(${COMPILE_SUCCESS_COUNT} of ${TOTAL_FILES})${NC}"
+Compilation Rate: ${BOLD}${CYAN}${COMPILE_SUCCESS_RATE}%${NC} ${DIM}(${COMPILE_SUCCESS_COUNT} of ${TOTAL_FILES})${NC}"
 
         if $VERBOSE; then
             STATS_BLOCK+="\n  ${DIM}-${NC} ${GREEN}Compiled:${NC} ${COMPILE_SUCCESS_COUNT}\n  ${DIM}-${NC} ${RED}Errors:${NC}   ${COMPILE_ERRORS}"
@@ -820,7 +824,7 @@ Compilation Success Rate: ${BOLD}${CYAN}${COMPILE_SUCCESS_RATE}%${NC} ${DIM}(${C
 Test Cases:   ${STAT_TC_TOTAL} total | ${GREEN}${STAT_TC_PASS} passed${NC} | ${RED}${STAT_TC_FAIL} failed${NC} | ${DIM}${STAT_TC_SKIP} skipped${NC}
 Assertions:   ${TOTAL_AS} total | ${GREEN}${STAT_AS_PASS} passed${NC} | ${RED}${STAT_AS_FAIL} failed${NC}
 Success Rate: ${BOLD}${CYAN}${SUCCESS_RATE}%${NC}
-────────────────────────────────"领域:
+────────────────────────────────"
 
         # if [[ ${#SLOWEST_TESTS[@]} -gt 0 ]]; then
         #     STATS_BLOCK+="\n────────────────────────────────\n${BOLD}🐌 Slowest Tests${NC}"
