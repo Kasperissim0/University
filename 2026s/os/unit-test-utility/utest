@@ -781,9 +781,15 @@ if ! $HIDE_SUMMARY; then
         fi
 
         # 3. Global Stats (Centered as a unified block)
-        COMPILE_SUCCESS=0
+        MISSING_COUNT=0
+        if $STRICT_EXEC; then
+            MISSING_COUNT=${#MISSING_BINARIES[@]}
+        fi
+        
+        COMPILE_SUCCESS_COUNT=$(( TOTAL_FILES - COMPILE_ERRORS - MISSING_COUNT ))
+        COMPILE_SUCCESS_RATE=0
         if [ $TOTAL_FILES -gt 0 ]; then
-            COMPILE_SUCCESS=$(( ( (TOTAL_FILES - COMPILE_ERRORS) * 100) / TOTAL_FILES ))
+            COMPILE_SUCCESS_RATE=$(( (COMPILE_SUCCESS_COUNT * 100) / TOTAL_FILES ))
         fi
 
         SUCCESS_RATE=0
@@ -801,11 +807,20 @@ if ! $HIDE_SUMMARY; then
         # Build the block to display
         STATS_BLOCK="${BOLD}📊 Global Stats${NC}
 ────────────────────────────────
-Compilation:  ${BOLD}${CYAN}${COMPILE_SUCCESS}%${NC}
+Compilation Success Rate: ${BOLD}${CYAN}${COMPILE_SUCCESS_RATE}%${NC} ${DIM}(${COMPILE_SUCCESS_COUNT} of ${TOTAL_FILES})${NC}"
+
+        if $VERBOSE; then
+            STATS_BLOCK+="\n  ${DIM}-${NC} ${GREEN}Compiled:${NC} ${COMPILE_SUCCESS_COUNT}\n  ${DIM}-${NC} ${RED}Errors:${NC}   ${COMPILE_ERRORS}"
+            if [[ $MISSING_COUNT -gt 0 ]]; then
+                STATS_BLOCK+="\n  ${DIM}-${NC} ${YELLOW}Missing:${NC}  ${MISSING_COUNT}"
+            fi
+        fi
+
+        STATS_BLOCK+="\n
 Test Cases:   ${STAT_TC_TOTAL} total | ${GREEN}${STAT_TC_PASS} passed${NC} | ${RED}${STAT_TC_FAIL} failed${NC} | ${DIM}${STAT_TC_SKIP} skipped${NC}
 Assertions:   ${TOTAL_AS} total | ${GREEN}${STAT_AS_PASS} passed${NC} | ${RED}${STAT_AS_FAIL} failed${NC}
 Success Rate: ${BOLD}${CYAN}${SUCCESS_RATE}%${NC}
-────────────────────────────────"
+────────────────────────────────"领域:
 
         # if [[ ${#SLOWEST_TESTS[@]} -gt 0 ]]; then
         #     STATS_BLOCK+="\n────────────────────────────────\n${BOLD}🐌 Slowest Tests${NC}"
@@ -873,7 +888,7 @@ if $JSON_OUTPUT; then
     echo "    \"failed\": [$(json_list "${FAILED_LIST[@]}")]"
     echo "  },"
     echo "  \"stats\": {"
-    echo "    \"compilation_success\": ${COMPILE_SUCCESS:-0},"
+    echo "    \"compilation\": { \"total\": ${TOTAL_FILES:-0}, \"success\": ${COMPILE_SUCCESS_COUNT:-0}, \"errors\": ${COMPILE_ERRORS:-0}, \"missing\": ${MISSING_COUNT:-0}, \"rate\": ${COMPILE_SUCCESS_RATE:-0} },"
     echo "    \"test_cases\": { \"total\": ${STAT_TC_TOTAL:-0}, \"passed\": ${STAT_TC_PASS:-0}, \"failed\": ${STAT_TC_FAIL:-0}, \"skipped\": ${STAT_TC_SKIP:-0} },"
     echo "    \"assertions\": { \"total\": $((STAT_AS_PASS + STAT_AS_FAIL)), \"passed\": ${STAT_AS_PASS:-0}, \"failed\": ${STAT_AS_FAIL:-0} },"
     echo "    \"success_rate\": ${SUCCESS_RATE:-0},"
