@@ -1,0 +1,1 @@
+./bank_main 2> my_error_stream.txt > my_output.txt

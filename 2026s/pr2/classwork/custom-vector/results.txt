@@ -1,7 +1,0 @@
-❯ ut -osqri 6, 7
-  📊 Global Stats
-  ────────────────────────────────
-  Test Cases:   111 total | 111 passed | 0 failed | 0 skipped
-  Assertions:   543 total | 543 passed | 0 failed
-  Success Rate: 100%
-  ────────────────────────────────

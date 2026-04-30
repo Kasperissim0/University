@@ -1,0 +1,2 @@
+for f in *.cpp; do echo -n "Title For $f Executable: "; read title; clang++ $f -o exec/$title; done
+for f in exec/*; do ./$f; done

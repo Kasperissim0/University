@@ -1,0 +1,78 @@
+constructors
+bank-owner-empty true
+bank-empty true
+customer-empty true
+standard-empty-name true
+standard-dispo-zero true
+standard-dispo-10000 true
+standard-balance-too-low true
+standard-null-owner true
+special-fee-zero true
+customer-empty-2 true
+customer-id-sequential true
+standard-balance-too-low-2 true
+account-id-sequential true
+account-type Standard Special
+accounts
+standard-output Standard
+special-output Special, 25
+family-id-match true
+family-owner-count-1 1
+family-share-direct true
+bob-account-added 1
+family-share-direct-duplicate false
+family-owner-count-2 2
+vip-share-temp true
+vip-owner-count-before-reset 2
+vip-owner-count-after-reset 1
+family-remove-missing false
+family-remove-bob true
+bob-account-removed 0
+family-remove-last-owner false
+family-withdraw-zero true
+family-withdraw-50 50
+family-withdraw-too-much true
+family-deposit-zero true
+family-deposit-25 75
+vip-withdraw-negative true
+vip-withdraw-100 875
+family-print [Family, Standard, 75, 500, {[Alice, 950]}, 1]
+vip-print [VIP, Special, 25, 875, 300, {[Alice, 950]}, 1]
+customers
+alice-name Alice
+alice-id-positive true
+alice-account-count 2
+alice-total-balance-before-share 950
+customer-share true
+customer-share-duplicate false
+customer-share-missing false
+carol-account-added 1
+customer-transfer-same-id true
+customer-transfer-ok true
+customer-transfer-missing-source false
+customer-transfer-missing-target false
+customer-transfer-negative false
+customer-transfer-too-much false
+alice-total-balance-after-transfer 950
+carol-total-balance 1075
+alice-print [Alice, {[Family, 1], [VIP, 2]}, 950]
+carol-print [Carol, {[VIP, 2]}, 1075]
+banks
+bank-customer-count-0 0
+bank-customer-count-2 2
+bank-print [Central Bank, {[Dora, {[Dora Standard, 1]}, 50], [Evan, {[Evan Special, 1]}, 400]}]
+bank-owners
+owner-get-customers-no-bank true
+owner-create-customer-no-bank true
+owner-a-create-bank true
+owner-a-create-bank-again false
+owner-a-customer-count 1
+owner-b-create-bank true
+owner-a-transfer-bank-to-owner-b false
+owner-a-transfer-bank-to-owner-c true
+owner-b-transfer-bank-to-owner-c false
+owner-c-customer-count 1
+owner-c-transfer-bank-to-self false
+owner-a-print [Owner A]
+owner-b-print [Owner B, [Bank B, {}]]
+owner-c-print [Owner C, [Bank A, {[Fred, {[Fred Standard, 1]}, 20]}]]

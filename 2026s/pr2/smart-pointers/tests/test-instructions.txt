@@ -1,0 +1,9 @@
+Um Dateien zum Vergleich des Outputs zu bekommen können sie Ihr Programm wie folgt ausführen.
+
+./bank_main 2> my_error_stream.txt > my_output.txt
+
+Sie können den Inhalt dann mit Programmen vergleichen, z.b. vimdiff auf dem almighty
+
+vimdiff my_output.txt bank_unit_output_txt
+
+Hinweis: Mit ":q!" beenden sie vim. 
