@@ -1,7 +1,7 @@
-#include "bank.h"
-#include "bank_account.h"
-#include "bank_customer.h"
-#include "bank_owner.h"
+#include "bank.hpp"
+#include "bank_account.hpp"
+#include "bank_customer.hpp"
+#include "bank_owner.hpp"
 
 #include <iostream>
 #include <memory>
@@ -142,8 +142,10 @@ int main() {
     Bank central{"Central Bank"};
     std::cout << "bank-customer-count-0 " << central.get_customers().size() << "\n";
     central.create_customer("Dora", "Dora Standard", 200, 50, Account_Type::STANDARD);
-    central.create_customer("Evan", "Evan Special", 300, 400,
-                            Account_Type::SPECIAL, 10);
+    central.create_customer("Evan", "Evan Special", 300, 400, Account_Type::SPECIAL, 10);
+    expect_throw("bank-create-customer-empty-account-name", [&] { central.create_customer("Dora", "", 200, 50, Account_Type::STANDARD); });
+    expect_throw("bank-create-customer-illegal-fee-value", [&] { central.create_customer("Evan", "Evan Special", 300, 400, Account_Type::SPECIAL, -10); });
+    expect_throw("bank-create-customer-empty-customer-name", [&] { central.create_customer("", "Dora_Standard", 200, 50, Account_Type::STANDARD); });
     std::cout << "bank-customer-count-2 " << central.get_customers().size() << "\n";
     std::cout << "bank-print " << central << "\n";
     std::cerr << "ERR bank " << central << "\n";

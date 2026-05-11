@@ -1,17 +1,12 @@
-//§ Contents
-  #ifndef BANK_ACCOUNT
-  #define BANK_ACCOUNT
-
+#ifndef BANK_ACCOUNT
+#define BANK_ACCOUNT
   //§ Utilities
     //§ Includes
       #include <cstddef>
-      #include <format>
       #include <ostream>
-      #include <stdexcept>
       #include <string>
       #include <map>
       #include <memory>
-      #include <utility>
     //.
     //§ Macros
       #ifndef CUSTOM_MACROS
@@ -39,6 +34,20 @@
               return this->MEMBER; \
             }
         //.
+        //§ Editors
+          #define EDITOR(MEMBER) \
+            [[nodiscard]] RETURN_QUALIFIERS edit_ ## MEMBER() GETTER_QUALIFIERS{ \
+              return this->MEMBER; \
+            }
+          #define EDITOR_CUSTOM(MEMBER, NAME) \
+            [[nodiscard]] RETURN_QUALIFIERS edit_ ## NAME() GETTER_QUALIFIERS{ \
+              return this->MEMBER; \
+            }
+          #define EDITOR_FULLY_CUSTOM(MEMBER, NAME) \
+            [[nodiscard]] RETURN_QUALIFIERS NAME() GETTER_QUALIFIERS{ \
+              return this->MEMBER; \
+            }
+        //.
         //§ Setters
           #define SETTER(MEMBER) \
             RETURN_QUALIFIERS set_ ## MEMBER(ARG newValue) OPTIMIZE(MEMBER, newValue) { \
@@ -55,6 +64,7 @@
         //.
         #define ACCESS(MEMBER) \
           GETTER(MEMBER) \
+          EDITOR(MEMBER) \
           SETTER(MEMBER) \
       //.
       #endif
@@ -62,16 +72,11 @@
     //§ Helpers
       class Customer;
       enum class Account_Type : unsigned char { STANDARD, SPECIAL };
-      constexpr std::string enumToString (const Account_Type &type) {
-        switch (type) {
-          break; case Account_Type::STANDARD: return "Standard";
-          break; case Account_Type::SPECIAL:  return "Special";
-          break; default: throw std::runtime_error(std::format("Invalid Account Type Passed: {}", static_cast<size_t>(type)));
-        }
-      }
+      constexpr std::string enumToString (const Account_Type &type);
+      std::ostream& operator<<(std::ostream&, const Account_Type&);
     //.
   //.
-  class Account : std::enable_shared_from_this<Account> {
+  class Account : public std::enable_shared_from_this<Account> {
       //§ Class Variables
         protected:
           static unsigned nextIdentifier;
@@ -84,82 +89,43 @@
       //.
     public:
       //§ (Con/De)structors
-        Account(const std::string &name, const int &dispo, const int &balance, const std::shared_ptr<Customer> &owner) : identifier{nextIdentifier++} {
-          if (name.empty()) 
-            throw std::runtime_error(std::format("Name Cannot Be Empty"));
-          if (dispo < 0 or dispo > 10'000) 
-            throw std::runtime_error(std::format("Dispo Not Within Valid Range: {}", dispo));
-          if (balance < -dispo) 
-            throw std::runtime_error(std::format("Balance ({}) Is Smaller Than Dispo ({}): ", balance, dispo));
-
-          this->name = name;
-          this->dispo = dispo;
-          this->owners[identifier] = owner; // std::weak_ptr<Customer>(owner);
-        }
-        virtual ~Account();
+        Account(const std::string&, const int&, const int&, const std::shared_ptr<Customer>&);
+        virtual ~Account(); // = 0;
       //.
       //§ Getters
-        [[nodiscard]] auto owner_count() const noexcept {
-          return static_cast<unsigned>(this->owners.size());
-        }
+        [[nodiscard]] auto owner_count() const noexcept -> size_t;
         GETTER_CUSTOM(identifier, id)
-        GETTER(balance)
-        GETTER(dispo)
-        GETTER(name)
-        GETTER(owners)
+        GETTER(balance) GETTER(dispo) 
+        GETTER(name) GETTER(owners)
         auto getPtr() {
             return shared_from_this();
-          }
+        }
         auto getPtr() const {
           return shared_from_this();
         }
       //.
-      [[nodiscard]] virtual std::string additional_output() const = 0;
-      virtual int withdraw(const int &amount) {
-        if (amount <= 0) throw std::runtime_error(std::format("Attempting To Withdraw Invalid Amount: {}", amount));
-        if ((this->balance - amount) >= (-(this->dispo))) 
-          this->balance -= amount;
-        return this->balance;
-      }
-      int deposit(const int &amount) {
-        if (amount <= 0) throw std::runtime_error(std::format("Attempting To Deposit Invalid Amount: {}", amount));
-        this->balance += amount;
-        return this->balance;
-      }
-      bool share_account(const std::shared_ptr<Customer>&) noexcept;
-      bool remove_owner(const unsigned &ownerID) noexcept {
-        return (!this->owners.empty() and (static_cast<bool>(this->owners.erase(ownerID))));
-      }
+      //§ Methods
+        [[nodiscard]] virtual std::string additional_output() const = 0;
+        virtual int withdraw(const int&);
+        int deposit(const int&);
+        bool share_account(std::shared_ptr<Customer>&) noexcept;
+        bool remove_owner(const unsigned&);
+      //.
   };
   //§ Derived
     struct Standard_Account : public Account {
       using Account::Account;
-
-      [[nodiscard]] std::string additional_output() const override {
-        return "Standard";
-      }
+      ~Standard_Account() override = default;
+      [[nodiscard]] std::string additional_output() const override;
     };
     class Special_Account : public Account {
         int fee = 0;
       public:
-        Special_Account(const std::string &name, const int &dispo, const int &balance, const std::shared_ptr<Customer> &owner, const int &fee) 
-          : Account(name, dispo, balance, owner) {
-          if (fee <= 0)
-            throw std::runtime_error(std::format("Fee Cannot Be Negative Or Zero: {}", fee));
-          this->fee = fee;
-        }
-
-        [[nodiscard]] std::string additional_output() const override {
-          return std::format("Standard, {}", fee);
-        }
-        int withdraw(const int &amount) override {  if (amount <= 0) throw std::runtime_error(std::format("Attempting To Withdraw Invalid Amount: {}", amount));
-          const auto totalWithdrawalAmount = amount + this->fee;
-          if ((this->balance - totalWithdrawalAmount) >= (-(this->dispo))) 
-            this->balance -= totalWithdrawalAmount;
-          return this->balance;
-      }
+      Special_Account(const std::string&, const int&, const int&, const std::shared_ptr<Customer>&, const int&);
+      ~Special_Account() override = default;
+      [[nodiscard]] std::string additional_output() const override;
+      int withdraw(const int&) override;
     };
   //.
-  std::ostream& operator<<(std::ostream& /*output*/, const Account& /*account*/);
-  #endif
-//.
+  std::ostream& operator<<(std::ostream&, const Account&);
+#endif

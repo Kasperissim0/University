@@ -85,13 +85,25 @@
           GETTER(name)
           GETTER(bank)
         //.
+        const auto& get_customers() const {
+          if (!this->bank) throw std::runtime_error("No Bank Present");
+          return this->bank->get_customers();
+        }
         void create_customer(const std::string &name, const std::string &accountName, const int &dispo, const int &balance, const Account_Type &type = Account_Type::STANDARD, const int &fee = 0) {
           if (!bank) throw std::runtime_error("No Bank Avaliable");
           this->bank->create_customer(name, accountName, dispo, balance, type, fee);
         }
+        bool create_bank(const std::string &name) {
+          return (!(this->bank) and (this->bank = std::make_unique<Bank>(name)));
+        }
+        bool transfer_bank(Bank_Owner &target) {
+          return ((this->bank and !target.bank) and (static_cast<bool>(target.bank = std::move(this->bank))));
+        }
   };
   std::ostream& operator<<(std::ostream &output, const  Bank_Owner &owner) {
-    return output << "[" << owner.get_name() << ", " << owner.get_bank() << " ]";
+                          output << "[" << owner.get_name();
+    if (owner.get_bank()) output << ", " << *owner.get_bank();
+    return                output << "]";
 }
   #endif
 //.

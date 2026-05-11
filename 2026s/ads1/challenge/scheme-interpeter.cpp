@@ -1,15 +1,20 @@
 //§ Requisites
-  #include <cstddef>
-  #include <exception>
-  #include <iostream>
-  #include <memory>
-  #include <cctype>
-  #include <string>
-  #include <vector>
-  #include <stdexcept>
-  #include <format>
-  #include <cassert>
-  using namespace std;
+    //§ Includes
+        #include <cstddef>
+        #include <exception>
+        #include <iostream>
+        #include <memory>
+        #include <cctype>
+        #include <string>
+        #include <vector>
+        #include <stdexcept>
+        #include <format>
+        #include <cassert>
+    //.
+    //§ Aliases
+        using namespace std;
+        using st = size_t;
+    //.
 //.
 
 //* --- Abstract Syntax Tree ---
@@ -55,7 +60,7 @@ auto tokenizeString(const string &input) {
                 tokens.push_back(current);
                 current.clear();
             }
-        } else if (character == '(' || character == ')') {
+        } else if (character == '(' or character == ')') {
             if (!current.empty()) {
                 tokens.push_back(current);
                 current.clear();
@@ -70,7 +75,7 @@ auto tokenizeString(const string &input) {
 }
 
 //* --- Parser ---
-shared_ptr<ExpressionNode> parseExpression(const vector<string> &tokens, size_t &position) { 
+shared_ptr<ExpressionNode> parseExpression(const vector<string> &tokens, st &position) { 
     if (position >= tokens.size()) throw runtime_error("Unexpected end of input");
     const string currentToken = tokens.at(position++);
 
@@ -78,7 +83,7 @@ shared_ptr<ExpressionNode> parseExpression(const vector<string> &tokens, size_t 
         vector<shared_ptr<ExpressionNode>> arguments;
         const auto operation = tokens.at(position++);
 
-        while (position < tokens.size() && tokens.at(position) != ")") {
+        while (position < tokens.size() and tokens.at(position) != ")") {
             arguments.push_back(parseExpression(tokens, position));
         }
         position++; //? why is this necesary
@@ -99,15 +104,15 @@ auto evaluateExpression(const shared_ptr<ExpressionNode> &node) {
         const auto operationName = node->functions->name;
         int result = evaluateExpression(node->arguments.at(0));
 
-        for (size_t i = 1, size = node->arguments.size(); i < size; ++i) {
+        for (st i = 1, size = node->arguments.size(); i < size; ++i) {
             const auto value = evaluateExpression(node->arguments.at(i));
             switch (operationName) {
-                break; case '+': result += value;
-                break; case '-': result -= value;
-                break; case '*': result *= value;
+                break; case '+':            result += value;
+                break; case '-':            result -= value;
+                break; case '*':            result *= value;
                 break; case '/': if (value) result /= value;
-                                 else throw runtime_error("Division by zero");
-                break; default: throw runtime_error(format("Unsupported Operator Detected: {}", operationName));
+                                 else       throw runtime_error("Division by zero");
+                break; default :            throw runtime_error(format("Unsupported Operator Detected: {}", operationName));
             }
         }
         return result;
@@ -118,23 +123,18 @@ auto evaluateExpression(const shared_ptr<ExpressionNode> &node) {
 
 //* --- Loop ---
 int main() {
-    string line;
+    const auto explain = [&](){ 
+        cout << "Micro Lisp. Type 'q' to quit." << endl;
+    }; string input; explain();
 
-    cout << "Micro Lisp. Type 'q' to quit.\n";
-    while (true) {
-        cout << ">> ";
-        if (!getline(cin, line)) break;
-        if ((line == "exit" || line == "q")) break;
-        if (line.empty()) continue;
+    while (cout << ">> " and getline(cin, input)) {
+        if ((input == "exit" or input == "q")) break;
+        if (input == "?" or input == "help")   explain(), input.clear();
+        if (input.empty())                     continue;
 
         try {
-            size_t position = 0;
-            // auto parsedTokens = tokenizeString(line);
-            // auto currentNode = parseExpression(parsedTokens, position);
-            // auto result = evaluateExpression(currentNode);
-
-            // cout << result << "\n";
-            cout << evaluateExpression(parseExpression(tokenizeString(line), position)) << endl;
+            st position = 0;
+            cout << evaluateExpression(parseExpression(tokenizeString(input), position)) << endl;
         } catch (exception& error) {
             cout << "Error: " << error.what() << "\n";
         }

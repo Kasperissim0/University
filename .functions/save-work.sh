@@ -16,14 +16,11 @@ NC='\033[0m'
 # --- Variables ---
 exit_early=false
 
-# --- Get commit message (optional argument or prompt) ---
-if [ "$#" -eq 0 ]; then
-    echo -e "${CYAN}No commit message provided.${NC}"
-    read -p "Enter default commit message: " msg
-    [ -z "$msg" ] && { echo "Error: Commit message cannot be empty." >&2; exit 1; }
-elif [ "$#" -eq 1 ]; then
+# --- Get commit message (optional argument) ---
+msg=""
+if [ "$#" -eq 1 ]; then
     msg="$1"
-else
+elif [ "$#" -gt 1 ]; then
     echo "Error: Too many arguments" >&2
     echo "Usage: $0 [\"commit message\"]" >&2
     exit 1
@@ -66,8 +63,24 @@ process_submodule() {
     if git diff --staged --quiet 2>/dev/null; then
         echo "  -> Nothing to commit."
     else
-        echo -e "  Default message: ${GREEN}\"$msg\"${NC}"
-        read -p "  [ENTER] default, [s]kip, [q]uit, or enter message: " submodule_msg
+        echo -e "  ${CYAN}Changes to be committed:${NC}"
+        git -c color.status=always status -s | sed 's/^/    /'
+        echo ""
+        git -c color.diff=always diff --cached --summary | sed 's/^/    /'
+        echo ""
+
+        if [ -n "$msg" ]; then
+            echo -e "  Default message: ${GREEN}\"$msg\"${NC}"
+            read -p "  [ENTER] default, [s]kip, [q]uit, or enter message: " submodule_msg
+            [ -z "$submodule_msg" ] && submodule_msg="$msg"
+        else
+            read -p "  Enter commit message ([s]kip, [q]uit): " submodule_msg
+            if [ -z "$submodule_msg" ]; then
+                echo -e "  -> ${RED}Error: Commit message cannot be empty.${NC}"
+                popd >/dev/null
+                return 1
+            fi
+        fi
         
         case "$submodule_msg" in
             s|skip)
@@ -79,9 +92,6 @@ process_submodule() {
                 echo -e "  -> ${RED}Quitting submodule processing...${NC}"
                 popd >/dev/null
                 return 2 # Special code for early exit
-                ;;
-            "")
-                submodule_msg="$msg"
                 ;;
         esac
 
@@ -130,9 +140,23 @@ commit_main_repo() {
     if git diff --staged --quiet; then
         echo "Main repo: Nothing to commit."
     else
-        echo -e "  Default message: ${GREEN}\"$msg\"${NC}"
-        read -p "  Press ENTER for default, or enter new message: " main_msg
-        [ -z "$main_msg" ] && main_msg="$msg"
+        echo -e "  ${CYAN}Changes to be committed:${NC}"
+        git -c color.status=always status -s | sed 's/^/    /'
+        echo ""
+        git -c color.diff=always diff --cached --summary | sed 's/^/    /'
+        echo ""
+
+        if [ -n "$msg" ]; then
+            echo -e "  Default message: ${GREEN}\"$msg\"${NC}"
+            read -p "  Press ENTER for default, or enter new message: " main_msg
+            [ -z "$main_msg" ] && main_msg="$msg"
+        else
+            read -p "  Enter commit message for main repository: " main_msg
+            if [ -z "$main_msg" ]; then
+                echo -e "  ${RED}Error: Commit message cannot be empty.${NC}"
+                exit 1
+            fi
+        fi
         
         if git commit -m "$main_msg"; then
             echo "Main repo: Committed with message \"$main_msg\""

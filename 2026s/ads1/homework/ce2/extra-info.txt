@@ -1,0 +1,24 @@
+From: https://mail.google.com/mail/u/0/#inbox/FMfcgzQgLjRrTSXJhFDvcQdxKKkzkwJF
+
+
+sagar.kale@univie.ac.at
+Wed, May 6, 2:45 AM (4 days ago)
+to sagar.kale
+
+Dear Students,
+
+I want to let you know about a conceptual issue in the testing logic for Coding Exercise 2. 
+This issue does not affect your work if you follow the instructions in the PDF and focus on getting all provided tests to pass. 
+Please proceed as usual.
+
+For those interested in the details: the testing code includes some duplicate insertions. 
+In a proper hash table implementation, duplicates should not be allowed! 
+There are several ways to prevent this. One approach is to search the table for a key before inserting and only insert if the key is not present. 
+Another is to perform this check inside the insert function. 
+The provided template does not include a search function, so you are not required to implement one. 
+The duplicates are the result of a bug in the test generator script.
+
+In short, please ignore this issue. The main goal of the exercise is to demonstrate that hash tables need to be dynamic.
+
+Best regards,
+Sagar Kale.

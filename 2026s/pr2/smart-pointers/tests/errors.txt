@@ -1,0 +1,4 @@
+ERR account [Family, Standard, 75, 500, {[Alice, 950]}, 1]
+ERR customer [Alice, {[Family, 1], [VIP, 1]}, 950]
+ERR bank [Central Bank, {[Dora, {[Dora Standard, 1]}, 50], [Evan, {[Evan Special, 1]}, 400]}]
+ERR owner [Owner C, [Bank A, {[Fred, {[Fred Standard, 1]}, 20]}]]

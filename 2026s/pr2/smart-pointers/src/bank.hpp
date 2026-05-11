@@ -17,7 +17,6 @@
       //§ Project
         #include "bank_account.hpp"
         #include "bank_customer.hpp"
-        #include "bank_customer.cpp"
       //.
     //.
     //§ Macros
@@ -67,7 +66,7 @@
       #endif
     //.
   //.
-  class Bank { // : std::enable_shared_from_this<Customer> {
+  class Bank {
       //§ Class Variables
         std::string name;
         std::map<unsigned, std::shared_ptr<Customer>> customers;
@@ -85,16 +84,18 @@
           GETTER(customers)
         //.
         void create_customer(const std::string &name, const std::string &accountName, const int &dispo, const int &balance, const Account_Type &type = Account_Type::STANDARD, const int &fee = 0) {
-          auto ptr = std::make_unique<Customer>(name);
-          this->customers.at(ptr->create_account(accountName, dispo, balance, type, fee)) = std::move(ptr);
+          auto ptr = std::make_shared<Customer>(name); ptr->create_account(accountName, dispo, balance, type, fee);
+          this->customers.insert_or_assign(ptr->get_id(), std::move(ptr));
         }
   };
   std::ostream& operator<<(std::ostream &output, const Bank &bank) {
     const auto formatCustomerList = [&](){
-      std::string list;
-      for (const auto &[customerID, customer] : bank.get_customers())
-        list += customer->print() + ", "; // TODO do not give out last comma
-      return list;
+      std::string list; bool addComma = false;
+      for (const auto &[customerID, customer] : bank.get_customers()) {
+        if (addComma) list += ", ";
+        list += customer->output();
+        if (!addComma) addComma = true;
+      } return list;
     };
     return output << std::format("[{}, {{{}}}]", bank.get_name(), formatCustomerList());
 }

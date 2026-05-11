@@ -51,8 +51,8 @@ vector<string> splitExpectedTests(const string &content) {
 
 int main() {
 
-    ifstream testsFile("tests.txt");
-    ifstream expectedFile("expected_output.txt");
+    ifstream testsFile("/Users/kasperissim0/Code/Archive/University/2026s/ads1/homework/ce1/tests.txt");
+    ifstream expectedFile("/Users/kasperissim0/Code/Archive/University/2026s/ads1/homework/ce1/expected_output.txt");
     if (!testsFile.is_open() || !expectedFile.is_open()) {
         cerr << "Error: Could not open tests.txt or expected_output.txt\n";
         return 1;
