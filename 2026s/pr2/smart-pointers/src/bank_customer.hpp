@@ -74,7 +74,6 @@
           //.
           //§ Getters
             [[nodiscard]] int total_balance()  const noexcept;
-            [[nodiscard]] std::string print()  const noexcept;
             [[nodiscard]] std::string output() const noexcept;
             GETTER_CUSTOM(identifier, id)
             SETTER_CUSTOM(identifier, id)

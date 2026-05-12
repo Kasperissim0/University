@@ -1,24 +1,16 @@
-//§ Contents
-  #ifndef BANK_OWNER
-  #define BANK_OWNER
+#ifndef BANK_OWNER
+#define BANK_OWNER
 
   //§ Utilities
     //§ Includes
       //§ C++
         #include <cstddef>
-        #include <format>
         #include <ostream>
-        #include <stdexcept>
         #include <string>
-        #include <map>
         #include <memory>
-        #include <utility>
       //.
       //§ Project
         #include "bank.hpp"
-        // #include "bank_account.hpp"
-        #include "bank_customer.hpp"
-        // #include "bank_customer.cpp"
       //.
     //.
     //§ Macros
@@ -68,42 +60,23 @@
       #endif
     //.
   //.
-  class Bank_Owner { // : std::enable_shared_from_this<Customer> {
+  class Bank_Owner {
       //§ Class Variables
         std::string           name;
         std::unique_ptr<Bank> bank;
       //.
       public:
         //§ (Con/De)structors
-          explicit Bank_Owner(const std::string &name) {
-            if (name.empty()) 
-              throw std::runtime_error(std::format("Name Cannot Be Empty"));
-            this->name = name;
-          }
+          explicit Bank_Owner(const std::string&);
         //.
         //§ Getters
-          GETTER(name)
-          GETTER(bank)
+          GETTER(name) GETTER(bank)
+          [[nodiscard]] decltype(bank->get_customers())& get_customers() const;
         //.
-        const auto& get_customers() const {
-          if (!this->bank) throw std::runtime_error("No Bank Present");
-          return this->bank->get_customers();
-        }
-        void create_customer(const std::string &name, const std::string &accountName, const int &dispo, const int &balance, const Account_Type &type = Account_Type::STANDARD, const int &fee = 0) {
-          if (!bank) throw std::runtime_error("No Bank Avaliable");
-          this->bank->create_customer(name, accountName, dispo, balance, type, fee);
-        }
-        bool create_bank(const std::string &name) {
-          return (!(this->bank) and (this->bank = std::make_unique<Bank>(name)));
-        }
-        bool transfer_bank(Bank_Owner &target) {
-          return ((this->bank and !target.bank) and (static_cast<bool>(target.bank = std::move(this->bank))));
-        }
+        void create_customer(const std::string&, const std::string&, const int&, const int&, 
+                             const Account_Type& = Account_Type::STANDARD, const int& = 0);
+        bool create_bank(const std::string&);
+        bool transfer_bank(Bank_Owner&);
   };
-  std::ostream& operator<<(std::ostream &output, const  Bank_Owner &owner) {
-                          output << "[" << owner.get_name();
-    if (owner.get_bank()) output << ", " << *owner.get_bank();
-    return                output << "]";
-}
-  #endif
-//.
+  std::ostream& operator<<(std::ostream&, const Bank_Owner&);
+#endif

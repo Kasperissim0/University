@@ -20,7 +20,7 @@ Account::Account(const std::string &name, const int &dispo, const int &balance, 
   this->balance = balance;
   this->owners[owner->get_id()] = owner; // std::weak_ptr<Customer>(owner);
 } Account::~Account() = default;
-[[nodiscard]] auto Account::owner_count() const noexcept -> size_t {
+auto Account::owner_count() const noexcept -> size_t {
   return std::accumulate(owners.begin(), owners.end(), static_cast<size_t>(0), [&](auto&& sum, const auto& elem) {
     return sum + static_cast<size_t>(elem.second.expired() ? 0 : 1);
   });
@@ -51,10 +51,10 @@ bool Account::remove_owner(const unsigned &ownerID) {
     return true;
   } return false;
 }
-[[nodiscard]] std::string Standard_Account::additional_output() const {
+std::string Standard_Account::additional_output() const {
   return "Standard";
 }
-[[nodiscard]] std::string Special_Account::additional_output() const {
+std::string Special_Account::additional_output() const {
   return std::format("Special, {}", fee);
 }
 Special_Account::Special_Account(const std::string &name, const int &dispo, const int &balance, const std::shared_ptr<Customer> &owner, const int &fee) 
@@ -85,7 +85,7 @@ std::ostream& operator<<(std::ostream &output, const Account &account) {
     for (const auto &[ownerID, ownerPtr] : account.get_owners()) {
       if (auto owner = ownerPtr.lock(); owner) {
         if (!addComma) list += ", ";
-        list += owner->print();
+        list += std::format("[{}, {}]", owner->get_name(), owner->total_balance());
         if (addComma) addComma = false;
       }
     }

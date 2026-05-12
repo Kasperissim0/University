@@ -1,0 +1,3 @@
+const auto oldKeys = get_all_keys();
+    delete[] table; numKeys = 0; table = new LinkedList[tableSize *= 2];
+    for (const auto &key : oldKeys) insert(key);

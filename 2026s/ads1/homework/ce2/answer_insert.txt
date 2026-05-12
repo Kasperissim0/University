@@ -1,0 +1,3 @@
+table[hash(key)].insert(key);
+    if (++numKeys > (2 * tableSize))
+        increase_hash_table_size();

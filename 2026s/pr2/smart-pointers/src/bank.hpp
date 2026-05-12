@@ -1,18 +1,14 @@
-//§ Contents
-  #ifndef BANK
-  #define BANK
+#ifndef BANK
+#define BANK
 
   //§ Utilities
     //§ Includes
       //§ C++
         #include <cstddef>
-        #include <format>
         #include <ostream>
-        #include <stdexcept>
         #include <string>
         #include <map>
         #include <memory>
-        #include <utility>
       //.
       //§ Project
         #include "bank_account.hpp"
@@ -73,31 +69,13 @@
       //.
       public:
         //§ (Con/De)structors
-          explicit Bank(const std::string &name) {
-            if (name.empty()) 
-              throw std::runtime_error(std::format("Name Cannot Be Empty"));
-            this->name = name;
-          }
+          explicit Bank(const std::string&);
         //.
         //§ Getters
-          GETTER(name)
-          GETTER(customers)
+          GETTER(name) GETTER(customers)
         //.
-        void create_customer(const std::string &name, const std::string &accountName, const int &dispo, const int &balance, const Account_Type &type = Account_Type::STANDARD, const int &fee = 0) {
-          auto ptr = std::make_shared<Customer>(name); ptr->create_account(accountName, dispo, balance, type, fee);
-          this->customers.insert_or_assign(ptr->get_id(), std::move(ptr));
-        }
+        void create_customer(const std::string&, const std::string&, const int&, const int&, 
+                             const Account_Type& = Account_Type::STANDARD, const int& = 0);
   };
-  std::ostream& operator<<(std::ostream &output, const Bank &bank) {
-    const auto formatCustomerList = [&](){
-      std::string list; bool addComma = false;
-      for (const auto &[customerID, customer] : bank.get_customers()) {
-        if (addComma) list += ", ";
-        list += customer->output();
-        if (!addComma) addComma = true;
-      } return list;
-    };
-    return output << std::format("[{}, {{{}}}]", bank.get_name(), formatCustomerList());
-}
-  #endif
-//.
+  std::ostream& operator<<(std::ostream&, const Bank&);
+#endif

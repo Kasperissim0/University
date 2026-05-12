@@ -1,0 +1,1 @@
+mkdir -p bin && clang++ -std=c++2b -I. speed-test.cpp -o bin/speed-test && ./bin/speed-test

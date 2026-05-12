@@ -10,16 +10,13 @@ Customer::Customer(const std::string &name) : identifier{nextIdentifier++} {
   if (name.empty()) --nextIdentifier, throw std::runtime_error(std::format("Name Cannot Be Empty"));
   this->name = name;
 }
-[[nodiscard]] int Customer::total_balance() const noexcept {
+int Customer::total_balance() const noexcept {
   return std::accumulate(this->accounts.begin(), this->accounts.end(), 0, [&](auto&& sum, const auto& elem){
     const auto& [id, account] = elem;
     return sum + account->get_balance();
   });
-} // TODO refactor the print/output functions
-[[nodiscard]] auto Customer::print() const noexcept -> std::string {
-  return static_cast<std::string>((std::format("[{}, {}]", this->name, this->total_balance())));
 }
-[[nodiscard]] auto Customer::output() const noexcept -> std::string {
+auto Customer::output() const noexcept -> std::string {
   const auto formatAccountList = [&](){
       std::string list; bool addComma = false;
       for (const auto &[accountID, account] : this->get_accounts()) {
