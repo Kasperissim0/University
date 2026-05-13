@@ -1,13 +1,17 @@
-#include "bank_customer.hpp"
-#include "bank_account.hpp"
-#include <format>
+#include "bank_customer.h"
+#include "bank_account.h"
+#include <string>
 #include <numeric>
 #include <stdexcept>
+
+static void bam() {
+  throw std::runtime_error("oops");
+}
 
 unsigned Customer::nextIdentifier = 0;
 
 Customer::Customer(const std::string &name) : identifier{nextIdentifier++} {
-  if (name.empty()) --nextIdentifier, throw std::runtime_error(std::format("Name Cannot Be Empty"));
+  if (name.empty()) --nextIdentifier, bam();
   this->name = name;
 }
 int Customer::total_balance() const noexcept {
@@ -17,15 +21,16 @@ int Customer::total_balance() const noexcept {
   });
 }
 auto Customer::output() const noexcept -> std::string {
+  const std::string c = ", ";
   const auto formatAccountList = [&](){
       std::string list; bool addComma = false;
       for (const auto &[accountID, account] : this->get_accounts()) {
-        if (addComma) list += ", ";
-        list += std::format("[{}, {}]", account->get_name(), account->owner_count());
+        if (addComma) list += c;
+        list += "[" + account->get_name() + c + std::to_string(account->owner_count()) + "]";
         if (!addComma) addComma = true;
       } return list;
     };
-    return std::format("[{}, {{{}}}, {}]", this->get_name(), formatAccountList(), this->total_balance());
+    return ("[" + this->get_name() + c + "{" + formatAccountList() + "}" + c + std::to_string(this->total_balance()) + "]");
 }
 decltype(Customer::identifier) Customer::create_account(const std::string &accountName, const int &dispo, const int &balance, const Account_Type &type, const int &fee) {
   std::shared_ptr<Account> ptr;
@@ -43,7 +48,7 @@ bool Customer::share_account(const unsigned &accountID, std::shared_ptr<Customer
   return accountIterator->second->share_account(newOwner);
 }
 bool Customer::transfer(const int &amount, const unsigned &sourceID, const std::shared_ptr<Customer> &target, const unsigned &targetID) {
-  if (sourceID == targetID) throw std::runtime_error("Transfer From Account To Itself Makes No Sense");
+  if (sourceID == targetID) bam();
   const auto sourceIterator = this->accounts.find(sourceID);   if (sourceIterator == this->accounts.end())   return false;
   const auto targetIterator = target->accounts.find(targetID); if (targetIterator == target->accounts.end()) return false;
 

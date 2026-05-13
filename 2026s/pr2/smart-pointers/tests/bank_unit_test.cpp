@@ -1,7 +1,7 @@
-#include "bank.hpp"
-#include "bank_account.hpp"
-#include "bank_customer.hpp"
-#include "bank_owner.hpp"
+#include "bank.h"
+#include "bank_account.h"
+#include "bank_customer.h"
+#include "bank_owner.h"
 
 #include <iostream>
 #include <memory>

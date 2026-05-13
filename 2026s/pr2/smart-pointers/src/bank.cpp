@@ -1,10 +1,9 @@
-#include "bank.hpp"
+#include "bank.h"
 #include <stdexcept>
 #include <utility>
-#include <format>
 
 Bank::Bank(const std::string &name) {
-  if (name.empty())  throw std::runtime_error(std::format("Name Cannot Be Empty"));
+  if (name.empty())  throw std::runtime_error("Name Cannot Be Empty");
   this->name = name;
 }
 void Bank::create_customer(const std::string &name, const std::string &accountName, const int &dispo, const int &balance, const Account_Type &type, const int &fee) {
@@ -19,5 +18,5 @@ std::ostream& operator<<(std::ostream &output, const Bank &bank) {
       list += customer->output();
       if (!addComma) addComma = true;
     } return list;
-  }; return output << std::format("[{}, {{{}}}]", bank.get_name(), formatCustomerList());
+  }; return output << "[" << bank.get_name() << ", " << "{" << formatCustomerList() << "}]";
 }

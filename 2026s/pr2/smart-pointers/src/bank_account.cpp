@@ -1,19 +1,23 @@
-#include "bank_account.hpp"
-#include "bank_customer.hpp"
-#include <format>
+#include "bank_account.h"
+#include "bank_customer.h"
+#include <string>
 #include <stdexcept>
 #include <numeric>
+
+static void bam() {
+  throw std::runtime_error("oops");
+}
 
 unsigned Account::nextIdentifier = 0;
 Account::Account(const std::string &name, const int &dispo, const int &balance, const std::shared_ptr<Customer> &owner) : identifier{nextIdentifier++} {
   if (name.empty()) 
-    --nextIdentifier, throw std::runtime_error(std::format("Name Cannot Be Empty"));
+    --nextIdentifier, bam();
   if (dispo <= 0 or dispo >= 10'000) 
-    --nextIdentifier, throw std::runtime_error(std::format("Dispo Not Within Valid Range: {}", dispo));
+    --nextIdentifier, bam();
   if (balance < -dispo) 
-    --nextIdentifier, throw std::runtime_error(std::format("Balance ({}) Is Smaller Than Dispo ({}): ", balance, dispo));
+    --nextIdentifier, bam();
   if (!owner) 
-    --nextIdentifier, throw std::runtime_error(std::format("Owner Cannot Be Empty"));
+    --nextIdentifier, bam();
 
   this->name = name;
   this->dispo = dispo;
@@ -26,12 +30,11 @@ auto Account::owner_count() const noexcept -> size_t {
   });
 }
 int Account::withdraw(const int &amount) {
-  if (amount <= 0 or ((this->balance - amount) < (-(this->dispo)))) 
-    throw std::runtime_error(std::format("Attempting To Withdraw Invalid Amount: {}", amount));
+  if (amount <= 0 or ((this->balance - amount) < (-(this->dispo)))) bam();
   return this->balance -= amount;
 }
 int Account::deposit(const int &amount) {
-  if (amount <= 0) throw std::runtime_error(std::format("Attempting To Deposit Invalid Amount: {}", amount));
+  if (amount <= 0) bam();
   this->balance += amount;
   return this->balance;
 }
@@ -44,7 +47,7 @@ bool Account::share_account(std::shared_ptr<Customer> &newOwner) noexcept {
   return true;
 }
 bool Account::remove_owner(const unsigned &ownerID) {
-  if (!(this->owners.contains(ownerID)) or (this->owners.size() == 1)) return false;
+  if ((this->owners.find(ownerID) == this->owners.end()) or (this->owners.size() == 1)) return false;
   if (auto customer = this->owners.at(ownerID).lock(); customer) {
     customer->get_accounts().erase(this->identifier);
     this->owners.erase(ownerID);
@@ -55,43 +58,46 @@ std::string Standard_Account::additional_output() const {
   return "Standard";
 }
 std::string Special_Account::additional_output() const {
-  return std::format("Special, {}", fee);
+  return ("Special, " + std::to_string(fee));;
 }
 Special_Account::Special_Account(const std::string &name, const int &dispo, const int &balance, const std::shared_ptr<Customer> &owner, const int &fee) 
   : Account(name, dispo, balance, owner) {
-  if (fee <= 0)
-    throw std::runtime_error(std::format("Fee Cannot Be Negative Or Zero: {}", fee));
+  if (fee <= 0) bam();
   this->fee = fee;
 }
 int Special_Account::withdraw(const int &amount) {
   const auto totalWithdrawalAmount = amount + this->fee;
-  if ((this->balance - totalWithdrawalAmount) < (-(this->dispo)) or amount <= 0) 
-    throw std::runtime_error(std::format("Attempting To Withdraw Invalid Amount: {}", amount));
+  if ((this->balance - totalWithdrawalAmount) < (-(this->dispo)) or amount <= 0) bam();
   return this->balance -= totalWithdrawalAmount;
 }
-constexpr std::string enumToString (const Account_Type &type) {
+// std::string enumToString (const Account_Type &type) {
+//   switch (type) {
+//     break; case Account_Type::STANDARD: return "Standard";
+//     break; case Account_Type::SPECIAL:  return "Special";
+//     break; default: bam();
+//   }
+// }
+std::ostream& operator<<(std::ostream& output, const Account_Type &type) {
   switch (type) {
-    break; case Account_Type::STANDARD: return "Standard";
-    break; case Account_Type::SPECIAL:  return "Special";
-    break; default: throw std::runtime_error(std::format("Invalid Account Type Passed: {}", static_cast<size_t>(type)));
+    break; case Account_Type::STANDARD: return output << "Standard";
+    break; case Account_Type::SPECIAL:  return output << "Special";
+    break; default: bam();
   }
 }
-std::ostream& operator<<(std::ostream& output, const Account_Type &type) {
-  return output << enumToString(type);
-}
 std::ostream& operator<<(std::ostream &output, const Account &account) {
+  const std::string c = ", ";
   const auto formatOwnerList = [&](){
     std::string list; bool addComma = true;
     for (const auto &[ownerID, ownerPtr] : account.get_owners()) {
       if (auto owner = ownerPtr.lock(); owner) {
-        if (!addComma) list += ", ";
-        list += std::format("[{}, {}]", owner->get_name(), owner->total_balance());
+        if (!addComma) list += c;
+        list += "[" + owner->get_name() + c + std::to_string(owner->total_balance()) + "]";
         if (addComma) addComma = false;
       }
     }
     return list;
   };
-  return output << std::format("[{}, {}, {}, {}, {{{}}}, {}]", account.get_name(), account.additional_output(), 
-                                                                    account.get_balance(), account.get_dispo(), 
-                                                                    formatOwnerList(), account.owner_count());
+  return output << "[" << account.get_name() << c << account.additional_output() << c 
+                << account.get_balance() << c  << account.get_dispo() << c 
+                << "{" << formatOwnerList() << "}" << c  << account.owner_count() << "]";
 }
