@@ -86,16 +86,16 @@ st max_non_overlapping_intervals(vector<interval> &intervals) {
   } return --amount;
 }
 int main(int n, char** args) { // output: 775802780778801797805801800799
-  // if ((n - 1) % 2 == 0 and (n - 1) != 0) { // Testing out with manual interval inputs
-  //   vector<interval> intervals;
-  //   for (st i = 1; i < n; ++i)
-  //     intervals.emplace_back(stoul(args[i]), stoul(args[++i])); // should probably wrap in try/catch blocks ...
-  //   cout << "Amount: " << max_non_overlapping_intervals(intervals) << endl;
-  // }
-  // else {
-    ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-3/input.txt"));
+  if ((n - 1) % 2 == 0 and (n - 1) != 0) { // Testing out with manual interval inputs
+    vector<interval> intervals;
+    for (st i = 1; i < n; ++i)
+      intervals.emplace_back(stoul(args[i]), stoul(args[++i])); // should probably wrap in try/catch blocks ...
+    cout << "Amount: " << max_non_overlapping_intervals(intervals) << endl;
+  }
+  else {
+    ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-3/input.txt")); if (!dataSource.is_open()) return 1;
     st amountOfTests { 0 }; dataSource >> amountOfTests; // if this is meant to be tested, then the path for the input file (obviously) needs to be changed 
-                                                        // currentInterval couldn't get it to work with relative paths for some reason
+                                                        // i couldn't get it to work with relative paths for some reason
     while (amountOfTests--) {
       st amountOfIntervals { 0 }; dataSource >> amountOfIntervals;
       vector<interval> intervals(amountOfIntervals);
@@ -104,6 +104,6 @@ int main(int n, char** args) { // output: 775802780778801797805801800799
         dataSource >> interval.first >> interval.second;
       cout << max_non_overlapping_intervals(intervals);
     } dataSource.close();
-  // }
+  }
   return 0;
 }

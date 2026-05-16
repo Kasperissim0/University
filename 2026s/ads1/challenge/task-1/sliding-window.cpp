@@ -23,7 +23,7 @@ st lengthOfSubArrayMeetingCondition(const st arr[], const st amountOfElements, c
   } return length;
 }
 int main() { // output: 506128108109782787219207541247589993221416922442134626965530
-  ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-1/input.txt")); 
+  ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-1/input.txt")); if (!dataSource.is_open()) return 1; 
   st amountOfArrays; dataSource >> amountOfArrays; // if this is meant to be tested, then the path for the input file (obviously) needs to be changed 
                                                    // i couldn't get it to work with relative paths for some reason
   for (st currentArrayIndex = 0; currentArrayIndex < amountOfArrays; ++currentArrayIndex) {

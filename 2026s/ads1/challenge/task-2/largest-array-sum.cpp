@@ -144,7 +144,7 @@ int main() { // output: 18934115471464326577337363707926913547101583119871
   // //! Checking
   // stringstream a1, a2, a3, a4; ll d1 = 0, d2 = 0, d3 = 0, d4 = 0;
 
-  ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-2/input.txt")); 
+  ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-2/input.txt")); if (!dataSource.is_open()) return 1;
   st amountOfArrays; dataSource >> amountOfArrays; // if this is meant to be tested, then the path for the input file (obviously) needs to be changed 
                                                    // i couldn't get it to work with relative paths for some reason
   for (st currentArrayIndex = 0; currentArrayIndex < amountOfArrays; ++currentArrayIndex) {
