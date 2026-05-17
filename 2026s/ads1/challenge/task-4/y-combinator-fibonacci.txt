@@ -1,0 +1,1 @@
+((lambda (a b) (a a b)) (lambda (c d) (if (< d 2) d (+ (c c (- d 1)) (c c (- d 2))))) 10)

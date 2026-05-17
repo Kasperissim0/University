@@ -1,11 +1,3 @@
-//? Testing
-// #include <array>
-// #include <chrono>
-// #include <utility>
-// #include <sstream>
-// #include <print>
-// #include <cassert>
-// using timetype = std::chrono::microseconds;
 //§ Requisities
   //§ Includes
     #include <iostream>
@@ -15,6 +7,12 @@
     #include <string>
     #include <vector>
     #include <algorithm>
+    #include <array>
+    #include <chrono>
+    #include <utility>
+    #include <sstream>
+    #include <print>
+    #include <cassert>
     #if __has_include("random.hpp")
       #include "random.hpp"
     #else
@@ -48,6 +46,7 @@
     using namespace std;
     using st = size_t;
     namespace fs = filesystem;
+    using timetype = std::chrono::microseconds;
     using ComputationTable = vector<vector<int>>;
     #define VARIABLE_INIT(VALUE) \
       const auto s1_size = s1.size(), s2_size = s2.size(), rowAmount = s1_size + 1, columnAmount = s2_size + 1; \
@@ -86,27 +85,26 @@ auto edit_distance(const string &s1, const string &s2) {
   return((s1 == s2) ? 0 : (gen.generate<int>(0, 1) ? edit_distance_tab(s1, s2) : edit_distance_memo(s1, s2)));
 }
 int main() { // output: 4444474646484748454742454445464644484548484847454446484444454447464546454848454641464547474543464746
-  // array<pair<stringstream, timetype>, 2> outputs;
+  array<pair<stringstream, timetype>, 2> outputs;
   ifstream dataSource(fs::path("/Users/kasperissim0/Code/Archive/University/2026s/ads1/challenge/task-4/input.txt")); if (!dataSource.is_open()) return 1;
   st amountOfTests { 0 }; dataSource >> amountOfTests; // if this is meant to be tested, then the path for the input file (obviously) needs to be changed 
                                                        // i couldn't get it to work with relative paths for some reason
   for (st i = 0; i < amountOfTests; i += 2) {
-    string a, b; dataSource >> a >> b;
-    // const auto now = []() {
-    //   return chrono::duration_cast<timetype>(
-    //     chrono::high_resolution_clock::now().time_since_epoch()
-    //   );
-    // };
+    string a, b; dataSource >> a >> b; // cout << edit_distance(a, b);
+    const auto now = []() {
+      return chrono::duration_cast<timetype>(
+        chrono::high_resolution_clock::now().time_since_epoch()
+      );
+    };
     
-    // outputs.at(0).second = now();
-    // outputs.at(0).first << edit_distance_tab(a, b);
-    // outputs.at(0).second = now() - outputs.at(0).second;
-    // outputs.at(1).second = now();
-    // outputs.at(1).first << edit_distance_memo(a, b);
-    // outputs.at(1).second = now() - outputs.at(1).second;
-    cout << edit_distance(a, b);
+    outputs.at(0).second = now();
+    outputs.at(0).first << edit_distance_tab(a, b);
+    outputs.at(0).second = now() - outputs.at(0).second;
+    outputs.at(1).second = now();
+    outputs.at(1).first << edit_distance_memo(a, b);
+    outputs.at(1).second = now() - outputs.at(1).second;
   } dataSource.close();
-  // print("\nTabulation:  {} | Took: {}\nMemoization: {} | Took: {}\n", outputs.at(0).first.str(), outputs.at(0).second, 
-  //                                                                     outputs.at(1).first.str(), outputs.at(1).second);
+  print("\nTabulation:  {} | Took: {}\nMemoization: {} | Took: {}\n", outputs.at(0).first.str(), outputs.at(0).second, 
+                                                                          outputs.at(1).first.str(), outputs.at(1).second);
   return 0;
 }
