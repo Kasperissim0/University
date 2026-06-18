@@ -20,7 +20,6 @@ bool pathExists(LinkedList* adjList, int start, int target, int maxLength) { usi
           return (foundTarget or ((travelsLeft == 1) and adjList[currentNode].search(target)));
     for (int traversedNode = 0; traversedNode < currentDistance; ++traversedNode) 
       if (activePath[traversedNode] == currentNode) return false; // if there is a cycle this path is invalid, terminate search
-
     // update path and get the first edge of currentNode
     activePath[currentDistance] = currentNode; const auto *edge = adjList[currentNode].get_head();
     
