@@ -58,7 +58,7 @@ process_submodule() {
     printf "${BLUE}║${NC}${YELLOW}%${left_padding}s%s%${right_padding}s${NC}${BLUE}║${NC}\n" "" "$name" ""
     echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 
-    git add . 2>/dev/null || true
+    git add -A 2>/dev/null || true
 
     if git diff --staged --quiet 2>/dev/null; then
         echo "  -> Nothing to commit."
@@ -135,7 +135,7 @@ commit_main_repo() {
     printf "${RED}║${NC}%${left_padding}s%s%${right_padding}s${RED}║${NC}\n" "" "$name" ""
     echo -e "${RED}╚══════════════════════════════════════════════╝${NC}"
 
-    git add .
+    git add -A
 
     if git diff --staged --quiet; then
         echo "Main repo: Nothing to commit."
