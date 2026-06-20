@@ -9,7 +9,6 @@ public abstract class MagicItem implements Tradeable, MagicEffectRealization, Ma
 	private int usages;  // number of usages remaining ; must not be negative
 	private int price ;  // must not be negative
 	private int weight ; // must not be negative
-
 	/**
 	 * @param name name
 	 * @param usages number of usages still left

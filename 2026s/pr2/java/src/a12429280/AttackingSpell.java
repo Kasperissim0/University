@@ -19,7 +19,7 @@ public class AttackingSpell extends ApplicationSpell {
 	@Override public void doEffect(MagicEffectRealization target) {
 		if (target.isProtected(this)) target.removeProtection(Set.of(this));
 		else
-			if (type)
+			if (affectsHealth())
 				this.applyEffect(MagicEffectRealization::takeDamage, MagicEffectRealization::takeDamagePercent, target);
 			else
 				this.applyEffect(MagicEffectRealization::weakenMagic, MagicEffectRealization::weakenMagicPercent, target);

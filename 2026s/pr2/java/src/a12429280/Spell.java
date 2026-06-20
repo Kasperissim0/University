@@ -8,7 +8,6 @@ public abstract class Spell {
 	private String name ;            // must not be null or empty
 	private int manaCost ;           // must not be negative
 	private MagicLevel levelNeeded ; // must not be null
-
 	/**
 	 * @param name name
 	 * @param manaCost manaCost

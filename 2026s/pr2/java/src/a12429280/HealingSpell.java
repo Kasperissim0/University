@@ -21,7 +21,7 @@ public class HealingSpell extends ApplicationSpell {
 	 * @param target target that receives healing
 	 */
 	@Override public void doEffect(MagicEffectRealization target) {
-		if (type)
+		if (affectsHealth())
 			this.applyEffect(MagicEffectRealization::heal, MagicEffectRealization::healPercent, target);
 		else
 			this.applyEffect(MagicEffectRealization::enforceMagic, MagicEffectRealization::enforceMagicPercent, target);

@@ -5,7 +5,6 @@ package a12429280;
  */
 public class ManaPotion extends Potion {
 	private int mana ; // must not be negative
-
 	/**
 	 * @param name name
 	 * @param usages number of usages still left
@@ -17,7 +16,6 @@ public class ManaPotion extends Potion {
 		super(name, usages, price, weight); AssertValue.isPositive(mana);
 		this.mana = mana;
 	}
-
 	/**
 	 * Returns "; +'mana' MP".
 	 * E.g. (total result of toString) "[Mana Potion; 1 g; 2 Knuts; 1 gulp; +20 MP]"

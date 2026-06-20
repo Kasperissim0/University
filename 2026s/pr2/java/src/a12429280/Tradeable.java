@@ -3,7 +3,7 @@ package a12429280;
 /**
  * Tradeable objects can be traded and stored in inventories 
  */
-interface Tradeable {
+public interface Tradeable {
     /**
      * Returns price of the object
      * @return price of the object

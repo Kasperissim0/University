@@ -1,6 +1,7 @@
 //Setzen Sie in Zeile 2 Ihre Packagebezeichnung ein.
 package tests.number_1;
 
+import a12429280.*;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -14,10 +15,10 @@ public class Main {
 		// Hier die Aufgaben dekommentieren, die implementiert wurden
 		// und geprüft werden sollen.
 		// Nur dekommentierte Aufgaben werden beurteilt!
-		// Checks_Do_Not_Change.checkTask1(); //Aufgabe 1
-		// Checks_Do_Not_Change.checkTask2(); //Aufgabe 2
-		// Checks_Do_Not_Change.checkTask3(); //Aufgabe 3
-		// Checks_Do_Not_Change.checkTask4(); //Aufgabe 4
+		Checks_Do_Not_Change.checkTask1(); //Aufgabe 1
+//		Checks_Do_Not_Change.checkTask2(); //Aufgabe 2
+//		Checks_Do_Not_Change.checkTask3(); //Aufgabe 3
+//		Checks_Do_Not_Change.checkTask4(); //Aufgabe 4
 	}
 
 	// Methoden für Beispiel 1

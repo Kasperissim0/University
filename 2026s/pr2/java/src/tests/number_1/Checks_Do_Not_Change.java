@@ -1,6 +1,8 @@
 //Setzen Sie in Zeile 2 Ihre Packagebezeichnung ein
 package tests.number_1;
 
+import a12429280.*;
+
 // Machen Sie ab hier keine Änderungen in dieser Datei!
 // Es werden 0 Punkte vergeben, wenn Sie hier Änderungen durchführen!
 

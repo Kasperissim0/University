@@ -3,7 +3,7 @@ package a12429280;
 /**
  * A MagicSource object can provide mana necessary to cause a magic effect
  */
-interface MagicSource {
+public interface MagicSource {
     /**
      * levelNeeded==null or negative manaAmount must throw IllegalArgumentException;
      * returns true if the object has at least the required level and can provide enough

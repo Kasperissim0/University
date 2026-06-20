@@ -5,7 +5,7 @@ package a12429280;
  * They can trade and use these objects. Additionally they are able to
  * steal and loot objects from other traders. 
  */
-interface Trader {
+public interface Trader {
 	/**
 	 * If item is null an IllegalArgumentException must be thrown;
 	 * returns true if this object possesses the item, false otherwise.

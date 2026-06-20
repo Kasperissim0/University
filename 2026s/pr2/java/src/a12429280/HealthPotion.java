@@ -5,7 +5,6 @@ package a12429280;
  */
 public class HealthPotion extends Potion {
 	private int health ; // must not be negative
-
 	/**
 	 * @param name name
 	 * @param usages number of usages still left
