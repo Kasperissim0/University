@@ -29,12 +29,19 @@ fi
 # --- Function to confirm force push ---
 confirm_force_push() {
     local context="$1"
-    echo -e "${MAGENTA}⚠️  WARNING: Force push requested for $context${NC}"
+    echo -e "${MAGENTA}⚠️  WARNING: Force push requested for ${NC}$context"
     read -p "Are you SURE you want to force push? (type 'yes' to confirm): " confirm1
-    if [ "$confirm1" != "yes" ]; then
+    
+    # Check for bypass first!
+    if [ "$confirm1" == "lg" ]; then
+        echo "Skipping further checks."
+        echo ""
+        return 0
+    elif [ "$confirm1" != "yes" ]; then
         echo "Force push cancelled."
         return 1
     fi
+    
     read -p "FINAL CONFIRMATION: Force push will overwrite remote. Type 'FORCE' to proceed: " confirm2
     if [ "$confirm2" != "FORCE" ]; then
         echo "Force push cancelled."
@@ -59,6 +66,7 @@ process_submodule() {
     echo -e "${BLUE}╚══════════════════════════════════════════════╝${NC}"
 
     git add -A 2>/dev/null || true
+    local needs_push=false
 
     if git diff --staged --quiet 2>/dev/null; then
         echo "  -> Nothing to commit."
@@ -97,23 +105,49 @@ process_submodule() {
 
         if git commit -m "$submodule_msg"; then
             echo "  -> Committed: \"$submodule_msg\""
+            needs_push=true
         else
             echo "  -> Commit failed."
             popd >/dev/null
             return 1
         fi
+    fi
 
+    # If we didn't just commit, check if there are prior manual commits waiting to be pushed
+    if [ "$needs_push" = false ] && git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+        local unpushed_count
+        unpushed_count=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
+        if [[ "$unpushed_count" =~ ^[0-9]+$ ]] && [ "$unpushed_count" -gt 0 ]; then
+            needs_push=true
+        fi
+    fi
+
+    # Only attempt to push if there is actually something to send
+    if [ "$needs_push" = true ]; then
         if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
             if git push 2>/dev/null; then
                 echo '  -> Pushed.'
             else
                 echo '  -> Push failed.'
-                read -p "  Retry with force-with-lease? (y/n): " retry_choice
-                if [[ "$retry_choice" =~ ^[Yy]$ ]]; then
-                    if confirm_force_push "$(basename "$path")"; then
-                        git push --force-with-lease && echo '  -> Force pushed.' || echo '  -> Force push failed.'
+                local head_msg
+                head_msg="$(git log -1 --pretty=%s)"
+                
+                while true; do
+                    echo -en "  Retry push for commit ${GREEN}\"${head_msg}\"${NC} with force-with-lease? (y/n): "
+                    read -r retry_choice
+                    
+                    if [[ "$retry_choice" =~ ^[Yy]$ ]]; then
+                        if confirm_force_push "'$(basename "$path")' (commit: ${GREEN}\"${head_msg}\"${NC})"; then
+                            git push --force-with-lease && echo '  -> Force pushed.' || echo '  -> Force push failed.'
+                        fi
+                        break
+                    elif [[ "$retry_choice" =~ ^[Nn]$ ]]; then
+                        echo '  -> Push not retried.'
+                        break
+                    else
+                        echo -e "  ${YELLOW}Invalid input. Please enter 'y' or 'n'.${NC}"
                     fi
-                fi
+                done
             fi
         else
             echo '  -> No upstream branch. Skipping push.'
@@ -136,6 +170,7 @@ commit_main_repo() {
     echo -e "${RED}╚══════════════════════════════════════════════╝${NC}"
 
     git add -A
+    local needs_push=false
 
     if git diff --staged --quiet; then
         echo "Main repo: Nothing to commit."
@@ -146,48 +181,111 @@ commit_main_repo() {
         git -c color.diff=always diff --cached --summary | sed 's/^/    /'
         echo ""
 
-        if [ -n "$msg" ]; then
-            echo -e "  Default message: ${GREEN}\"$msg\"${NC}"
-            read -p "  Press ENTER for default, or enter new message: " main_msg
-            [ -z "$main_msg" ] && main_msg="$msg"
-        else
-            read -p "  Enter commit message for main repository: " main_msg
-            if [ -z "$main_msg" ]; then
-                echo -e "  ${RED}Error: Commit message cannot be empty.${NC}"
-                exit 1
+        local main_msg="$msg"
+        
+        # Interactive message builder loop
+        while true; do
+            if [ -n "$main_msg" ]; then
+                echo -e "  Current message: ${GREEN}\"$main_msg\"${NC}"
+                read -p "  [ENTER] confirm, [+ msg] append, [^ msg] prepend, [q]uit, or new: " raw_input
+                
+                if [ -z "$raw_input" ]; then
+                    # Empty input breaks the loop and confirms the commit
+                    break
+                elif [[ "$raw_input" =~ ^(q|quit)$ ]]; then
+                    echo -e "  ${RED}Aborting main repository commit.${NC}"
+                    exit 1
+                elif [[ "$raw_input" =~ ^\^[[:space:]]*(.*) ]]; then
+                    local extracted="${BASH_REMATCH[1]}"
+                    # Strip leading/trailing quotes
+                    extracted="${extracted%\"}"; extracted="${extracted#\"}"
+                    extracted="${extracted%\'}"; extracted="${extracted#\'}"
+                    # Trim leading/trailing spaces to prevent double spacing
+                    extracted=$(echo -e "$extracted" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+                    
+                    main_msg="$extracted $main_msg"
+                elif [[ "$raw_input" =~ ^\+[[:space:]]*(.*) ]]; then
+                    local extracted="${BASH_REMATCH[1]}"
+                    # Strip leading/trailing quotes
+                    extracted="${extracted%\"}"; extracted="${extracted#\"}"
+                    extracted="${extracted%\'}"; extracted="${extracted#\'}"
+                    # Trim leading/trailing spaces to prevent double spacing
+                    extracted=$(echo -e "$extracted" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+                    
+                    main_msg="$main_msg $extracted"
+                else
+                    # Replace message entirely, but strip quotes if user added them
+                    local extracted="$raw_input"
+                    extracted="${extracted%\"}"; extracted="${extracted#\"}"
+                    extracted="${extracted%\'}"; extracted="${extracted#\'}"
+                    main_msg="$extracted"
+                fi
+            else
+                read -p "  Enter commit message for main repository ([q]uit): " raw_input
+                if [[ "$raw_input" =~ ^(q|quit)$ ]]; then
+                    echo -e "  ${RED}Aborting main repository commit.${NC}"
+                    exit 1
+                elif [ -n "$raw_input" ]; then
+                    main_msg="$raw_input"
+                else
+                    echo -e "  ${RED}Error: Commit message cannot be empty.${NC}"
+                fi
             fi
-        fi
+        done
         
         if git commit -m "$main_msg"; then
             echo "Main repo: Committed with message \"$main_msg\""
+            needs_push=true
         else
             echo "Main repo: Commit failed."
             exit 1
         fi
     fi
 
-    if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
-        if git push 2>/dev/null; then
-            echo "Main repo: Pushed."
-        else
-            echo "Main repo: Push failed."
-            read -p "  Retry with force-with-lease? (y/n): " retry_choice
-            if [[ "$retry_choice" =~ ^[Yy]$ ]]; then
-                if confirm_force_push "main repository"; then
-                    if git push --force-with-lease; then
-                        echo "Main repo: Force pushed."
-                    else
-                        echo "Error: Main repo force push failed." >&2
-                        exit 1
-                    fi
-                fi
-            else
-                echo "Error: Main repo push failed and not retried." >&2
-                exit 1
-            fi
+    # If we didn't just commit, check if there are prior manual commits waiting to be pushed
+    if [ "$needs_push" = false ] && git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+        local unpushed_count
+        unpushed_count=$(git rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
+        if [[ "$unpushed_count" =~ ^[0-9]+$ ]] && [ "$unpushed_count" -gt 0 ]; then
+            needs_push=true
         fi
-    else
-        echo "Main repo: No upstream branch. Skipping push."
+    fi
+
+    # Only attempt to push if there is actually something to send
+    if [ "$needs_push" = true ]; then
+        if git rev-parse --abbrev-ref --symbolic-full-name @{u} >/dev/null 2>&1; then
+            if git push 2>/dev/null; then
+                echo "Main repo: Pushed."
+            else
+                echo "Main repo: Push failed."
+                local head_msg
+                head_msg="$(git log -1 --pretty=%s)"
+                
+                while true; do
+                    echo -en "  Retry push for commit ${GREEN}\"${head_msg}\"${NC} with force-with-lease? (y/n): "
+                    read -r retry_choice
+                    
+                    if [[ "$retry_choice" =~ ^[Yy]$ ]]; then
+                        if confirm_force_push "Main Repository (commit: ${GREEN}\"${head_msg}\"${NC})"; then
+                            if git push --force-with-lease; then
+                                echo "Main repo: Force pushed."
+                            else
+                                echo "Error: Main repo force push failed." >&2
+                                exit 1
+                            fi
+                        fi
+                        break
+                    elif [[ "$retry_choice" =~ ^[Nn]$ ]]; then
+                        echo "Error: Main repo push failed and not retried." >&2
+                        exit 1
+                    else
+                        echo -e "  ${YELLOW}Invalid input. Please enter 'y' or 'n'.${NC}"
+                    fi
+                done
+            fi
+        else
+            echo "Main repo: No upstream branch. Skipping push."
+        fi
     fi
 }
 
@@ -242,9 +340,9 @@ print_repo_summary() {
     # --- Recent Commits & Changes ---
     print_row " ${CYAN}Recent Commits:${NC}" "$border_color"
 
-    git log -n 5 --format="%h %s" | while read -r hash msg; do
+    git log -n 5 --format="%h %s" | while read -r hash msg_log; do
         # 1. Print Commit Hash and Message
-        print_row "               ${YELLOW}${hash}${NC} | ${RED} ${msg}" "$border_color"
+        print_row "               ${YELLOW}${hash}${NC} | ${RED} ${msg_log}" "$border_color"
 
         # 2. Print File Stats
         git show --format="" --stat=55 "$hash" | head -n 5 | while IFS= read -r stat_line; do
