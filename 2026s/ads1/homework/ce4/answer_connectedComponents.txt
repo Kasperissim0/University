@@ -1,0 +1,22 @@
+if (n <= 0) return 0;
+
+  const int NO_NODE_FOUND = -1; int amount = 0; bool *visited = new bool[n]; for (int i = 0; i < n; ++i) visited[i] = false; 
+  const auto unvisitedNode = [&]() {
+    for (int i = 0; i < n; ++i) if (!visited[i]) return i;
+    return NO_NODE_FOUND;
+  }; int nodeToExplore = unvisitedNode();
+  const auto exploreStartingFrom = [&](const int &node) {
+    const auto explore = [&] (const auto &self, const int &currentNode) -> void {
+      if (!visited[currentNode]) {
+        visited[currentNode] = true; const auto *edge = adjList[currentNode].get_head();
+        while (edge) {
+          self(self, edge->data);
+          edge = edge->next;
+        }
+      }
+    }; explore(explore, node);
+  };
+
+  while (nodeToExplore != NO_NODE_FOUND && ++amount) {
+    exploreStartingFrom(nodeToExplore), nodeToExplore = unvisitedNode();
+  } return delete[] visited, amount;
