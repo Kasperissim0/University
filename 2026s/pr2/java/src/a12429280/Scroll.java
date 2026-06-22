@@ -27,13 +27,17 @@ public class Scroll extends MagicItem {
 	@Override public String additionalOutputString() {
 		return "; casts " + spell;
 	}
+	public Spell getSpell() { return spell; }
+	@Override public void applyEffectsDefinedBy(ItemApplication visitor) {
+		if (this.ableToApplyEffect()) visitor.applyEffectFrom(this);
+	}
 	/**
 	 * If usages is greater than 0 reduce usages by 1 (tryUsage method) and
 	 * cast the spell using this as magic source and parameter target as target 
 	 * @param target target of the spell cast by reading the scroll
 	 */
-	@Override public void useOn(MagicEffectRealization target) {
-		AssertValue.isNotNull(target);
-		if (tryUsage()) spell.cast(this, target);
-	}
+//	@Override public void useOn(MagicEffectRealization target) {
+//		AssertValue.isNotNull(target);
+//		if (tryUsage()) spell.cast(this, target);
+//	}
 }

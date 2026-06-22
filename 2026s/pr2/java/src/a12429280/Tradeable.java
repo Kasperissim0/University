@@ -15,12 +15,19 @@ public interface Tradeable {
      */
 	int getWeight();
 	/**
+	 * Accepts a visitor for the double-dispatch pattern.
+	 */
+	void applyEffectsDefinedBy(ItemApplication visitor);
+	/**
      * If target is null, an IllegalArgumentException must be thrown;
      * use the object on the target
      * @param target target of the object's usage (which will typically inflicted by the magic
      * effects)
      */
-	void useOn(MagicEffectRealization target);
+	default void useOn(MagicEffectRealization target) {
+		AssertValue.isNotNull(target);
+		this.applyEffectsDefinedBy(target);
+	}
     /**
      * Caution: this method transfers the item from from's inventory to to's inventory
      * without any checks. It has to be ensured that all necessary conditions for the

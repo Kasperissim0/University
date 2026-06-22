@@ -120,6 +120,10 @@ public class A_Main {
         runGroup("Null and negative argument checks", A_Main::testNullAndNegativeChecks);
         runGroup("Zero Boundaries (No Throw checks)", A_Main::testZeroBoundariesNoThrow);
         runGroup("Constructor integrity checks", A_Main::testConstructorIntegrityChecks);
+        
+        // --- NEW BONUS TASK TESTS ---
+        runGroup("Bonus Task 2.1: Refactoring (Extract Class)", A_Main::testBonusExtractClass21);
+        runGroup("Bonus Task 2.2: Visitor Pattern", A_Main::testBonusVisitorPattern22);
 
         System.out.println("\n----------------------------------------");
         System.out.println("Results: " + passed + " passed, " + failed + " failed.");
@@ -775,5 +779,74 @@ public class A_Main {
         Set<Tradeable> tooHeavyInventory = new HashSet<>();
         tooHeavyInventory.add(new HealthPotion("Heavy", 1, 1, 10, 1)); // weight 10
         expectIllegalArgument("Wizard inventory heavier than capacity throws", () -> new Wizard("X", MagicLevel.NOOB, 100, 100, 50, 50, 0, new HashSet<>(), new HashSet<>(), 1, tooHeavyInventory)); // capacity 1
+    }
+
+    // ================================================================
+    private static void testBonusExtractClass21() {
+        action("Testing Wizard Refactoring dependencies (VitalStats, Inventory, SpellBook)");
+        
+        VitalStats vitals = new VitalStats(100, 50, 150, 75);
+        Inventory inv = new Inventory(50, 100, new HashSet<>());
+        SpellBook spellBook = new SpellBook(new HashSet<>(), new HashSet<>());
+        
+        action("Creating Wizard using the refactored 5-parameter constructor");
+        Wizard wizard21 = new Wizard("RefactoredWiz", MagicLevel.ADEPT, vitals, inv, spellBook);
+        
+        checkContains("Refactored Wizard toString works", wizard21.toString(), "RefactoredWiz");
+        checkContains("VitalStats properly injected (HP)", wizard21.toString(), "50/100");
+        checkContains("VitalStats properly injected (MP)", wizard21.toString(), "75/150");
+        checkContains("Inventory properly injected (money)", wizard21.toString(), "50 Knuts");
+        
+        action("Checking Refactored Wizard behaviors relying on extracted classes");
+        wizard21.heal(20);
+        checkContains("Delegation to VitalStats works (HP + 20)", wizard21.toString(), "70/100");
+        
+        wizard21.earn(10);
+        checkContains("Delegation to Inventory works (Money + 10)", wizard21.toString(), "60 Knuts");
+        
+        AttackingSpell testSpell = new AttackingSpell("BonusHit", 10, MagicLevel.NOOB, true, false, 20);
+        wizard21.learn(testSpell);
+        check("Delegation to SpellBook works (Learning and casting spell)", wizard21.castRandomSpell(wizard21));
+    }
+
+    // ================================================================
+    private static void testBonusVisitorPattern22() {
+        action("Testing the Visitor Pattern double-dispatch mechanism");
+        
+        Wizard target = makeWizard("VisitorTarget", MagicLevel.NOOB, 100, 100, 0, 10);
+        target.takeDamage(50);
+        target.weakenMagic(50); // HP is now 50/100, MP is now 50/100
+        
+        ItemApplication visitor = target; // target acts as the Visitor (MagicEffectRealization extends ItemApplication)
+        
+        action("Direct dispatch: HealthPotion via applyEffectsDefinedBy");
+        HealthPotion hp = new HealthPotion("Visitor Pot", 1, 1, 1, 20);
+        hp.applyEffectsDefinedBy(visitor);
+        checkContains("Target healed by direct Visitor dispatch", target.toString(), "70/100");
+        
+        action("Direct dispatch: ManaPotion via applyEffectsDefinedBy");
+        ManaPotion mp = new ManaPotion("Visitor Mana", 1, 1, 1, 30);
+        mp.applyEffectsDefinedBy(visitor);
+        checkContains("Target mana increased by direct Visitor dispatch", target.toString(), "80/100");
+        
+        action("Direct dispatch: Concoction via applyEffectsDefinedBy");
+        AttackingSpell spl = new AttackingSpell("C-Spell", 5, MagicLevel.NOOB, true, false, 10);
+        Concoction conc = new Concoction("VisConc", 1, 1, 1, 5, 5, List.of(spl));
+        conc.applyEffectsDefinedBy(visitor);
+        // Effects of Concoction: HP goes +5, then spell hits for -10 = Net -5. (70 - 5 = 65). MP goes +5 (80 + 5 = 85).
+        checkContains("Visitor dispatch handled concoction complex HP effects", target.toString(), "65/100");
+        checkContains("Visitor dispatch handled concoction complex MP effects", target.toString(), "85/100");
+        
+        action("Direct dispatch: Scroll via applyEffectsDefinedBy");
+        AttackingSpell heavySpell = new AttackingSpell("Heavy", 10, MagicLevel.NOOB, true, false, 40);
+        Scroll scroll = new Scroll("VisScroll", 1, 1, 1, heavySpell);
+        scroll.applyEffectsDefinedBy(visitor);
+        // Scroll casts heavy spell: HP drops 65 - 40 = 25.
+        checkContains("Visitor dispatch cast scroll spell", target.toString(), "25/100");
+        
+        action("Verifying applyEffectFrom directly on ItemApplication interface");
+        HealthPotion hp2 = new HealthPotion("App Pot", 1, 1, 1, 5);
+        visitor.applyEffectFrom(hp2);
+        checkContains("Direct applyEffectFrom interface execution works", target.toString(), "30/100");
     }
 }

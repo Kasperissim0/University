@@ -24,13 +24,8 @@ public class HealthPotion extends Potion {
 	@Override public String additionalOutputString() {
 		return String.format("; +%d HP", health);
 	}
-	/**
-	 * If usages is greater than 0 reduce usages by 1 (tryUsage method) and
-	 * increase HP of target by health (call method heal(health))
-	 * @param target target on which to object is to be used on
-	 */
-	@Override public void useOn(MagicEffectRealization target) {
-		AssertValue.isNotNull(target);
-		if (tryUsage()) target.heal(health);
+	public int getHealth() { return health; }
+	@Override public void applyEffectsDefinedBy(ItemApplication visitor) {
+		if (this.ableToApplyEffect()) visitor.applyEffectFrom(this);
 	}
 }

@@ -24,13 +24,17 @@ public class ManaPotion extends Potion {
 	@Override public String additionalOutputString() {
 		return String.format("; +%d MP", mana);
 	}
+	public int getMana() { return mana; }
+	@Override public void applyEffectsDefinedBy(ItemApplication visitor) {
+		if (this.ableToApplyEffect()) visitor.applyEffectFrom(this);
+	}
 	/**
 	 * If usages greater than 0 reduce usages by 1 (tryUsage method) and
 	 * increase MP of target by mana (call method enforceMagic(mana))
 	 * @param target target that the potion's effect will act on
 	 */
-	@Override public void useOn(MagicEffectRealization target) {
-		AssertValue.isNotNull(target);
-		if (tryUsage()) target.enforceMagic(mana);
-	}
+//	@Override public void useOn(MagicEffectRealization target) {
+//		AssertValue.isNotNull(target);
+//		if (tryUsage()) target.enforceMagic(mana);
+//	}
 }

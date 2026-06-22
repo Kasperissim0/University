@@ -1,7 +1,5 @@
 package a12429280;
 
-import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -9,66 +7,69 @@ import java.util.Set;
  * magic energy, cast spells and also are affected be various magical effects.
  */
 public class Wizard implements MagicSource, Trader, MagicEffectRealization {
-	private String               name;             // not null not empty
-	private MagicLevel           level;            // not null
-	private int                  basicHP;          // not negative
-	private int                  HP;               // not negative ; defaults to basicHP
-	private int                  basicMP;          // not less than the manapoints associated with the magic level
-	private int                  MP;               // not negative ; defaults to basicMP
-	private int                  money;            // not negative
-	private int                  carryingCapacity; // not negative
-	private Set<Spell>           knownSpells;      // not null , may be empty ; use HashSet for instantiation
-	private Set<AttackingSpell>  protectedFrom;    // not null , may be empty ; use HashSet for instantiation
-	private Set<Tradeable>       inventory;        // not null , may be empty , use HashSet for instantiation 
-	// , total weight of inventory may never exceed carryingCapacity
+	private String      name;
+	private MagicLevel  level;
+	private VitalStats  vitals;
+	private Inventory   inventory;
+	private SpellBook   spellBook;
+
 	/**
 	 * @param name name
 	 * @param level the magic level (proficiency needed to cast spells)
-	 * @param basicHP base for percentage health calculations
-	 * @param HP current health 
-	 * @param basicMP base for percentage mana calculations
-	 * @param MP current mana
+	 * @param vitals the health and mana manager
+	 * @param inventory the items, money, and capacity manager
+	 * @param spellBook the known spells and protections manager
+	 */
+	/*
+	 * REFACTORING TASK 2.1:
+	 * I chose the "Extract Class" method to refactor the Wizard constructor.
+	 * The Wizard was violating the Single Responsibility Principle by trying 
+	 * to manage trading, energy, and spell logic all at once. By extracting 
+	 * these into Inventory, VitalStats, and SpellBook classes, the constructor 
+	 * drops from 11 parameters to 5, and the Wizard cleanly delegates tasks.
+	 */
+	public Wizard(String name, MagicLevel level, VitalStats vitals, Inventory inventory, SpellBook spellBook) {
+		AssertValue.isNotNull(name); AssertValue.isNotEmpty(name); AssertValue.isNotNull(level);
+		AssertValue.isNotNull(vitals); AssertValue.isNotNull(inventory); AssertValue.isNotNull(spellBook);
+		if (vitals.getDefaultManaPoints() < level.toMana()) throw new IllegalArgumentException("basic mana to low");
+
+		this.name      = name;
+		this.level     = level;
+		this.vitals    = vitals;
+		this.inventory = inventory;
+		this.spellBook = spellBook;
+	}
+
+	/**
+	 * Compatibility Constructor for Checks_Do_Not_Change.java.
+	 * @param name name
+	 * @param level the magic level (proficiency needed to cast spells)
+	 * @param defaultHealthPoints base for percentage health calculations
+	 * @param healthPoints current health 
+	 * @param defaultManaPoints base for percentage mana calculations
+	 * @param manaPoints current mana
 	 * @param money current money
 	 * @param knownSpells set of known spells
 	 * @param protectedFrom set of spells the object is protected against
 	 * @param carryingCapacity maximum carrying capacity
-	 * @param inventory set of items the object is currently carrying
+	 * @param items set of items the object is currently carrying
 	 */
-	public Wizard(String name, MagicLevel level, int basicHP, int hP, int basicMP, int mP, int money, Set<Spell> knownSpells,
-				 Set<AttackingSpell> protectedFrom, int carryingCapacity, Set<Tradeable> inventory) {
-		AssertValue.isNotNull(name); AssertValue.isNotEmpty(name); AssertValue.isNotNull(level);
-		AssertValue.isPositive(basicHP); AssertValue.isPositive(hP); AssertValue.isPositive(basicMP);
-		AssertValue.isPositive(mP); AssertValue.isPositive(money); AssertValue.isPositive(carryingCapacity);
-		AssertValue.isNotNull(knownSpells); AssertValue.isNotNull(protectedFrom); AssertValue.isNotNull(inventory);
-		if (basicMP < level.toMana()) throw new IllegalArgumentException("basic mana to low");
-		
-		this.inventory        = new HashSet<>(inventory);
-		if (inventoryTotalWeight() > carryingCapacity) throw new IllegalArgumentException("inventory is too heavy");
-		this.name             = name;
-		this.level            = level;
-		this.basicHP          = basicHP;
-		this.HP               = hP;
-		this.basicMP          = basicMP;
-		this.MP               = mP;
-		this.money            = money;
-		this.carryingCapacity = carryingCapacity;
-		this.knownSpells      = new HashSet<>(knownSpells);
-		this.protectedFrom    = new HashSet<>(protectedFrom);
+	public Wizard(String name, MagicLevel level, int defaultHealthPoints, int healthPoints, int defaultManaPoints, int manaPoints, int money, 
+			      Set<Spell> knownSpells, Set<AttackingSpell> protectedFrom, int carryingCapacity, Set<Tradeable> items) {
+		this(name, level, 
+			 new VitalStats(defaultHealthPoints, healthPoints, defaultManaPoints, manaPoints), 
+			 new Inventory(money, carryingCapacity, items), 
+			 new SpellBook(knownSpells, protectedFrom));
 	}
+
 	/**
 	 * Return true, if HP is 0, false otherwise
 	 * @return true, if HP is 0, false otherwise
 	 */
 	public boolean isDead() {
-		return HP == 0;
+		return vitals.isDead();
 	}  
-	/**
-	 * Calculates and returns the total weight of all the items in the inventory
-	 * @return total weight of all items in inventory
-	 */
-	private int inventoryTotalWeight() {
-		return inventory.stream().mapToInt(Tradeable::getWeight).sum();
-	}
+
 	/**
 	 * If spell is null, IllegalArgumentException has to be thrown;
 	 * if wizard is dead (isDead) no action can be taken and false is returned;
@@ -79,8 +80,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	public boolean learn(Spell s) {
 		AssertValue.isNotNull(s); if (isDead()) return false;
-		return knownSpells.add(s);
+		return spellBook.addSpell(s);
 	}
+
 	/**
 	 * If spell is null, IllegalArgumentException has to be thrown;
 	 * if wizard is dead (isDead) no action can be taken and false is returned;
@@ -91,8 +93,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	public boolean forget(Spell s) {
 		AssertValue.isNotNull(s); if (isDead()) return false;
-		return knownSpells.remove(s);
+		return spellBook.removeSpell(s);
 	}
+
 	/**
 	 * If s or target is null, IllegalArgumentException has to be thrown;
 	 * if wizard is dead (isDead) no action can be taken and false is returned;
@@ -104,11 +107,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * @return true, if cast was called, false otherwise;
 	 */
 	public boolean castSpell(Spell s, MagicEffectRealization target) {
-		AssertValue.isNotNull(s); AssertValue.isNotNull(target); 
-		if (isDead() || !knownSpells.contains(s)) return false;
-		
+		AssertValue.isNotNull(s); AssertValue.isNotNull(target);  if (isDead() || !spellBook.containsSpell(s)) return false;
 		s.cast(this, target); return true;
 	}
+
 	/**
 	 * If this object's knownSpells is empty, return false
 	 * otherwise choose a random spell from knownSpells and delegate to
@@ -118,9 +120,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * result of the delegation to castSpell
 	 */
 	public boolean castRandomSpell(MagicEffectRealization target) {
-		if (knownSpells.isEmpty()) return false;
-		return castSpell(knownSpells.toArray(new Spell[0])[new Random().nextInt(knownSpells.size())], target);
+		Spell randomSpell = spellBook.getRandomSpell(); if (randomSpell == null) return false;
+		return castSpell(randomSpell, target);
 	}
+
 	/**
 	 * If item or target is null, IllegalArgumentException has to be thrown;
 	 * if wizard is dead (isDead) no action can be taken and false is returned;
@@ -132,11 +135,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * @return true, if useOn was called, false otherwise
 	 */
 	public boolean useItem(Tradeable item, MagicEffectRealization target) {
-		AssertValue.isNotNull(item); AssertValue.isNotNull(target);
-		if (isDead() || !inventory.contains(item)) return false;
-		
+		AssertValue.isNotNull(item); AssertValue.isNotNull(target); if (isDead() || !inventory.containsItem(item)) return false;
 		item.useOn(target); return true;
 	}
+
 	/**
 	 * If this object's inventory is empty, return false;
 	 * otherwise choose a random item from inventory and delegate to
@@ -146,9 +148,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * result of the delegation to useItem
 	 */
 	public boolean useRandomItem(MagicEffectRealization target) {
-		if (inventory.isEmpty()) return false;
-		return useItem(inventory.toArray(new Tradeable[0])[new Random().nextInt(inventory.size())], target);
+		Tradeable randomItem = inventory.getRandomItem(); if (randomItem == null) return false;
+		return useItem(randomItem, target);
 	}
+
 	/**
 	 * If item or target is null, IllegalArgumentException has to be thrown;
 	 * if wizard is dead (isDead), no action can be taken and false is returned;
@@ -164,6 +167,7 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 		AssertValue.isNotNull(item); AssertValue.isNotNull(target); if (isDead()) return false;
 		return item.purchase(this, target);
 	}
+
 	/**
 	 * If this object's inventory is empty, return false,
 	 * otherwise choose a random item from inventory and delegate to
@@ -173,9 +177,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * result of the delegation to sellItem
 	 */
 	public boolean sellRandomItem(Trader target) {
-		if (inventory.isEmpty()) return false;
-		return sellItem(inventory.toArray(new Tradeable[0])[new Random().nextInt(inventory.size())], target);
+		Tradeable randomItem = inventory.getRandomItem(); if (randomItem == null) return false;
+		return sellItem(randomItem, target);
 	}
+
 	/**
 	 * Returns a string in the format
 	 * "['name'('level'): 'HP'/'basicHP' 'MP'/'basicMP'; 'money' 'KnutOrKnuts'; knows 'knownSpells'; carries 'inventory']";
@@ -188,11 +193,12 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */ 
 	@Override public String toString() {
 		return String.format("[%s(%s): %d/%d %d/%d; %d Knut%s; knows %s; carries %s]", 
-				name, level, HP,
-				basicHP, MP, basicMP,
-				money, ((money == 1) ? "" : "s"),
-				knownSpells, inventory);
+				name, level, vitals.getHealthPoints(), vitals.getDefaultHealthPoints(), 
+				vitals.getManaPoints(), vitals.getDefaultManaPoints(), inventory.getMoney(), 
+				((inventory.getMoney() == 1) ? "" : "s"), spellBook.getKnownSpells(), 
+				inventory.getItems());
 	}
+
 	// MagicSource Interface
 	/**
 	 * If wizard is dead (isDead) no action can be taken and false is returned:
@@ -204,12 +210,11 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * @return true, if mana can be successfully provided, false otherwise
 	 */
 	@Override public boolean provideMana(MagicLevel levelNeeded, int manaAmount) {
-		AssertValue.isNotNull(levelNeeded); AssertValue.isPositive(manaAmount);
-		if (isDead() || (level.compareTo(levelNeeded) < 0) || MP < manaAmount) return false;
-		MP -= manaAmount; return true;
+		AssertValue.isNotNull(levelNeeded); AssertValue.isPositive(manaAmount); if (isDead() || (level.compareTo(levelNeeded) < 0)) return false;
+		return vitals.provideMana(manaAmount);
 	}
-	//Trader Interface
 
+	//Trader Interface
 	/**
 	 * Return true, if the item is in the inventory, false otherwise
 	 * @param item object is tested, if it possesses this item
@@ -217,8 +222,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean possesses(Tradeable item) {
 		AssertValue.isNotNull(item);
-		return inventory.contains(item);
+		return inventory.containsItem(item);
 	}
+
 	/**
 	 * Return true, if money is greater than or equal to amount, false otherwise
 	 * @param amount object is tested, if it owns enough money to pay this amount
@@ -226,8 +232,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean canAfford(int amount) {
 		AssertValue.isPositive(amount);
-		return money >= amount;
+		return inventory.hasEnoughMoney(amount);
 	}
+
 	/**
 	 * Return true, if inventoryTotalWeight+weight is less than or equal to carryingCapacity, false otherwise
 	 * @param weight test, if this weight can be added to object's inventory, without exceeding the
@@ -236,8 +243,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean hasCapacity(int weight) {
 		AssertValue.isPositive(weight);
-		return (inventoryTotalWeight() + weight) <= carryingCapacity;
+		return inventory.hasAvailableCapacity(weight);
 	}
+
 	/**
 	 * If wizard is dead (isDead) no action can be taken and false is returned;
 	 * if this owns enough money deduct amount from money and return true,
@@ -246,9 +254,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * @return true, if payment succeeds, false otherwise
 	 */
 	@Override public boolean pay(int amount) {
-		if (isDead() || !this.canAfford(amount)) return false;
-		money -= amount; return true;
+		if (isDead() || !inventory.hasEnoughMoney(amount)) return false;
+		inventory.deductMoney(amount); return true;
 	}   
+
 	/**
 	 * If wizard is dead (isDead), no action can be taken and false is returned;
 	 * add amount to this object's money and return true.
@@ -257,8 +266,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean earn(int amount) {
 		AssertValue.isPositive(amount); if (isDead()) return false;
-		money += amount; return true;
-	}    
+		inventory.addMoney(amount); return true;
+	}   
+
 	/**
 	 * Edd item to inventory if carryingCapacity is sufficient.
 	 * returns true, if item is successfully added, false otherwise
@@ -267,9 +277,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 * @return true. if item is successfully added, false otherwise
 	 */
 	@Override public boolean addToInventory(Tradeable item) {
-		AssertValue.isNotNull(item); if (!hasCapacity(item.getWeight())) return false;
-		return inventory.add(item);
+		AssertValue.isNotNull(item);
+		return inventory.addItem(item);
 	}
+
 	/**
 	 * Remove item from inventory.
 	 * returns true, if item is successfully removed, false otherwise
@@ -279,8 +290,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean removeFromInventory(Tradeable item) {
 		AssertValue.isNotNull(item);
-		return inventory.remove(item);
+		return inventory.removeItem(item);
 	}
+
 	/**
 	 * Returns true, if this object's HP are not 0 (alive wizard).
 	 * @return true, if the object is alive
@@ -288,6 +300,7 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	@Override public boolean canSteal() {
 		return !isDead();
 	}
+
 	/**
 	 * If thief is null, IllegalArgumentException has to be thrown;
 	 * if thief cannot steal (canSteal returns false) no action can be taken
@@ -303,10 +316,11 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean steal(Trader thief) {
 		AssertValue.isNotNull(thief); if (!thief.canSteal() || inventory.isEmpty()) return false;
-		var item = inventory.toArray(new Tradeable[0])[new Random().nextInt(inventory.size())];
 		
-		inventory.remove(item); return thief.addToInventory(item);
+		var item = inventory.getRandomItem(); inventory.removeItem(item);
+		return thief.addToInventory(item);
 	}
+
 	/**
 	 * Returns true if, this object's HP are 0 (dead wizard)
 	 * @return true if the object is dead
@@ -314,6 +328,7 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	@Override public boolean isLootable() {
 		return isDead();
 	}
+
 	/**
 	 * Returns true if this object's HP are not 0 (alive wizard)
 	 * @return true, if the object is alive
@@ -321,6 +336,7 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	@Override public boolean canLoot() {
 		return !isDead();
 	}
+
 	/**
 	 * Of looter is null, IllegalArgumentException has to be thrown;
 	 * if looter cannot loot (canLoot returns false), no action can be taken
@@ -336,10 +352,10 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean loot(Trader looter) {
 		AssertValue.isNotNull(looter); if (!looter.canLoot() || !isLootable()) return false;
-		var stole = inventory.stream().filter(looter::addToInventory).count() > 0;
-		
+		var stole = inventory.getItems().stream().filter(looter::addToInventory).count() > 0;
 		inventory.clear(); return stole;
 	} 
+
 	// MagicEffectRealization Interface
 	/**
 	 * Reduce the object's HP by amount ensuring however that HP does not
@@ -348,8 +364,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public void takeDamage(int amount) {
 		MagicEffectRealization.super.takeDamage(amount);
-		HP -= amount; if (HP < 0) HP = 0;
+		vitals.takeDamage(amount);
 	}  
+
 	/**
 	 * Reduce the object's HP by the percentage given of the object's basic
 	 * HP value ensuring however, that HP does not become negative.
@@ -358,8 +375,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public void takeDamagePercent(int percentage) {
 		MagicEffectRealization.super.takeDamagePercent(percentage);
-		HP -= (int)(basicHP * (percentage / 100.)); if (HP < 0) HP = 0;
+		vitals.takeDamagePercent(percentage);
 	}
+
 	/**
 	 * Reduce the object's MP by amount ensuring however that MP does not
 	 * become negative.
@@ -367,8 +385,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public void weakenMagic(int amount) {
 		MagicEffectRealization.super.weakenMagic(amount);
-		MP -= amount; if (MP < 0) MP = 0;
+		vitals.weakenMagic(amount);
 	}
+
 	/**
 	 * Reduce the object's MP by the percentage given of the object's basic
 	 * MP value ensuring however, that MP does not become negative.
@@ -377,16 +396,18 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public void weakenMagicPercent(int percentage) {
 		MagicEffectRealization.super.weakenMagicPercent(percentage);
-		MP -= (int)(basicMP * (percentage / 100.)); if (MP < 0) MP = 0;
+		vitals.weakenMagicPercent(percentage);
 	}
+
 	/**
 	 * Increase the object's HP by the amount given.
 	 * @param amount amount to increase health
 	 */
 	@Override public void heal(int amount) {
 		MagicEffectRealization.super.heal(amount);
-		HP += amount; // if (HP > basicHP) HP = basicHP;
+		vitals.heal(amount);
 	}
+
 	/**
 	 * Increase the object's HP by the percentage given of the object's
 	 * basic HP. Do calculations in double truncating to int only for
@@ -395,16 +416,18 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public void healPercent(int percentage) {
 		MagicEffectRealization.super.healPercent(percentage);
-		HP += (int)(basicHP * (percentage / 100.)); // if (HP > basicHP) HP = basicHP;
+		vitals.healPercent(percentage);
 	}
+
 	/**
 	 * Increase the object's MP by the amount given.
 	 * @param amount amount to increase mana
 	 */
 	@Override public void enforceMagic(int amount) {
 		MagicEffectRealization.super.enforceMagic(amount);
-		MP += amount; // if (MP > basicMP) MP = basicMP;
+		vitals.enforceMagic(amount);
 	}
+
 	/**
 	 * Increase the object's MP by the percentage given of the object's
 	 * basic MP. Do calculations in double truncating to int only for
@@ -413,8 +436,9 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public void enforceMagicPercent(int percentage) {
 		MagicEffectRealization.super.enforceMagicPercent(percentage);
-		MP += (int)(basicMP * (percentage / 100.)); // if (MP > basicMP) MP = basicMP;
+		vitals.enforceMagicPercent(percentage);
 	}
+
 	/**
 	 * Return true, if s is contained in instance variable protectedFrom
 	 * @param s spell that is tested for
@@ -422,22 +446,24 @@ public class Wizard implements MagicSource, Trader, MagicEffectRealization {
 	 */
 	@Override public boolean isProtected(Spell s) {
 		MagicEffectRealization.super.isProtected(s);
-		return protectedFrom.contains(s);
+		return spellBook.containsProtectionAgainst(s);
 	}  
+
 	/**
 	 * Add all spells from attacks to instance variable protectedFrom
 	 * @param attacks spells against which protection is provided
 	 */
 	@Override public void setProtection(Set<AttackingSpell> attacks) {
 		MagicEffectRealization.super.setProtection(attacks);
-		protectedFrom.addAll(attacks);
+		spellBook.addProtectionAgainst(attacks);
 	}
+
 	/**
 	 * Remove all spells from attacks from instance variable protectedFrom
 	 * @param attacks spells against which protection is removed 
 	 */
 	@Override public void removeProtection(Set<AttackingSpell> attacks) {
 		MagicEffectRealization.super.removeProtection(attacks);
-		protectedFrom.removeAll(attacks);
+		spellBook.removeProtectionAgainst(attacks);
 	}
 }

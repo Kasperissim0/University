@@ -8,7 +8,7 @@ import java.util.Set;
  * influenced by magic. The overrides define what exactly will happen given a specific
  * magic effect on the specific object.
  */
-interface MagicEffectRealization {
+interface MagicEffectRealization extends ItemApplication {
     /**
      * Negative amount must throw IllegalArgumentException;
      * a typical implementation will reduce the object's HP by amount ensuring however
@@ -128,5 +128,49 @@ interface MagicEffectRealization {
      */
 	default void removeProtection(Set<AttackingSpell> attacks) {
 		AssertValue.isNotNull(attacks);
+	}
+	/**
+	 * Visits a HealthPotion to apply its effects to this object.
+	 * If the potion has remaining usages, it increases the object's HP.
+	 * @param potion the HealthPotion being consumed
+	 */
+	@Override default void applyEffectFrom(HealthPotion potion) {
+		this.heal(potion.getHealth());
+	}
+	/**
+	 * Visits a ManaPotion to apply its effects to this object.
+	 * If the potion has remaining usages, it increases the object's MP.
+	 * @param potion the ManaPotion being consumed
+	 */
+	@Override default void applyEffectFrom(ManaPotion potion) {
+		this.enforceMagic(potion.getMana());
+	}
+	/**
+	 * Visits a Concoction to apply its complex effects to this object.
+	 * If the concoction has remaining usages, it alters health and mana based
+	 * on its positive or negative values, and casts any spells it contains.
+	 * @param concoction the Concoction being consumed
+	 */
+	@Override default void applyEffectFrom(Concoction concoction) {
+		if (concoction.getHealth() >= 0) 
+			this.heal(concoction.getHealth());
+		else 
+			this.takeDamage(-concoction.getHealth());
+
+		if (concoction.getMana() >= 0) 
+			this.enforceMagic(concoction.getMana());
+		else 
+			this.weakenMagic(-concoction.getMana());
+
+		for (Spell s : concoction.getSpells()) 
+			s.cast(concoction, this);
+	}
+	/**
+	 * Visits a Scroll to apply its effects to this object.
+	 * If the scroll has remaining usages, it casts the spell written on it.
+	 * @param scroll the Scroll being read
+	 */
+	@Override default void applyEffectFrom(Scroll scroll) {
+		scroll.getSpell().cast(scroll, this);
 	}
 }

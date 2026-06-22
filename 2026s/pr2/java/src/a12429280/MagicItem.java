@@ -101,4 +101,8 @@ public abstract class MagicItem implements Tradeable, MagicEffectRealization, Ma
 		MagicEffectRealization.super.takeDamagePercent(percentage);
 		usages = (int) (usages * (1 - percentage / 100.0));
 	}
+	@Override public boolean ableToApplyEffect() {
+		return tryUsage();
+	}
+	abstract public void applyEffectsDefinedBy(ItemApplication visitor);
 }

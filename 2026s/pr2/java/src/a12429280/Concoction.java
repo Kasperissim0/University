@@ -16,7 +16,6 @@ public class Concoction extends Potion {
 	private int health ; // may be any int value
 	private int mana ;  // may be any int value
 	private List<Spell> spells ; // must not be null but may be empty ; Use ArrayList as concrete type
-
 	/**
 	 * @param name name
 	 * @param usages number of usages still left
@@ -34,6 +33,9 @@ public class Concoction extends Potion {
 		this.mana = mana;
 		this.spells = spells;
 	}
+	public int         getHealth() { return health; }
+	public int         getMana()   { return mana; 	}
+	public List<Spell> getSpells() { return spells; }
 	/**
 	 * Returns "; '+/-''health' HP; '+/-''mana' MP; cast 'spells' ";
 	 * here '+/-' denotes the appropriate sign, spells will be a bracketed list
@@ -51,6 +53,9 @@ public class Concoction extends Potion {
 		if (!spells.isEmpty()) parts.add("cast " + spells.toString());
 		return String.join("; ", parts);
 	}
+	@Override public void applyEffectsDefinedBy(ItemApplication visitor) {
+		if (this.ableToApplyEffect()) visitor.applyEffectFrom(this);
+	}
 	/**
 	 * If usages is greater than 0 reduce usages by 1 (tryUsage method) and
 	 * change HP of target by health (call method heal(health) or takeDamage(health)
@@ -60,15 +65,15 @@ public class Concoction extends Potion {
 	 * call cast Method for every spell in spells.
 	 * @param target target that takes the magic effects
 	 */
-	@Override public void useOn(MagicEffectRealization target) {
-		AssertValue.isNotNull(target);
-		if (tryUsage()) {
-			if (health >= 0) target.heal(health);
-			else             target.takeDamage(-health);
-			if (mana >= 0)   target.enforceMagic(mana);
-			else             target.weakenMagic(-mana);
-			
-			for (var spell : spells) spell.cast(this, target);
-		}
-	}
+//	@Override public void useOn(MagicEffectRealization target) {
+//		AssertValue.isNotNull(target);
+//		if (tryUsage()) {
+//			if (health >= 0) target.heal(health);
+//			else             target.takeDamage(-health);
+//			if (mana >= 0)   target.enforceMagic(mana);
+//			else             target.weakenMagic(-mana);
+//			
+//			for (var spell : spells) spell.cast(this, target);
+//		}
+//	}
 }
