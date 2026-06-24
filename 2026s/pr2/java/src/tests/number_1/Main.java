@@ -2,9 +2,14 @@
 package tests.number_1;
 
 import a12429280.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class Main {
 	
@@ -16,22 +21,41 @@ public class Main {
 		// und geprüft werden sollen.
 		// Nur dekommentierte Aufgaben werden beurteilt!
 		Checks_Do_Not_Change.checkTask1(); //Aufgabe 1
-//		Checks_Do_Not_Change.checkTask2(); //Aufgabe 2
-//		Checks_Do_Not_Change.checkTask3(); //Aufgabe 3
-//		Checks_Do_Not_Change.checkTask4(); //Aufgabe 4
+		Checks_Do_Not_Change.checkTask2(); //Aufgabe 2
+		Checks_Do_Not_Change.checkTask3(); //Aufgabe 3
+		Checks_Do_Not_Change.checkTask4(); //Aufgabe 4
 	}
 
 	// Methoden für Beispiel 1
 	// Diese Methode muss komplettiert werden
 	public static Potion[] sortPotions(List<Potion> potions) {
-		return null;
+		var lists = potions.stream().collect(Collectors.groupingBy(potion -> (potion.getPrice() % 3))); var iterators = List.of(
+			lists.getOrDefault(0, List.of()).stream().sorted(Comparator.comparingInt(Potion::getWeight)).iterator(),
+			lists.getOrDefault(1, List.of()).iterator(),
+			lists.getOrDefault(2, List.of()).stream().sorted(Comparator.comparingInt(Potion::getWeight).reversed()).iterator()
+		); List<Potion> result = new ArrayList<>(); var elementsLeft = true;
+		
+		while (elementsLeft) {
+			elementsLeft = false;
+			for (var it : iterators) {
+				if (it.hasNext()) {
+					result.add(it.next());
+					elementsLeft = true;
+				}
+			}
+		}
+		return result.toArray(Potion[]::new);
 	}
 	// Methoden für Beispiel 1 Ende
 
 	// Methoden für Beispiel 2
 	// Diese Methode muss komplettiert werden
 	public static TreeMap<Integer, TreeSet<MagicItem>> mapItemsPerPriceCategory(List<MagicItem> items) {
-		return null;
+		return items.stream().collect(Collectors.groupingBy(
+			potion -> (String.valueOf(potion.getPrice()).charAt(0) - '0'),
+			TreeMap::new,
+			Collectors.toCollection(() -> new TreeSet<>(Comparator.comparingInt(MagicItem::getWeight).reversed()))
+		));
 	}
 	// Methoden für Beispiel 2 Ende
 
@@ -42,12 +66,8 @@ public class Main {
 	
 	// Methoden für Beispiel 4
 	// Diese Methode muss komplettiert werden
-	public static List<Potion> selectPotions(List<Potion> l) {
-		//Aufruf von Checks_Do_Not_Change.doSelect(object) für jeden Potion
-		//aus l mit override der apply Methode. 
-		//public static void doSelect(Function<Integer, Boolean> p)
-		//public Boolean apply(Integer value)
-		return null;
+	public static List<Potion> selectPotions(List<Potion> list) {
+		return list.stream().filter(potion -> Checks_Do_Not_Change.doSelect(potion::checkName)).toList();
 	}
 	// Methoden für Beispiel 4 Ende
 }

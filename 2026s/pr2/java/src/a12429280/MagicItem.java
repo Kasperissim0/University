@@ -86,6 +86,9 @@ public abstract class MagicItem implements Tradeable, MagicEffectRealization, Ma
 	@Override public int getWeight() {
 		return this.weight;
 	}
+	public String getName() {
+		return name;
+	}
 	// MagicSource Interface:
     /**
      * Always returns true; no Exceptions needed
