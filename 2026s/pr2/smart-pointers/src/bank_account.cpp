@@ -3,42 +3,44 @@
 #include <string>
 #include <stdexcept>
 #include <numeric>
+#include <memory>
+#include <sstream>
+#include <iomanip>
 
 static void bam() {
   throw std::runtime_error("oops");
 }
+static std::string fmt(const double digit, const int precision = 2) {
+    std::ostringstream output;
+    output << std::fixed << std::setprecision(precision) << digit;
+    return output.str();
+}
 
 unsigned Account::nextIdentifier = 0;
-Account::Account(const std::string &name, const int &dispo, const int &balance, const std::shared_ptr<Customer> &owner) : identifier{nextIdentifier++} {
-  if (name.empty()) 
+Account::Account(const std::string &name, const int dispo, const int balance, 
+                 const std::shared_ptr<Customer> &owner) : identifier{nextIdentifier++} {
+  if (name.empty() or dispo <= 0 or dispo >= 10'000 or balance < -dispo or !owner) 
     --nextIdentifier, bam();
-  if (dispo <= 0 or dispo >= 10'000) 
-    --nextIdentifier, bam();
-  if (balance < -dispo) 
-    --nextIdentifier, bam();
-  if (!owner) 
-    --nextIdentifier, bam();
-
   this->name = name;
   this->dispo = dispo;
   this->balance = balance;
   this->owners[owner->get_id()] = owner; // std::weak_ptr<Customer>(owner);
-} Account::~Account() = default;
+}
+Account::Account(const AccountConfig& config) : Account(config.name, config.dispo, config.balance, config.owner) {}
 auto Account::owner_count() const noexcept -> size_t {
   return std::accumulate(owners.begin(), owners.end(), static_cast<size_t>(0), [&](auto&& sum, const auto& elem) {
     return sum + static_cast<size_t>(elem.second.expired() ? 0 : 1);
   });
 }
-int Account::withdraw(const int &amount) {
-  if (amount <= 0 or ((this->balance - amount) < (-(this->dispo)))) bam();
+int Account::withdraw(const int amount) {
+  if ((amount <= 0) or ((this->balance - amount) < (-(this->dispo)))) bam();
   return this->balance -= amount;
 }
-int Account::deposit(const int &amount) {
+int Account::deposit(const int amount) {
   if (amount <= 0) bam();
-  this->balance += amount;
-  return this->balance;
+  return this->balance += amount;
 }
-bool Account::share_account(std::shared_ptr<Customer> &newOwner) noexcept {
+bool Account::share_account(const std::shared_ptr<Customer> &newOwner) {
   for (const auto &[ownerID, owner] : this->owners)
     if (ownerID == newOwner->get_id()) return false;
 
@@ -54,35 +56,69 @@ bool Account::remove_owner(const unsigned &ownerID) {
     return true;
   } return false;
 }
+Special_Account::Special_Account(const std::string &name, const int dispo, const int balance, const std::shared_ptr<Customer> &owner, 
+                                 const int fee) : Account(name, dispo, balance, owner) {
+  if (fee <= 0) bam();
+  this->fee = fee;
+}
+int Special_Account::withdraw(const int amount) {
+  if (amount <= 0) bam(); // explicit check since amount can be negative, and amount + fee makes it positive
+  return Account::withdraw(amount + fee);
+}
+Foreign_Currency_Account::Foreign_Currency_Account(const AccountConfig &config, const std::string &currency, 
+                                                   const std::string &symbol, const double rate) : Account(config) {
+  if (rate <= 0.0) bam();
+  this->currency = currency;
+  this->currencySymbol = symbol;
+  this->exchangeRate = rate;
+}
+int Foreign_Currency_Account::withdraw(const int amount)  {
+  return Account::withdraw(convertCurrency(amount));
+}
+int Foreign_Currency_Account::deposit(const int amount)  {
+  return Account::deposit(convertCurrency(amount));
+}
+Business_Account::Business_Account(const AccountConfig &config, const double percentage) : Account(config) {
+  if (percentage <= 0.0) bam();
+  this->percentage = percentage;  
+}
+int Business_Account::withdraw(const int amount)  {
+  return Account::withdraw((amount + calculateFeeFor(amount)));
+}
+int Business_Account::deposit(const int amount)  {
+  return Account::deposit((amount - calculateFeeFor(amount)));
+}
+Foreign_Business_Account::Foreign_Business_Account(const AccountConfig &config, const std::string &currency, const std::string &symbol,
+                                                   const double rate, const double percentage) : Account(config), 
+                                                   Foreign_Currency_Account(config, currency, symbol, rate), 
+                                                   Business_Account(config, percentage) {}
+int Foreign_Business_Account::withdraw(const int amount)  {
+  return Business_Account::withdraw(convertCurrency(amount));
+}
+int Foreign_Business_Account::deposit(const int amount)  {
+  return Business_Account::deposit(convertCurrency(amount));
+}
 std::string Standard_Account::additional_output() const {
   return "Standard";
 }
 std::string Special_Account::additional_output() const {
-  return ("Special, " + std::to_string(fee));;
+  return ("Special, " + std::to_string(fee));
 }
-Special_Account::Special_Account(const std::string &name, const int &dispo, const int &balance, const std::shared_ptr<Customer> &owner, const int &fee) 
-  : Account(name, dispo, balance, owner) {
-  if (fee <= 0) bam();
-  this->fee = fee;
+std::string Foreign_Currency_Account::additional_output() const {
+  return ("Foreign, " + currency + " (" + currencySymbol + ") with rate: " + fmt(exchangeRate));
 }
-int Special_Account::withdraw(const int &amount) {
-  const auto totalWithdrawalAmount = amount + this->fee;
-  if ((this->balance - totalWithdrawalAmount) < (-(this->dispo)) or amount <= 0) bam();
-  return this->balance -= totalWithdrawalAmount;
+std::string Business_Account::additional_output() const {
+  return ("Business, with " + fmt(percentage) + "% fee");
 }
-// std::string enumToString (const Account_Type &type) {
-//   switch (type) {
-//     break; case Account_Type::STANDARD: return "Standard";
-//     break; case Account_Type::SPECIAL:  return "Special";
-//     break; default: bam();
-//   }
-// }
+std::string Foreign_Business_Account::additional_output() const {
+  return (Foreign_Currency_Account::additional_output() + " and " + Business_Account::additional_output());
+}
 std::ostream& operator<<(std::ostream& output, const Account_Type &type) {
   switch (type) {
     break; case Account_Type::STANDARD: return output << "Standard";
     break; case Account_Type::SPECIAL:  return output << "Special";
     break; default: bam();
-  }
+  } return output;
 }
 std::ostream& operator<<(std::ostream &output, const Account &account) {
   const std::string c = ", ";
